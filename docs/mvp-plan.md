@@ -14,7 +14,7 @@ Agreed with Ken on 2026-10-27. Turns the prototype into an internal MVP for more
 
 | Area | Decision | Why |
 | --- | --- | --- |
-| Frontend | Static web app on GitHub Pages | Free, already on GitHub |
+| Frontend | Vue 3 + TypeScript, Vite, Tailwind + DaisyUI, Reka UI; static app on GitHub Pages | Same stack as hub, so any FGM dev can work on it; free hosting |
 | Backend | Supabase free tier: login, Postgres, row-level security, Edge Functions | Free; no server of our own to run |
 | Architecture | Decoupled but small: static app + Supabase + scanner | Each part is free to host; no API layer to maintain |
 | Scanner | GitHub Actions on a schedule, state in Supabase | Free (public repo); stops committing `state.json` to `main` |
@@ -43,6 +43,14 @@ For each source URL, in order:
 - **Sources:** one row per URL, shared by every watch list that uses it, so each URL is scanned once.
 - **Articles:** found by the scanner, with the time they were first seen.
     - "New" on the dashboard = first seen after the user last opened that watch list.
+
+## Screens (step 3)
+
+- **Login:** set your password (from the invite), sign in, forgot password.
+- **Dashboard:** one box per watch list with its number of new items.
+- **Watch list:** its articles, plus adding and removing sources by URL.
+- **New watch list:** a name, plus a magazine picker for multi-magazine users.
+- Look and behaviour follow hub's `DESIGN.md` (`../hub/DESIGN.md`): DaisyUI for looks, Reka UI for dialogs and menus.
 
 ## Features
 
