@@ -23,7 +23,7 @@ Core rule, adapted for Wirescout. Last edited: 2026-10-27.
 ## Doing the work
 
 - One job = one branch = one PR.
-- Branch from the latest `origin/main`.
+- Branch from the latest `origin/mvp`.
 - Make the smallest change that fully solves the task.
 - Problems found along the way: note them where `CLAUDE.md` says. Don't fix them in this branch.
 - Dependencies:
@@ -47,7 +47,7 @@ Core rule, adapted for Wirescout. Last edited: 2026-10-27.
 - The task is unclear, or it needs a decision on product, money, data or direction.
 - 3 attempts have failed (the ladder in `code-style.md`, "When something doesn't work").
 - You can't reproduce the bug, can't run the tests, or can't verify the fix.
-- The branch conflicts with `main`, or another open branch changes the same code.
+- The branch conflicts with `mvp`, or another open branch changes the same code.
 - The change touches any of these:
     - database schema, content types or migrations
     - login, permissions or security
@@ -74,7 +74,7 @@ When a fix needs a change to a file on a live server (for example the nginx site
     4. **Not tested:** what, and why.
     5. **Before you merge:** everything that happens on live at merge, or "nothing special". That covers the deploy itself, migrations, schema changes, new env variables and crons.
     6. **How to undo:** revert the PR, plus any extra step.
-- If the branch fell behind `main`, merge `origin/main` into it (no rebase: on a pushed branch that needs a force-push) and run the checks again before asking for review.
+- If the branch fell behind `mvp`, merge `origin/mvp` into it (no rebase: on a pushed branch that needs a force-push) and run the checks again before asking for review.
 
 ## Finishing (housekeeping)
 
@@ -85,4 +85,4 @@ When a fix needs a change to a file on a live server (for example the nginx site
 - Branches:
     - Delete a branch once it's merged, locally and on GitHub.
     - Ask before deleting an unmerged branch.
-    - Never delete `main`.
+    - Never delete `main` or `mvp`.

@@ -6,4 +6,5 @@ Newest first. One entry per job: date, what was done, what's next.
 
 - Added `docs/` (project facts, MVP plan, progress, known issues) and `README.md` listing them.
 - Added `CLAUDE.md` and `.claude/` (rules, guard hook, settings), adapted from the hub repo.
+- Created the `mvp` branch from `main`: all MVP work merges there until release.
 - Next: step 2, Supabase setup.

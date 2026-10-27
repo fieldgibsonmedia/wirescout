@@ -11,7 +11,7 @@ An internal Field Gibson Media tool for journalists. It watches a curated list o
 - `chrono-node` parses article dates.
 - `nodemailer` sends alerts over SMTP (`EMAIL_*` variables).
 - GitHub Actions runs the scanner every 4 hours (`.github/workflows/scraper.yml`).
-- Git: GitHub (`kennethzuniga/wirescout`), public. `main` is live.
+- Git: GitHub (`kennethzuniga/wirescout`), public. `main` is live; MVP work goes into `mvp` until release.
 
 The MVP stack is decided in `docs/mvp-plan.md`.
 

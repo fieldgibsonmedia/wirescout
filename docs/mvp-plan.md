@@ -62,6 +62,12 @@ For each source URL, in order:
 - All 4 magazines run on MODX today, and MODX has no ready-made API for creating articles. Each site needs one small "receive draft" endpoint.
 - All 4 are moving to Statamic (months away). Its API is read-only, so it will need the same endpoint. Wirescout doesn't change: only the endpoint on each site is swapped.
 
+## Branches
+
+- Every MVP job: a branch from `mvp`, with a PR into `mvp`.
+- `main` stays live and untouched until the MVP is ready; then `mvp` is merged into `main` once.
+- `main` keeps getting "Update state" commits from the live scanner. Merge `main` into `mvp` before the release merge.
+
 ## Build order
 
 1. Docs and Claude setup
