@@ -1,0 +1,26 @@
+{
+    "permissions": {
+        "deny": [
+            "Bash(git push origin main:*)",
+            "Bash(git push origin HEAD:main:*)",
+            "Bash(gh pr merge:*)",
+            "Edit(/.claude/settings.json)",
+            "Write(/.claude/settings.json)",
+            "Edit(/.claude/hooks/**)",
+            "Write(/.claude/hooks/**)"
+        ]
+    },
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Bash|mcp__.*",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-main.js\""
+                    }
+                ]
+            }
+        ]
+    }
+}
