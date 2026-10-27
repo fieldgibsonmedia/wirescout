@@ -13,7 +13,9 @@ An internal Field Gibson Media tool for journalists. It watches a curated list o
 - GitHub Actions runs the scanner every 4 hours (`.github/workflows/scraper.yml`).
 - Git: GitHub (`kennethzuniga/wirescout`), public. `main` is live; MVP work goes into `mvp` until release.
 
-The MVP stack is decided in `docs/mvp-plan.md`.
+The MVP stack is decided in `docs/mvp-plan.md`. Built so far:
+
+- Supabase (Postgres 17 + Auth), developed locally with the Supabase CLI (`npx supabase`, a dev dependency) in Docker.
 
 ## Layout
 
@@ -23,6 +25,9 @@ The MVP stack is decided in `docs/mvp-plan.md`.
 - `src/utils/state.js`: load, save and compare `state.json`.
 - `src/utils/email.js`: builds and sends the alert email.
 - `reset.js`: empties `state.json`.
+- `supabase/config.toml`: local Supabase settings (sign-ups off: invite only).
+- `supabase/migrations/`: the database schema and access rules, one SQL file per change.
+- `supabase/tests/database/`: access tests (pgTAP).
 
 ## How a run works
 
@@ -43,6 +48,18 @@ npm ci
 - Copy `.env.example` to `.env` and point `EMAIL_*` at a test inbox, never at real journalists.
 - `npm start`
 
+## Local Supabase
+
+- Docker Desktop must be running.
+- Start: `npx supabase start`. Stop: `npx supabase stop`.
+- Local URLs and demo keys: `npx supabase status`. Local emails (invites, sign-in links) go to Mailpit at http://127.0.0.1:54324.
+- New schema change: `npx supabase migration new <name>`, then `npx supabase db reset` to rebuild the local database.
+
 ## Before a PR
 
-- No automated tests or linters yet. Check that `npm start` runs without errors against a test inbox.
+```bash
+npx supabase test db
+npx supabase db lint
+```
+
+- Scanner changes: check that `npm start` runs without errors against a test inbox.

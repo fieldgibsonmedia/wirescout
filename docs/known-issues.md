@@ -2,6 +2,11 @@
 
 Bugs found while working on something else. One entry each: date, what, where, how to see it.
 
+## 2026-10-27: `npm audit` reports high-severity issues in `nodemailer` and `undici`
+
+- `nodemailer` 6.10.1 (direct dependency) and `undici` 7.18.2 (through `cheerio`). Already on `main`, not added by the Supabase work.
+- See them with `npm audit`. Fixing `nodemailer` needs a major upgrade.
+
 ## 2026-10-27: 14 of 23 sources return no articles, silently
 
 - The last stored scan in `src/state.json` has articles from only 9 sources.

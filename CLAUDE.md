@@ -40,6 +40,9 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
     - Never trigger the workflow (`workflow_dispatch`) and never run `npm start` with real email settings: both email real people.
 - The workflow commits `src/state.json` to `main` after each run ("Update state [skip ci]"). Expect those commits; never edit or revert them.
 - The repo is public: everything committed is visible to anyone.
+- Supabase cloud project: no real users yet. You may push migrations to it after Ken's "approve".
+    - Once journalists are invited, it is production: from then on, treat it like any live database (`safety.md`).
+- Develop and test against the local Supabase (`docs/project.md`), never against the cloud project.
 - When the MVP (UI, Supabase) goes live, update this section.
 
 ## Git hosting

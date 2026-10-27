@@ -33,13 +33,16 @@ For each source URL, in order:
 
 ## Data model (outline)
 
-- **Users:** sign in through Supabase Auth.
+- **Users:** sign in through Supabase Auth, invite only (public sign-ups are off).
+    - The invite email opens a "Set your password" page. After that: email + password, with a "Forgot password" link.
+    - Passwords, not emailed sign-in links: company email scanners "pre-click" links and break one-time sign-in links.
 - **Publications:** Environmental Finance, InsuranceERM, Insurance Asset Risk, Corporate Disclosures.
 - **User ↔ publication:** which magazines each user may post to. Most users have one; some have several.
 - **Watch lists:** owned by one user and linked to **one** publication.
     - Users with a single publication never pick one: it is set for them.
-- **Sources:** URLs in a watch list.
-- **Articles:** found by the scanner, plus a seen/unseen flag per user.
+- **Sources:** one row per URL, shared by every watch list that uses it, so each URL is scanned once.
+- **Articles:** found by the scanner, with the time they were first seen.
+    - "New" on the dashboard = first seen after the user last opened that watch list.
 
 ## Features
 
