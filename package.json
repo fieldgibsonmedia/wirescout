@@ -14,5 +14,8 @@
     "chrono-node": "^2.9.0",
     "dotenv": "^16.0.3",
     "nodemailer": "^6.9.9"
+  },
+  "devDependencies": {
+    "supabase": "^2.122.0"
   }
 }
