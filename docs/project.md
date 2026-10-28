@@ -16,9 +16,16 @@ An internal Field Gibson Media tool for journalists. It watches a curated list o
 The MVP stack is decided in `docs/mvp-plan.md`. Built so far:
 
 - Supabase (Postgres 17 + Auth), developed locally with the Supabase CLI (`npx supabase`, a dev dependency) in Docker.
+- Web app: Vue 3 + TypeScript, Vite, Tailwind + DaisyUI, Reka UI, Vue Router, `@supabase/supabase-js`, `read-excel-file` (bulk source upload). It talks to Supabase directly; access is protected by row-level security.
 
 ## Layout
 
+All code lives in `src/`: the web app in `src/app/`, and the scanner (moving into `src/scanner/` in build step 4).
+
+- `index.html`, `vite.config.ts`, `tsconfig.json`: the web app's entry page and build settings.
+- `src/app/`: the web app. `pages/` (one file per screen), `components/` (`ui/` holds the shared building blocks, copied from hub), `layouts/`, `lib/supabase.ts` (the connection), `router.ts`.
+- `src/app/lib/database.types.ts`: generated from the local database with `npm run types`. Regenerate after a schema change.
+- `.env.development`: the web app's connection to the local Supabase (public demo values, safe to commit).
 - `src/index.js`: fetch each source, extract articles, compare with the last scan, email the new ones.
 - `src/sites.js`: the hardcoded source list, with CSS selectors per source.
 - `src/state.json`: the last scan. The workflow commits it to `main` after every run.
@@ -28,6 +35,7 @@ The MVP stack is decided in `docs/mvp-plan.md`. Built so far:
 - `supabase/config.toml`: local Supabase settings (sign-ups off: invite only).
 - `supabase/migrations/`: the database schema and access rules, one SQL file per change.
 - `supabase/tests/database/`: access tests (pgTAP).
+- `supabase/seed.sql`: made-up sources and articles, loaded into the local database on every reset.
 
 ## How a run works
 
@@ -48,6 +56,16 @@ npm ci
 - Copy `.env.example` to `.env` and point `EMAIL_*` at a test inbox, never at real journalists.
 - `npm start`
 
+## Run the web app (dev environment)
+
+1. Start the local Supabase (below).
+2. `npm run dev`, then open http://127.0.0.1:3000.
+3. To get a local test user:
+    - Invite a made-up address (e.g. `test@example.com`) in Studio (http://127.0.0.1:54323), Authentication → Invite.
+    - Open the invite in Mailpit and set a password.
+    - Optional, to see a magazine under Settings → Channels: Table Editor → `user_publications` → Insert row, with the user and a `publication_id` (1 Environmental Finance, 2 InsuranceERM, 3 Insurance Asset Risk, 4 Corporate Disclosures).
+4. Add `https://news.example.com/press` or `https://regulator.example.org/updates` to a watch list to see the seed articles.
+
 ## Local Supabase
 
 - Docker Desktop must be running.
@@ -60,6 +78,10 @@ npm ci
 ```bash
 npx supabase test db
 npx supabase db lint
+npm run type-check
+npm run build
 ```
 
+- Run `npx supabase db reset` first: the tests expect an empty user table.
+- Web app changes: click through the changed screens with `npm run dev`.
 - Scanner changes: check that `npm start` runs without errors against a test inbox.
