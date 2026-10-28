@@ -2,16 +2,10 @@
 begin;
 select plan(12);
 
--- Two made-up users: Alice works for one magazine, Bob for two.
+-- Two made-up users.
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'alice@example.com'),
   ('00000000-0000-0000-0000-00000000000b', 'bob@example.com');
-
-insert into public.user_publications (user_id, publication_id)
-select '00000000-0000-0000-0000-00000000000a'::uuid, id from public.publications where slug = 'insuranceerm'
-union all
-select '00000000-0000-0000-0000-00000000000b'::uuid, id from public.publications
-where slug in ('insurance-asset-risk', 'corporate-disclosures');
 
 insert into public.sources (id, url) values
   ('00000000-0000-0000-0000-0000000000f1', 'https://example.com/news');
@@ -31,17 +25,24 @@ select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-000000
 insert into public.watch_lists (id, name) values ('00000000-0000-0000-0000-0000000000a1', 'Regulators');
 
 select is(
-  (select p.slug from public.watch_lists w join public.publications p on p.id = w.publication_id),
-  'insuranceerm',
-  'A single-magazine user gets their magazine set automatically'
+  (select name from public.watch_lists),
+  'Regulators',
+  'A user can create a watch list with just a name'
 );
 
 select throws_ok(
-  $$ insert into public.watch_lists (name, publication_id)
-     select 'Wrong magazine', id from public.publications where slug = 'environmental-finance' $$,
+  $$ insert into public.watch_lists (name, user_id) values ('Not mine', '00000000-0000-0000-0000-00000000000b') $$,
   '42501',
   null,
-  'A user cannot link a watch list to a magazine they do not work for'
+  'A user cannot create a watch list for someone else'
+);
+
+select throws_ok(
+  $$ update public.watch_lists set user_id = '00000000-0000-0000-0000-00000000000b'
+     where id = '00000000-0000-0000-0000-0000000000a1' $$,
+  '42501',
+  null,
+  'A user cannot hand a watch list to someone else'
 );
 
 select is(
@@ -69,17 +70,9 @@ select throws_ok(
 -- As Bob
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-00000000000b", "role": "authenticated"}', true);
 
-select throws_ok(
-  $$ insert into public.watch_lists (name) values ('No magazine picked') $$,
-  '42501',
-  null,
-  'A multi-magazine user must pick a magazine'
-);
-
 select lives_ok(
-  $$ insert into public.watch_lists (name, publication_id)
-     select 'Disclosures', id from public.publications where slug = 'corporate-disclosures' $$,
-  'A multi-magazine user can create a list for either magazine'
+  $$ insert into public.watch_lists (name) values ('Disclosures') $$,
+  'Another user can create their own watch list'
 );
 
 select is(
