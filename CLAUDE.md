@@ -49,11 +49,11 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
 
 - GitHub (`kennethzuniga/wirescout`), public.
 - `main` is the live branch. `mvp` collects the MVP work until release.
-    - Branch from the latest `origin/mvp`, and open every PR into `mvp`.
-    - After Ken says "approve" on a job, merge its branch into `mvp` yourself and push `mvp`. Mistakes there can be undone.
+    - Branch from the latest `origin/mvp`.
+    - After Ken says "approve" on a job, merge its branch into `mvp` yourself and push `mvp`. No PR and no PR text for jobs: the PR rules in `workflow.md` apply only to the release (`mvp` into `main`). Mistakes there can be undone.
     - Only Ken merges `mvp` into `main`, when the MVP is ready to release.
     - `main` must stay the GitHub default branch: scheduled workflows run from the default branch, so switching it would put unreleased work live.
-- There is no `gh` CLI. To open a PR: push the branch, show Ken the PR title and description, and after he says "approve" give him the GitHub compare link into `mvp`.
+- There is no `gh` CLI. For the release PR: push `mvp`, show Ken the PR title and description, and after he says "approve" give him the GitHub compare link into `main`.
 - No mention of Claude, Claude Code or AI in branch names, commits or PRs.
 
 ## Security rules
