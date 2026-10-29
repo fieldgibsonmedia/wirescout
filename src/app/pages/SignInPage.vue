@@ -32,8 +32,11 @@ async function signIn() {
     busy.value = false;
 
     if (error) {
-        failed.value =
-            error.code === 'invalid_credentials' ? 'Wrong email or password.' : 'Sign in failed. Please try again.';
+        const messages: Record<string, string> = {
+            invalid_credentials: 'Wrong email or password.',
+            email_not_confirmed: 'Confirm your email first: open the link we sent you when you created the account.',
+        };
+        failed.value = messages[error.code ?? ''] ?? 'Sign in failed. Please try again.';
         password.value = '';
         return;
     }
@@ -71,7 +74,10 @@ async function signIn() {
         />
 
         <template #links>
-            <RouterLink :to="{ name: 'forgot-password' }" class="link">Forgot password?</RouterLink>
+            <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+                <RouterLink :to="{ name: 'forgot-password' }" class="link">Forgot password?</RouterLink>
+                <RouterLink :to="{ name: 'sign-up' }" class="link">Create account</RouterLink>
+            </div>
         </template>
     </FormLayout>
 </template>
