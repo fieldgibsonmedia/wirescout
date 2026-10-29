@@ -3,7 +3,7 @@
 // The logs only show totals: the repo is public, and which sources people follow is theirs.
 import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
-import { readSource } from "./read-source.js";
+import { readProblem, readSource } from "./read-source.js";
 import { findProblem, sendHealthEmail } from "./health.js";
 
 // Sources read at the same time: enough to finish in a few minutes, few enough to be polite.
@@ -28,10 +28,12 @@ const supabase = createClient(CONFIG.supabaseUrl, CONFIG.supabaseSecretKey, {
 async function checkSource(source) {
   let result;
   let error = null;
+  let readFailure = null;
   try {
     result = await readSource(source);
   } catch (readError) {
     error = readError.cause?.code ?? readError.message;
+    readFailure = readProblem(readError);
     // Keep the feed found earlier: the site may be down for a moment.
     result = { stories: [], readFrom: source.read_from, feedUrl: source.feed_url };
   }
@@ -58,6 +60,7 @@ async function checkSource(source) {
       stories_found: result.stories.length,
       read_from: result.readFrom,
       feed_url: result.feedUrl,
+      problem: readFailure,
     })
     .eq("id", source.id);
   if (updated.error) throw updated.error;

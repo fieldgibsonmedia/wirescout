@@ -1,18 +1,20 @@
 <script setup lang="ts">
-// A watch list: its stories, newest first, 50 at a time, and its sources, added and removed by URL.
+// A watch list: its stories, newest first, 50 at a time, and its sources, added, fixed and removed by URL.
 // Opening it marks the stories shown as seen, so the dashboard's new count starts again from zero.
-import { ArrowTopRightOnSquareIcon, PlusIcon } from '@heroicons/vue/20/solid';
+import { ArrowTopRightOnSquareIcon, ExclamationTriangleIcon, PlusIcon } from '@heroicons/vue/20/solid';
 import { onMounted, ref } from 'vue';
 import ShareMenu from '@/components/ShareMenu.vue';
 import SourceFileImport from '@/components/SourceFileImport.vue';
+import SourceMenu from '@/components/SourceMenu.vue';
 import WatchListMenu from '@/components/WatchListMenu.vue';
 import Alert from '@/components/ui/Alert.vue';
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
+import FormDialog from '@/components/ui/FormDialog.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import TextField from '@/components/ui/TextField.vue';
-import { addSources, isWebAddress, SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
+import { addSources, isWebAddress, listLabel, replaceSource, SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
 
 const props = defineProps<{
@@ -50,6 +52,13 @@ const urlError = ref('');
 const adding = ref(false);
 const removing = ref('');
 const removeFailed = ref(false);
+
+// The Fix and Edit dialog: the source being changed, and whether it opened from Fix (it then says what's wrong).
+const editing = ref<Source | null>(null);
+const fixing = ref(false);
+const editUrl = ref('');
+const editErrors = ref<Record<string, string>>({});
+const saving = ref(false);
 
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -181,6 +190,43 @@ async function addSource() {
     await showAdded(added);
 }
 
+function startEdit(source: Source, fix: boolean) {
+    editing.value = source;
+    fixing.value = fix;
+    editUrl.value = source.url;
+    editErrors.value = {};
+}
+
+async function saveEdit() {
+    const source = editing.value!;
+    const url = editUrl.value.trim();
+    if (url === source.url) {
+        editing.value = null;
+        return;
+    }
+    if (!isWebAddress(url)) {
+        editErrors.value = { url: 'Enter the full web address of a news page, starting with https://' };
+        return;
+    }
+    if (sources.value.some((other) => other.url === url)) {
+        editErrors.value = { url: 'This source is already in the list.' };
+        return;
+    }
+
+    saving.value = true;
+    const saved = await replaceSource(props.id, source.id, url);
+    saving.value = false;
+
+    if (!saved) {
+        editErrors.value = { url: "The source couldn't be saved. Please try again." };
+        return;
+    }
+
+    editing.value = null;
+    sources.value = sources.value.map((other) => (other.id === source.id ? saved : other));
+    await loadArticles();
+}
+
 async function showAdded(added: Source[]) {
     sources.value.push(...added);
     await loadArticles();
@@ -289,18 +335,49 @@ onMounted(load);
 
                     <p v-if="sources.length === 0" class="text-base-content/70">No sources yet.</p>
                     <ul v-else class="flex flex-col divide-y divide-base-300 border-t border-base-300">
-                        <li v-for="source in sources" :key="source.id" class="flex items-center justify-between gap-3 py-2">
+                        <li
+                            v-for="source in sources"
+                            :key="source.id"
+                            :class="['flex items-center justify-between gap-3 py-2', { 'opacity-50': removing === source.id }]"
+                            :aria-busy="removing === source.id"
+                        >
                             <div class="min-w-0">
-                                <p class="font-medium break-words">{{ source.label }}</p>
-                                <p class="text-sm break-words text-base-content/70">{{ source.url }}</p>
-                                <p class="text-sm text-base-content/70">{{ source.status }}</p>
+                                <p class="font-medium break-words">{{ listLabel(source, sources) }}</p>
+                                <p :class="['flex gap-1 text-sm', source.problem ? 'text-error' : 'text-base-content/70']">
+                                    <ExclamationTriangleIcon v-if="source.problem" class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                                    {{ source.status }}
+                                </p>
                             </div>
-                            <Button variant="ghost" :busy="removing === source.id" @click="removeSource(source.id)">
-                                Remove<span class="sr-only"> {{ source.label }}</span>
-                            </Button>
+                            <div class="flex shrink-0 items-center gap-1">
+                                <Button v-if="source.problem" variant="outline" @click="startEdit(source, true)">
+                                    Fix<span class="sr-only"> {{ listLabel(source, sources) }}</span>
+                                </Button>
+                                <SourceMenu :label="listLabel(source, sources)" @edit="startEdit(source, false)" @remove="removeSource(source.id)" />
+                            </div>
                         </li>
                     </ul>
                 </Card>
+
+                <FormDialog
+                    :open="editing !== null"
+                    :title="fixing ? 'Fix source' : 'Edit source'"
+                    :description="fixing ? (editing?.problem ?? undefined) : undefined"
+                    :busy="saving"
+                    :errors="editErrors"
+                    @update:open="editing = null"
+                    @submit="saveEdit"
+                >
+                    <TextField
+                        v-model="editUrl"
+                        name="url"
+                        label="News page address"
+                        type="url"
+                        inputmode="url"
+                        autocomplete="url"
+                        placeholder="https://"
+                        :error="editErrors.url"
+                    />
+                </FormDialog>
             </section>
         </div>
     </template>

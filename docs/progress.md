@@ -2,6 +2,17 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-29: Fix sources
+
+- Scanner: saves why a source couldn't be read in `sources.problem`: `not_found` (404, 410), `blocked` (401, 403, 429), `unreachable` (timeouts, connection and certificate errors, 5xx), empty otherwise.
+- Source list: the domain (plus the end of the path when two rows share a site), the status line with the reason in red and a warning icon, a Fix button on failing sources, and a "⋯" menu with Edit and Remove on every row.
+- Fix/Edit dialog: the link field and Save; Fix adds one line on the problem. Save swaps the source in this list only and keeps its place; a link already in the list is refused.
+- 1 migration: the `problem` column, plus an access rule letting users change the sources in their own lists (Ken, 2026-10-29; the Move job needs it too).
+- Checked: 13 scanner tests, 42 database tests, db lint, type check, build. A local scan of real sites gave all 4 reasons; in the browser (dark mode, desktop): the rows, Fix with a duplicate and a new link, Edit, Remove.
+- Not checked: 320 px and light mode (the browser window couldn't be resized).
+- Release order: push the migration to the cloud before Ken merges, or the live scanner fails writing `problem`.
+- Next: Check links job.
+
 ## 2026-10-29: New scanner (build step 4)
 
 - `src/scanner/` replaces the prototype: no selectors. Each source is read from its feed (the address itself, one named in the page, or a guessed `/feed`), or else from the page's biggest list of headline links. Newest 50 per source.
