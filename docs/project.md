@@ -8,7 +8,7 @@ An internal Field Gibson Media tool for journalists. It watches a curated list o
 
 - Scanner: Node.js 22 (ES modules), no framework.
     - `cheerio` reads feeds and pages, `chrono-node` reads dates written on pages.
-    - `@supabase/supabase-js` saves stories and source status with the secret key (`SUPABASE_*` variables).
+    - `@supabase/supabase-js` saves stories and source status with the secret key (`SUPABASE_*` variables). In the cloud it's the key named `wirescout_scanner` (Project Settings → API Keys), saved in the GitHub secret `SUPABASE_SECRET_KEY`.
     - `nodemailer` sends the health email to a developer over SMTP (`EMAIL_*`, `ADMIN_EMAIL`).
     - GitHub Actions runs it every hour (`.github/workflows/scanner.yml`), installing only the runtime packages (`npm ci --omit=dev`).
 - Git: GitHub (`fieldgibsonmedia/wirescout`), public. `main` is live; MVP work goes into `mvp`, and each finished stage is merged into `main`.
