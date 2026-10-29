@@ -42,7 +42,8 @@ import {
     replaceSource,
     type Source,
 } from '@/lib/sources';
-import { watchLists } from '@/lib/watchLists';
+import { supabase } from '@/lib/supabase';
+import { loadWatchLists, watchLists } from '@/lib/watchLists';
 
 const props = defineProps<{
     watchListId: string;
@@ -141,9 +142,12 @@ const confirmingRemove = ref(false);
 const removeBusy = ref(false);
 const removeError = ref('');
 
-// The Move dialog: the sources being moved (one from its menu, or the ticked ones) and where to.
+// The Move dialog: the sources being moved (one from its menu, or the ticked ones) and where to:
+// one of the user's other watch lists, or a new one they name there.
+const NEW_LIST = 'new';
 const moving = ref<string[]>([]);
 const moveTarget = ref('');
+const newListName = ref('');
 const moveErrors = ref<Record<string, string>>({});
 const moveBusy = ref(false);
 const moved = ref('');
@@ -151,6 +155,7 @@ const moved = ref('');
 const otherLists = computed(() =>
     watchLists.value.filter((list) => list.id !== props.watchListId).map((list) => ({ value: list.id, label: list.name })),
 );
+const moveOptions = computed(() => [...otherLists.value, { value: NEW_LIST, label: 'New watch list…' }]);
 
 // The Fix and Edit dialog: the source being changed, and whether it opened from Fix (it then says what's wrong).
 const editing = ref<Source | null>(null);
@@ -265,7 +270,8 @@ async function removeSelected() {
 
 function startMove(sourceIds: string[]) {
     moved.value = '';
-    moveTarget.value = '';
+    moveTarget.value = otherLists.value.length > 0 ? '' : NEW_LIST;
+    newListName.value = '';
     moveErrors.value = {};
     moving.value = sourceIds;
 }
@@ -275,8 +281,23 @@ async function move() {
         moveErrors.value = { list: 'Choose a watch list.' };
         return;
     }
+    if (moveTarget.value === NEW_LIST && !newListName.value.trim()) {
+        moveErrors.value = { name: 'Enter a name.' };
+        return;
+    }
 
     moveBusy.value = true;
+    if (moveTarget.value === NEW_LIST) {
+        const { data, error } = await supabase.from('watch_lists').insert({ name: newListName.value.trim() }).select('id').single();
+        if (error) {
+            moveBusy.value = false;
+            moveErrors.value = { name: "The watch list couldn't be created. Please try again." };
+            return;
+        }
+        await loadWatchLists();
+        // A retry after a failed move then goes to the list just made, instead of making another.
+        moveTarget.value = data.id;
+    }
     const done = await moveSources(props.watchListId, moveTarget.value, moving.value);
     moveBusy.value = false;
 
@@ -295,15 +316,18 @@ async function move() {
 
 <template>
     <div class="flex flex-col gap-4">
-        <div class="flex flex-wrap items-center gap-3">
-            <label class="input min-w-0 grow focus-within:outline-primary sm:max-w-sm">
+        <!-- Search on the left, actions on the right, so the button doesn't read as the search's submit. -->
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <label class="input w-full focus-within:outline-primary sm:w-72">
                 <MagnifyingGlassIcon class="size-5 text-base-content/70" aria-hidden="true" />
                 <input v-model="search" type="search" placeholder="Search sources" aria-label="Search sources" />
             </label>
-            <Button @click="addingSources = true">
-                <PlusIcon class="size-5" aria-hidden="true" />
-                Add sources
-            </Button>
+            <div class="ms-auto">
+                <Button @click="addingSources = true">
+                    <PlusIcon class="size-5" aria-hidden="true" />
+                    Add sources
+                </Button>
+            </div>
         </div>
 
         <Alert v-if="removeFailed" type="error">The source couldn't be removed. Please try again.</Alert>
@@ -311,7 +335,7 @@ async function move() {
 
         <div v-if="selected.length > 0" class="flex flex-wrap items-center gap-2 rounded-box bg-base-200 p-2">
             <p role="status" class="me-auto px-2 font-medium">{{ selected.length }} selected</p>
-            <Button v-if="otherLists.length > 0" variant="outline" @click="startMove(selected)">Move to…</Button>
+            <Button variant="outline" @click="startMove(selected)">Move to…</Button>
             <Button variant="outline" @click="startRemoveSelected">Remove</Button>
             <Button variant="ghost" @click="rowSelection = {}">Clear</Button>
         </div>
@@ -386,7 +410,6 @@ async function move() {
                             </Button>
                             <SourceMenu
                                 :label="listLabel(row.original, sources)"
-                                :can-move="otherLists.length > 0"
                                 @edit="startEdit(row.original, false)"
                                 @move="startMove([row.original.id])"
                                 @remove="removeSource(row.original.id)"
@@ -412,7 +435,15 @@ async function move() {
         @update:open="moving = []"
         @submit="move"
     >
-        <SelectField v-model="moveTarget" name="move-to" label="Watch list" :options="otherLists" placeholder="Choose a watch list" :error="moveErrors.list" />
+        <SelectField v-model="moveTarget" name="move-to" label="Watch list" :options="moveOptions" placeholder="Choose a watch list" :error="moveErrors.list" />
+        <TextField
+            v-if="moveTarget === NEW_LIST"
+            v-model="newListName"
+            name="new-list-name"
+            label="Name of the new watch list"
+            autocomplete="off"
+            :error="moveErrors.name"
+        />
     </FormDialog>
 
     <ConfirmDialog

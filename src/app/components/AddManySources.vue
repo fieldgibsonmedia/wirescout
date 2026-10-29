@@ -234,7 +234,8 @@ async function add(urls: string[]) {
 </script>
 
 <template>
-    <div class="flex flex-col gap-3">
+    <!-- One fixed height for both tabs and their results, so the dialog never resizes; the content scrolls inside. -->
+    <div class="flex h-[28rem] max-h-[calc(100dvh-12rem)] flex-col gap-3 overflow-y-auto">
         <TabsRoot v-model="tab" class="flex flex-col gap-3">
             <TabsList aria-label="How to add sources" class="tabs tabs-border">
                 <TabsTrigger value="paste" class="tab data-[state=active]:tab-active">Paste links</TabsTrigger>

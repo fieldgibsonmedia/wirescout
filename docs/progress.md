@@ -2,6 +2,17 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-29: Sources fixes after the live test
+
+- Released before this job (PR #6, merged by Ken): Fix sources, Check links, Paste links, Select/move/remove, and the Sources tab. Migration pushed to the cloud right after the merge (16:21 UTC, before the next scan); Ken deployed `check-links`. Live test (Ken): 1 link added, 1 "page not found".
+- From Ken's live test:
+    - The Add sources dialog keeps one height on both tabs; its content scrolls inside.
+    - Search on the left, Add sources on the right.
+    - Move to… always shows. The Move dialog offers "New watch list…" with a name field: it creates the list and moves the sources in one go.
+- Checked: type check, build. In the browser: both dialog tabs the same height, the toolbar, moving a source into a new list (it appeared in the side nav).
+- Not checked: the phone layout and light mode.
+- Next: Keywords job.
+
 ## 2026-10-29: Sources tab and table
 
 - The watch list has two tabs: **Stories** (default) and **Sources**, with a red badge counting failing sources.
