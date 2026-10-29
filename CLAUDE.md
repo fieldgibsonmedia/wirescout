@@ -35,14 +35,15 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
 
 ## What is live (check it before every change)
 
-- The scanner is live: `.github/workflows/scraper.yml` runs on `main` every 4 hours and emails real journalists.
-    - Anything merged to `main` goes live on the next run.
-    - Never trigger the workflow (`workflow_dispatch`) and never run `npm start` with real email settings: both email real people.
+- The old prototype scanner: `.github/workflows/scraper.yml` runs on `main` every 4 hours. Step 4 replaces it.
+    - It has failed since 2026-10-27, and `EMAIL_RECIPIENTS` was removed on 2026-10-29, so it emails nobody. Ken treats it as a prototype: don't fix it.
+    - Never trigger the workflow (`workflow_dispatch`) and never run `npm start` with real email settings.
 - The workflow commits `src/state.json` to `main` after each run ("Update state [skip ci]"). Expect those commits; never edit or revert them.
 - The web app: `.github/workflows/deploy-app.yml` publishes it to GitHub Pages (`kennethzuniga.github.io/wirescout/`) on every push to `main`. It uses the cloud Supabase project.
 - The repo is public: everything committed is visible to anyone.
-- Supabase cloud project: no real users yet. You may push migrations to it after Ken's "approve".
-    - Once journalists are invited, it is production: from then on, treat it like any live database (`safety.md`).
+- Supabase cloud project: Ken's account only, no journalists yet. Sign-ups are open to allowed email domains. You may push migrations to it after Ken's "approve".
+    - Its settings live in the dashboard (Ken changes them): site URL, the sign-up hook, the 3 email templates, and SMTP (a Gmail account with an app password).
+    - Once journalists sign up, it is production: from then on, treat it like any live database (`safety.md`).
 - Develop and test against the local Supabase (`docs/project.md`), never against the cloud project.
 - When journalists start using the web app, update this section.
 
@@ -54,7 +55,7 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
     - After Ken says "approve" on a job, commit it. Then ask him before merging its branch into `mvp` and pushing `mvp` (`safety.md`, "Never commit or merge without asking"). No PR and no PR text for jobs: the PR rules in `workflow.md` apply only to releases (`mvp` into `main`). Mistakes there can be undone.
     - Only Ken merges `mvp` into `main`, once per finished stage. Before each release, merge `origin/main` into `mvp` (it has the scanner's state commits).
     - `main` must stay the GitHub default branch: scheduled workflows run from the default branch, so switching it would put unreleased work live.
-- There is no `gh` CLI. For a release PR: push `mvp`, show Ken the PR title and description, and after he says "approve" give him the GitHub compare link into `main`.
+- `gh` is installed and signed in as Ken. For a release PR: push `mvp`, show Ken the PR title and description, and after he says "approve" open it yourself (`gh pr create --base main --head mvp`). Only Ken merges it: merging PRs from here is denied in `.claude/settings.json`.
 - No mention of Claude, Claude Code or AI in branch names, commits or PRs.
 
 ## Security rules

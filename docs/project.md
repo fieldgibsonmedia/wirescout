@@ -15,7 +15,7 @@ An internal Field Gibson Media tool for journalists. It watches a curated list o
 
 The MVP stack is decided in `docs/mvp-plan.md`. Built so far:
 
-- Supabase (Postgres 17 + Auth), developed locally with the Supabase CLI (`npx supabase`, a dev dependency) in Docker.
+- Supabase (Postgres 17 + Auth), developed locally with the Supabase CLI (`npx supabase`, a dev dependency) in Docker. The cloud project sends account emails through a Gmail account (SMTP, app password), set in its dashboard.
 - Web app: Vue 3 + TypeScript, Vite, Tailwind + DaisyUI, Reka UI, Vue Router, `@supabase/supabase-js`, `read-excel-file` (bulk source upload). It talks to Supabase directly; access is protected by row-level security. Published on GitHub Pages at `kennethzuniga.github.io/wirescout/`.
 
 ## Layout
@@ -80,7 +80,7 @@ npm ci
 
 - Docker Desktop must be running.
 - Start: `npx supabase start`. Stop: `npx supabase stop`.
-- Local URLs and demo keys: `npx supabase status`. Local emails (invites, sign-in links) go to Mailpit at http://127.0.0.1:54324.
+- Local URLs and demo keys: `npx supabase status`. Local emails (account and password emails) go to Mailpit at http://127.0.0.1:54324.
 - New schema change: `npx supabase migration new <name>`, then `npx supabase db reset` to rebuild the local database.
 
 ## Before a PR

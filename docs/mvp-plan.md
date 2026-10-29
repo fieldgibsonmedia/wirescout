@@ -18,7 +18,7 @@ Agreed with Ken on 2026-10-27. Turns the prototype into an internal MVP for more
 | Backend | Supabase free tier: login, Postgres, row-level security, Edge Functions | Free; no server of our own to run |
 | Architecture | Decoupled but small: static app + Supabase + scanner | Each part is free to host; no API layer to maintain |
 | Scanner | GitHub Actions on a schedule, state in Supabase | Free (public repo); stops committing `state.json` to `main` |
-| Email | Current SMTP setup | Already works |
+| Email | A Gmail account over SMTP, with an app password | Microsoft 365 ends password SMTP in December 2026, and a company-domain sender (e.g. Brevo) needs DNS records IT won't add |
 | Posting | Supabase Edge Function calls a "receive draft" endpoint on each site | CMS credentials stay server-side |
 | Sharing | LinkedIn and email through share links: LinkedIn's share window and the user's own email app | No setup, no logins to expire, free; the journalist posts or sends as themselves |
 | Look | Apple's web blue (`#0071E3`) as the primary colour until Wirescout has a brand | Apple's system blue `#007AFF` is too light for white button text (4.0:1) |
@@ -38,7 +38,7 @@ For each source URL, in order:
 ## Data model (outline)
 
 - **Users:** sign up and sign in through Supabase Auth. Only emails on the allowed list can sign up (self sign-up below).
-    - The invite email opens a "Set your password" page. After that: email + password, with a "Forgot password" link.
+    - Email + password, with a "Forgot password" link that opens a "Set your password" page.
     - Passwords, not emailed sign-in links: company email scanners "pre-click" links and break one-time sign-in links.
 - **Publications:** Environmental Finance, InsuranceERM, Insurance Asset Risk, Corporate Disclosures.
 - **User ↔ publication:** which magazines each user may post to (their magazine channels). Set by an admin by hand. Some users have none, some have several.
@@ -52,7 +52,7 @@ For each source URL, in order:
 
 ## Screens (step 3)
 
-- **Login:** set your password (from the invite), sign in, forgot password.
+- **Login:** sign in, sign up, forgot password, set your password (from the reset email), request access.
 - **Layout:** same as hub. Side nav with Dashboard, then "Watch lists" (every list, plus "New watch list"), then Settings at the bottom. Top bar with the account menu (Account settings, Sign out).
 - **Dashboard:** one box per watch list with its number of new items.
 - **Watch list:** its articles, 50 at a time with "Load more", each with a Share menu, plus adding and removing sources by URL.
