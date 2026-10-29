@@ -32,8 +32,11 @@ For each source URL, in order:
 1. **RSS/Atom feed:** auto-discover it from the page. Stable when the site's design changes.
 2. **Automatic list detection:** Cheerio finds the repeated blocks of article links.
 3. **Optional AI fallback:** only for sources the first two can't read. Pennies per month.
+    - Not built in step 4 (Ken, 2026-10-29): first see how many sources journalists add can't be read.
 
 **Health check:** when a source suddenly returns 0 articles, or far fewer than usual, a dev gets an email.
+
+**Schedule:** the scanner runs every hour (Ken, 2026-10-29), so the app stays current through the day and the digest has everything up to about an hour before it's sent. Once a day was ruled out: the app would lag a day, and one failed run would lose a day.
 
 ## Data model (outline)
 

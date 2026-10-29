@@ -2,6 +2,17 @@
 
 Bugs found while working on something else. One entry each: date, what, where, how to see it.
 
+## 2026-10-29: 10 of the 23 old sources can't be read without a browser
+
+- Munich Re, Lloyd's, Hannover Re, Bank of England, Gallagher Re, Zurich, AIG (global), Tokio Marine, BaFin, Geneva Association: their pages build the story list with JavaScript, or turn away anything that isn't a browser. (Count from 2026-10-29; BaFin and Munich Re have stories only in menus.)
+- The scanner shows them as "No stories found" and the health email lists them on their first check.
+- Waiting on the AI fallback decision (`docs/mvp-plan.md`, "Scanning without selectors"), once we know how many sources journalists add fail.
+
+## 2026-10-29: A guessed or linked feed can hold more than the page
+
+- When a page names a site-wide feed, or the scanner guesses `/feed`, the feed can include stories the page doesn't show (e.g. blog posts next to press releases). Seen on AXA XL and Capgemini.
+- See it: the source's `feed_url` in Table Editor → `sources`.
+
 ## 2026-10-29: An email change isn't checked against the allowed list
 
 - The sign-up check (`hook_before_user_created`) only runs when an account is created.
@@ -17,23 +28,3 @@ Bugs found while working on something else. One entry each: date, what, where, h
 
 - `nodemailer` 6.10.1 (direct dependency) and `undici` 7.18.2 (through `cheerio`). Already on `main`, not added by the Supabase work.
 - See them with `npm audit`. Fixing `nodemailer` needs a major upgrade.
-
-## 2026-10-27: 14 of 23 sources return no articles, silently
-
-- The last stored scan in `src/state.json` has articles from only 9 sources.
-- Missing: Munich Re, ABI, Lloyd's, Hannover Re, GDV, Bank of England, Capgemini, Zurich, AIG (both), Tokio Marine, AXA, BaFin, Geneva Association.
-- Likely causes: changed HTML, pages built with JavaScript, or bot blocking. Nothing alerts anyone.
-- The new scanner and its health check (`docs/mvp-plan.md`) address this.
-
-## 2026-10-27: A failed source floods the next alert with old articles
-
-- `src/index.js`: a source that errors returns `[]`, and `saveState` then overwrites `state.json` without that source's articles.
-- When the source works again, all its current articles look new and get emailed again.
-
-## 2026-10-27: Typo in the Munich Re title selector
-
-- `src/sites.js`: `"div. searchResults__resultPressReleaseTitle"` has a space after `div.`, so it matches nothing.
-
-## 2026-10-27: Alert email has no explicit sender
-
-- `src/utils/email.js` uses `config.emailFrom`, but `CONFIG` in `src/index.js` never sets it. The SMTP server falls back to the login account.
