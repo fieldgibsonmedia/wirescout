@@ -32,7 +32,8 @@ All code lives in `src/`: the web app in `src/app/`, and the scanner (moving int
 - `src/utils/state.js`: load, save and compare `state.json`.
 - `src/utils/email.js`: builds and sends the alert email.
 - `reset.js`: empties `state.json`.
-- `supabase/config.toml`: local Supabase settings (sign-ups off: invite only).
+- `supabase/config.toml`: local Supabase settings (sign-ups on for allowed emails, the sign-up check, email templates).
+- `supabase/templates/`: the account emails (confirm account, new password, email change). The cloud project needs the same templates pasted into its dashboard.
 - `supabase/migrations/`: the database schema and access rules, one SQL file per change.
 - `supabase/tests/database/`: access tests (pgTAP).
 - `supabase/seed.sql`: made-up sources and articles, loaded into the local database on every reset.
@@ -61,10 +62,17 @@ npm ci
 1. Start the local Supabase (below).
 2. `npm run dev`, then open http://127.0.0.1:3000.
 3. To get a local test user:
-    - Invite a made-up address (e.g. `test@example.com`) in Studio (http://127.0.0.1:54323), Authentication → Invite.
-    - Open the invite in Mailpit and set a password.
+    - Create an account on the sign-up page with a made-up address at an allowed domain (e.g. `test@fieldgibsonmedia.com`).
+    - Open the email in Mailpit and click Confirm.
     - Optional, to see a magazine under Settings → Channels: Table Editor → `user_publications` → Insert row, with the user and a `publication_id` (1 Environmental Finance, 2 InsuranceERM, 3 Insurance Asset Risk, 4 Corporate Disclosures).
 4. Add `https://news.example.com/press` or `https://regulator.example.org/updates` to a watch list to see the seed articles.
+
+## Admin tasks (in Studio, or the cloud dashboard)
+
+- **Let someone sign up:** Table Editor → `allowed_email_domains` → Insert row, with a domain (`example.com`) or one full address. Lower case.
+- **Access requests:** Table Editor → `access_requests`. Add the address to the allowed list, reply by email, then set `handled_at` to now.
+- **A magazine for a user:** Table Editor → `user_publications` → Insert row.
+- **A leaver:** their account stays until you delete it: Authentication → Users → the user → Delete. Their watch lists go with it.
 
 ## Local Supabase
 

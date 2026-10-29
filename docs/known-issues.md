@@ -2,6 +2,12 @@
 
 Bugs found while working on something else. One entry each: date, what, where, how to see it.
 
+## 2026-10-29: An email change isn't checked against the allowed list
+
+- The sign-up check (`hook_before_user_created`) only runs when an account is created.
+- A signed-in user can change their email to any address in Account settings, after confirming from both addresses.
+- Low risk for an internal tool: they already had an allowed email.
+
 ## 2026-10-27: An access test fails when the local database has users
 
 - `supabase/tests/database/access.test.sql`, "A profile is created for each new user", counts every profile and expects 2.
