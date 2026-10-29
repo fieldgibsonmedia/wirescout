@@ -10,7 +10,12 @@ Newest first. One entry per job: date, what was done, what's next.
 - Cloud database: the 5 new migrations pushed (all 6 match local).
 - Checked: the scanner installed like the workflow (Node 22, `--omit=dev`) and ran once, emailing a throwaway local inbox; type check and build pass; the app built for `/wirescout/` and served like Pages (5 browser checks: deep links, email link, sign in, reload).
 - Not checked: the real Pages deploy and the live app (Ken's steps).
-- Next (Ken, guided): Pages source "GitHub Actions", merge `mvp` into `main`, Supabase dashboard settings, click through the live app. Then step 4.
+- Released (PR #4, merged by Ken): the deploy passed and the app is live.
+- Cloud settings done by Ken: site URL, sign-up hook, 3 email templates, sign-ups on.
+- Email: the cloud SMTP failed (Gmail no longer takes a normal password). Microsoft 365 was ruled out (password SMTP ends December 2026), and Brevo with the company domain needs DNS records IT won't add. Now Gmail with an app password.
+- Ken signed up on the live app, confirmed by email and reached the dashboard.
+- `gh` installed and signed in, so release PRs are opened from here. `EMAIL_RECIPIENTS` removed from GitHub secrets (the old scanner, failing since 2026-10-27, is a prototype).
+- Next: step 4, the new scanner. When it or the digest sends email from GitHub, Ken updates the `EMAIL_*` secrets to the Gmail app password.
 
 ## 2026-10-29: Self sign-up (build step 3, job 2)
 
