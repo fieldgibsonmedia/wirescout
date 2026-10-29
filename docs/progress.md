@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-29: Paste links
+
+- "Add many at once" has two tabs: **Paste links** (default) and **Upload a file**. The component is now `AddManySources.vue` (was `SourceFileImport.vue`).
+- Paste: one link per line, text around them is fine, a bare domain on its own line gets `https://`. While typing: "4 links ready · 2 lines aren't links", with the bad lines listed. Add checks the links like the upload and clears the box.
+- Checked: type check, build, scanner tests. In the browser: 6 pasted lines (4 links incl. a bare domain, 2 bad lines), Add gave 3 added and 1 "page not found"; the Upload tab with a 13-link file.
+- Not checked: light mode and 320 px; no database or scanner change.
+- Next: Select, move and remove sources job.
+
 ## 2026-10-29: Check links
 
 - New Edge Function `check-links`: checks up to 10 links per call with the scanner's own code (`src/scanner/check-link.js`, imported from `src/scanner/`). Signed-in users only (`withSupabase`), public `http(s)` addresses only, at most 15 seconds per link.
