@@ -3,8 +3,8 @@
 // Opening it marks the stories shown as seen, so the dashboard's new count starts again from zero.
 import { ArrowTopRightOnSquareIcon, ExclamationTriangleIcon, PlusIcon } from '@heroicons/vue/20/solid';
 import { onMounted, ref } from 'vue';
+import AddManySources from '@/components/AddManySources.vue';
 import ShareMenu from '@/components/ShareMenu.vue';
-import SourceFileImport from '@/components/SourceFileImport.vue';
 import SourceMenu from '@/components/SourceMenu.vue';
 import WatchListMenu from '@/components/WatchListMenu.vue';
 import Alert from '@/components/ui/Alert.vue';
@@ -361,7 +361,7 @@ onMounted(load);
                         </div>
                     </form>
 
-                    <SourceFileImport :watch-list-id="id" :sources="sources" @added="showAdded" />
+                    <AddManySources :watch-list-id="id" :sources="sources" @added="showAdded" />
 
                     <Alert v-if="removeFailed" type="error">The source couldn't be removed. Please try again.</Alert>
 
