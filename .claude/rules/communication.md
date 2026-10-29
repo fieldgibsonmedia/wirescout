@@ -37,6 +37,13 @@ Before changing anything that reaches live users (the scanner, its emails, and l
 - List who could be affected and what you checked, in plain words.
 - `CLAUDE.md` lists what is live in this project.
 
+## Data changes, even local
+
+Before changing any data, even locally (including a database reset):
+
+- Say what will change and how Ken can do it himself.
+- Wait for his ok.
+
 ## Decide or ask
 
 - Decide the obvious yourself: naming, versions, ordinary defaults. Say what you chose in one line.
