@@ -2,6 +2,15 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-29: Repo moved to the company GitHub account
+
+- Ken transferred the repo from `kennethzuniga` to `fieldgibsonmedia` (a company user account, not an organization). Workflows and the `EMAIL_*` secrets moved with it.
+- The web app is now at `fieldgibsonmedia.github.io/wirescout/` (GitHub doesn't redirect the old Pages address). Ken re-ran the deploy and set the Supabase site URL and redirect URL to the new address.
+- Checked: the new address serves the app and its deep links; a password-reset email linked to the new address and worked (Ken).
+- This Mac: `gh` and git use only `fieldgibsonmedia`; the `kennethzuniga` login and saved git password were removed. The old `gh` token was not revoked on GitHub, because Ken uses it on his personal machine.
+- Docs and comments updated to the new account.
+- Next: step 4, the new scanner.
+
 ## 2026-10-29: Deploy from `main` (deploy job)
 
 - Decided: each finished stage goes from `mvp` into `main` and is tested live, instead of one release at the end.
