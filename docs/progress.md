@@ -2,6 +2,16 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-29: Check links
+
+- New Edge Function `check-links`: checks up to 10 links per call with the scanner's own code (`src/scanner/check-link.js`, imported from `src/scanner/`). Signed-in users only (`withSupabase`), public `http(s)` addresses only, at most 15 seconds per link.
+- The single add field, the file upload and the Fix/Edit dialog check links first ("Validating source(s)…"). Working links are added; the others aren't, with one line per reason. Long lists go 10 per call, 3 calls at a time.
+- Scanner: certificate and connection errors are "can't be reached" in Deno too (any fetch `TypeError`).
+- Checked: 17 scanner tests (incl. a local test server: works, 404, 403, no stories, too slow, private addresses), db lint, type check, build. The function served locally: 6 real links in 4.4 s with the right reasons, 401 without sign-in, 11 links refused, CORS preflight OK. In the browser: one bad and one good link in each of the add field and Fix dialog, a 13-link file (8 added, 4 refused with reasons, 1 already in the list).
+- Not checked: the database tests (no migration in this job; the local database has a test user, see `known-issues.md`); the deploy to the cloud.
+- Release order: Ken deploys the function before merging (`npx supabase functions deploy check-links --use-api`), or adding links breaks on the live app.
+- Next: Paste links job.
+
 ## 2026-10-29: Fix sources
 
 - Scanner: saves why a source couldn't be read in `sources.problem`: `not_found` (404, 410), `blocked` (401, 403, 429), `unreachable` (timeouts, connection and certificate errors, 5xx), empty otherwise.

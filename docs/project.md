@@ -33,6 +33,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `supabase/config.toml`: local Supabase settings (sign-ups on for allowed emails, the sign-up check, email templates).
 - `supabase/templates/`: the account emails (confirm account, new password, email change). The cloud project needs the same templates pasted into its dashboard.
 - `supabase/migrations/`: the database schema and access rules, one SQL file per change.
+- `supabase/functions/check-links/`: an Edge Function that checks links before they're added, with the scanner's own code (`src/scanner/check-link.js`). Up to 10 links per call, signed-in users only.
 - `supabase/tests/database/`: access tests (pgTAP).
 - `supabase/seed.sql`: made-up sources and articles, loaded into the local database on every reset.
 
@@ -88,6 +89,7 @@ npm ci
 - Start: `npx supabase start`. Stop: `npx supabase stop`.
 - Local URLs and demo keys: `npx supabase status`. Local emails (account and password emails) go to Mailpit at http://127.0.0.1:54324.
 - New schema change: `npx supabase migration new <name>`, then `npx supabase db reset` to rebuild the local database.
+- Edge Functions (`check-links`) run with the local Supabase. If it was started before a function existed, run `npx supabase functions serve`.
 
 ## Before a PR
 

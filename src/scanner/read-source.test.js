@@ -17,6 +17,8 @@ test("tells why a source couldn't be read", () => {
 test("a site that's down or too slow can't be reached", () => {
   const certificateError = new TypeError("fetch failed", { cause: Object.assign(new Error(), { code: "CERT_HAS_EXPIRED" }) });
   assert.equal(readProblem(certificateError), "unreachable");
+  // Deno, where the check-links function runs, gives no cause.
+  assert.equal(readProblem(new TypeError("error sending request: invalid peer certificate: Expired")), "unreachable");
   assert.equal(readProblem(new DOMException("The operation was aborted due to timeout", "TimeoutError")), "unreachable");
 });
 
