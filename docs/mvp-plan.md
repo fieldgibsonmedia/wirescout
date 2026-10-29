@@ -37,11 +37,11 @@ For each source URL, in order:
 
 ## Data model (outline)
 
-- **Users:** sign in through Supabase Auth, invite only (public sign-ups are off) until self sign-up (job 2 below).
+- **Users:** sign up and sign in through Supabase Auth. Only emails on the allowed list can sign up (self sign-up below).
     - The invite email opens a "Set your password" page. After that: email + password, with a "Forgot password" link.
     - Passwords, not emailed sign-in links: company email scanners "pre-click" links and break one-time sign-in links.
 - **Publications:** Environmental Finance, InsuranceERM, Insurance Asset Risk, Corporate Disclosures.
-- **User ↔ publication:** which magazines each user may post to (their magazine channels). Set by an admin. Some users have none.
+- **User ↔ publication:** which magazines each user may post to (their magazine channels). Set by an admin by hand. Some users have none, some have several.
 - **Watch lists:** owned by one user: a name plus its sources. Not tied to a magazine: the destination is picked per story when sharing.
 - **User settings (on the profile):** name, digest time (any minute, or off), time zone, and which share options (LinkedIn, Email, Copy link) their Share menu shows.
     - The time zone isn't picked: the app takes it from the browser on every visit, London if it can't.
@@ -90,13 +90,14 @@ For each source URL, in order:
 - Stories go in as **drafts** so an editor still reviews them.
 - All 4 magazines run on MODX today, and MODX has no ready-made API for creating articles. Each site needs one small "receive draft" endpoint.
 - All 4 are moving to Statamic (months away). Its API is read-only, so it will need the same endpoint. Wirescout doesn't change: only the endpoint on each site is swapped.
+- **Open, decided in step 6:** who may post to which magazine. A user can write for several magazines, and should only reach the ones where they have a writer or editor account in MODX (later Statamic, through the users-service). Until then an admin adds magazines by hand; nothing is linked from the email domain (decided 2026-10-29).
 
 ### Self sign-up (job 2 of step 3)
 
 - Sign-up page (email + password), linked from sign-in. Replaces invites.
-- Allowed list in a table `allowed_email_domains` (domains plus single full addresses, editable in Studio): fieldgibsonmedia.com, environmental-finance.com, insuranceassetrisk.com, insuranceerm.com, corporatedisclosures.org. Enforced by a Supabase "before user created" hook (check it's on the free plan first).
-- Magazine linked automatically from the domain (fieldgibsonmedia.com gets none).
-- Verification, password-reset and email-change emails: a link to a Wirescout page with a confirm button (token hash), so email scanners can't use up the link. Templates in `config.toml`; Ken pastes the cloud ones into the dashboard.
+- Allowed list in a table `allowed_email_domains` (domains plus single full addresses, editable in Studio): fieldgibsonmedia.com, environmental-finance.com, insuranceassetrisk.com, insuranceerm.com, corporatedisclosures.org. Enforced by a Supabase "before user created" hook (on the free plan).
+- Signing up gives no magazine: see "Post from Wirescout".
+- Verification, password-reset and email-change emails: a link to a Wirescout page with a confirm button (token hash), so email scanners can't use up the link. Templates in `supabase/templates/`; Ken pastes the cloud ones into the dashboard.
 - "Account creation denied" ends with "Request access": name, email, reason. Stored in `access_requests` (insert only, one open request per email, length limits, honeypot). Ken approves by adding the address to the allowed list and replying himself.
 - Email change in Account settings comes with this job (it sends confirmation links).
 - Leavers: their account stays until Ken deletes it in the dashboard (documented).

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// The signed-in person's account: their name, their password, and the theme on this device.
+// The signed-in person's account: their name, email and password, and the theme on this device.
 import { nextTick, ref, watch } from 'vue';
 import Alert from '@/components/ui/Alert.vue';
 import Button from '@/components/ui/Button.vue';
@@ -14,6 +14,12 @@ const name = ref('');
 const nameBusy = ref(false);
 const nameSaved = ref(false);
 const nameFailed = ref(false);
+
+const newEmail = ref('');
+const emailError = ref('');
+const emailBusy = ref(false);
+const emailSentTo = ref('');
+const emailFailed = ref(false);
 
 const passwordForm = ref<HTMLFormElement>();
 const currentPassword = ref('');
@@ -49,6 +55,40 @@ async function saveName() {
 
     nameSaved.value = ok;
     nameFailed.value = !ok;
+}
+
+async function changeEmail() {
+    emailSentTo.value = '';
+    emailFailed.value = false;
+    emailError.value = '';
+    if (!newEmail.value.trim()) {
+        emailError.value = 'Enter your new email.';
+        return;
+    }
+    if (newEmail.value.trim().toLowerCase() === profile.value?.email.toLowerCase()) {
+        emailError.value = 'This is already your email.';
+        return;
+    }
+
+    emailBusy.value = true;
+    const { error } = await supabase.auth.updateUser({ email: newEmail.value.trim() });
+    emailBusy.value = false;
+
+    if (error?.code === 'email_exists') {
+        emailError.value = 'This email already has a Wirescout account.';
+        return;
+    }
+    if (error?.code === 'validation_failed') {
+        emailError.value = 'Enter a valid email, like name@example.com.';
+        return;
+    }
+    if (error) {
+        emailFailed.value = true;
+        return;
+    }
+
+    emailSentTo.value = newEmail.value.trim();
+    newEmail.value = '';
 }
 
 async function changePassword() {
@@ -124,6 +164,31 @@ async function showPasswordErrors() {
                 <Button type="submit" :busy="nameBusy">Save</Button>
                 <Alert v-if="nameSaved" type="success">Saved.</Alert>
                 <Alert v-if="nameFailed" type="error">Your name couldn't be saved. Please try again.</Alert>
+            </div>
+        </form>
+    </Card>
+
+    <Card>
+        <form class="flex max-w-md flex-col gap-6" novalidate @submit.prevent="changeEmail">
+            <h2 class="text-xl font-bold">Email</h2>
+            <TextField
+                v-model="newEmail"
+                name="new-email"
+                label="New email"
+                type="email"
+                autocomplete="email"
+                :helper="`Now ${profile?.email ?? ''}. You'll confirm the change from both addresses.`"
+                :error="emailError"
+                required
+            />
+
+            <div class="flex flex-wrap items-center gap-4">
+                <Button type="submit" :busy="emailBusy">Change email</Button>
+                <Alert v-if="emailSentTo" type="success">
+                    Check both inboxes: we've sent a link to {{ profile?.email }} and to {{ emailSentTo }}. Your email changes once
+                    both are confirmed.
+                </Alert>
+                <Alert v-if="emailFailed" type="error">Your email couldn't be changed. Please try again in a few minutes.</Alert>
             </div>
         </form>
     </Card>

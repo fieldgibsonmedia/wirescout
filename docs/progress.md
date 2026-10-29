@@ -2,6 +2,18 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-29: Self sign-up (build step 3, job 2)
+
+- Sign-up page linked from sign-in. Only emails in `allowed_email_domains` (5 company domains, or single addresses) get an account: a Supabase "before user created" hook (free plan) refuses the rest.
+- Refused emails see "Account creation denied" and a Request access form (name, email, reason) that saves to `access_requests`: insert only, one open request per email, length limits, bot trap.
+- Account, password-reset and email-change emails link to a Confirm page that acts only on click, so email scanners can't use the links up. Templates in `supabase/templates/`.
+- Email change in Account settings (confirmed from both addresses); the profile follows the new email.
+- Signing up gives no magazine: Ken decided to settle magazine access in step 6 (MODX/Statamic accounts).
+- New rule in `communication.md`: ask before changing any data, even locally.
+- Checked: 37 database tests pass, db lint clean, type check and build pass, 17 browser checks with made-up users (every flow, 320 px, dark mode).
+- Cloud, after merge (Ken, guided): push the 5 new migrations, turn on sign-ups, email confirmations and the hook, paste the 3 templates, set the site URL.
+- Next: deploy job (GitHub Pages).
+
 ## 2026-10-27: Watch lists web app and dashboard (build step 3)
 
 - Vue web app in `src/app/`: sign in, set password (from invite or reset email), forgot password, dashboard, watch list.
@@ -12,34 +24,7 @@ Newest first. One entry per job: date, what was done, what's next.
 - 3 new migrations, 22 database tests. Checked in a browser against the local Supabase with made-up users: every flow, 320/768/1280 px, dark mode, keyboard.
 - Not done yet: publishing the app (GitHub Pages) and pushing the new migrations to the cloud project.
 
-### Where we left off (paused 2026-10-27)
-
-All work above is **uncommitted** on branch `feature/watch-lists-ui` (Ken hasn't reviewed it yet). Ken's local test account is in the local database: ask before any `npx supabase db reset`, it deletes local users.
-
-**Job 1 done (2026-10-28), same branch, still uncommitted:**
-
-- Daily digest: on/off switch and a time field to the minute; time zone taken from the browser on every visit (London if it can't), shown as text. New migration `digest_time` (`digest_hour` becomes a time; `time_zone` defaults to London and can't be empty).
-- Account menu on Reka's dropdown (closes on outside click), with "Account settings": name, password change (current password checked by signing in again), theme Auto/Light/Dark saved per device.
-- Watch list: "⋯" menu with Rename and Delete (new `ConfirmDialog`), stories 50 at a time with "Load more", and "Add many at once" from an `.xlsx`, `.csv` or `.txt` file (`read-excel-file` 9.3.12, loaded only for `.xlsx`).
-- Decisions and the new build order recorded in `mvp-plan.md`.
-- Checked: database tests 23/24 (the 1 failure is the known one: Ken's local user), db lint clean, type check and build pass. Ken clicked through the changes in the browser.
-- The current-password check runs in the app only. Supabase can also enforce it on the server; that's a cloud setting to decide with job 2.
-
-**Waiting for Ken's "approve":**
-
-1. Commit and push this branch, then the PR text.
-2. Push the 4 new migrations to the cloud project.
-3. Rule suggestion for `communication.md`: "Before changing any data, even locally (including a database reset), say what will change and how Ken can do it himself, and wait for his ok."
-
-**Job 2 (next branch, agreed): self sign-up instead of invites**
-
-- Sign-up page (email + password), linked from sign-in.
-- Allowed list in a table `allowed_email_domains` (domains plus single full addresses, editable in Studio): fieldgibsonmedia.com, environmental-finance.com, insuranceassetrisk.com, insuranceerm.com, corporatedisclosures.org. Enforced by a Supabase "before user created" hook (check it's on the free plan first).
-- Magazine linked automatically from the domain (fieldgibsonmedia.com gets none).
-- Verification, password-reset and email-change emails: a link to a Wirescout page with a confirm button (token hash), so email scanners can't use up the link. Templates in `config.toml`; Ken pastes the cloud ones into the dashboard.
-- "Account creation denied" message ends with "Request access": name, email, reason. Stored in `access_requests` (insert only, one open request per email, length limits, honeypot). Ken approves by adding the address to the allowed list and replying himself.
-- Email change in Account settings moves here (it sends confirmation links).
-- Leavers: their account stays until Ken deletes it in the dashboard (document it).
+Job 1 (2026-10-28): daily digest on/off and time to the minute, Account settings (name, password, theme), Rename and Delete for watch lists, 50 stories at a time, sources from an `.xlsx`, `.csv` or `.txt` file. Committed and merged into `mvp`.
 
 **Agreed for later jobs:**
 
@@ -50,7 +35,7 @@ All work above is **uncommitted** on branch `feature/watch-lists-ui` (Ken hasn't
 
 **New build order:** finish step 3 (jobs 1 and 2) → deploy job (GitHub Pages) → step 4 scanner → keywords → step 5 digest → usage report → step 6 post to magazines.
 
-- Next: Ken reviews and approves the commit, then job 2.
+- Next: job 2, self sign-up.
 
 ## 2026-10-27: Supabase database and login (build step 2)
 

@@ -23,7 +23,35 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "articles": {
+            "access_requests": {
+                  Row: {
+                    "created_at": string,"email": string,"handled_at": string | null,"id": number,"name": string,"reason": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"email": string,"handled_at"?: string | null,"id"?: never,"name": string,"reason": string
+                  }
+                  Update: {
+                    "created_at"?: string,"email"?: string,"handled_at"?: string | null,"id"?: never,"name"?: string,"reason"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"allowed_email_domains": {
+                  Row: {
+                    "created_at": string,"entry": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"entry": string
+                  }
+                  Update: {
+                    "created_at"?: string,"entry"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"articles": {
                   Row: {
                     "first_seen_at": string,"id": number,"published_at": string | null,"source_id": string,"summary": string | null,"title": string,"url": string
                   }
@@ -183,7 +211,9 @@ isOneToOne: false
                 }
           }
           Functions: {
-            [_ in never]: never
+            "hook_before_user_created":
+{ Args: { "event": Json }; Returns: Json
+                           }
           }
           Enums: {
             [_ in never]: never
