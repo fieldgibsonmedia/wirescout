@@ -12,7 +12,7 @@ import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import TextField from '@/components/ui/TextField.vue';
-import { addSources, isWebAddress, sourceLabel, type Source } from '@/lib/sources';
+import { addSources, isWebAddress, SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
 
 const props = defineProps<{
@@ -59,7 +59,7 @@ async function load() {
 
     const [list, listSources] = await Promise.all([
         supabase.from('watch_lists').select('name, last_viewed_at').eq('id', props.id).maybeSingle(),
-        supabase.from('watch_list_sources').select('sources (id, url, name)').eq('watch_list_id', props.id).order('created_at'),
+        supabase.from('watch_list_sources').select(`sources (${SOURCE_COLUMNS})` as const).eq('watch_list_id', props.id).order('created_at'),
     ]);
 
     if (list.error || listSources.error) {
@@ -75,7 +75,7 @@ async function load() {
 
     name.value = list.data.name;
     lastViewedAt.value = list.data.last_viewed_at;
-    sources.value = listSources.data.map(({ sources: source }) => ({ id: source.id, url: source.url, label: sourceLabel(source) }));
+    sources.value = listSources.data.map(({ sources: source }) => toSource(source));
 
     await loadArticles();
     loading.value = false;
@@ -293,6 +293,7 @@ onMounted(load);
                             <div class="min-w-0">
                                 <p class="font-medium break-words">{{ source.label }}</p>
                                 <p class="text-sm break-words text-base-content/70">{{ source.url }}</p>
+                                <p class="text-sm text-base-content/70">{{ source.status }}</p>
                             </div>
                             <Button variant="ghost" :busy="removing === source.id" @click="removeSource(source.id)">
                                 Remove<span class="sr-only"> {{ source.label }}</span>

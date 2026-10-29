@@ -2,6 +2,18 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-29: New scanner (build step 4)
+
+- `src/scanner/` replaces the prototype: no selectors. Each source is read from its feed (the address itself, one named in the page, or a guessed `/feed`), or else from the page's biggest list of headline links. Newest 50 per source.
+- Saves new stories to Supabase (secret key); stories are never deleted, so a failing source no longer floods the next alert.
+- Only sources that a watch list follows. `scanner.yml` runs every hour at :17, one run at a time.
+- Source status on the watch list page: "Working · Last checked 10:40", "No stories found · …", "Not checked yet". New columns on `sources` (1 migration); users can only set `url` and `name`.
+- Health email to `ADMIN_EMAIL` when a source just broke (0, under half of last time, or unreadable on its first check). Logs show totals only.
+- Removed: `scraper.yml`, `src/index.js`, `sites.js`, `state.json`, `src/utils/`, `reset.js`.
+- 13 of the 23 old sources read (the prototype: 9). The other 10 need JavaScript or block bots (`known-issues.md`). AI fallback: not built, decided after we see real failures.
+- Checked: 10 scanner tests, 38 database tests, db lint, type check, build; two local scans (42 then 0 new stories, one health email in Mailpit, none on the second run); the 3 status texts in the browser.
+- Next: release, then the keywords job.
+
 ## 2026-10-29: Repo moved to the company GitHub account
 
 - Ken transferred the repo from `kennethzuniga` to `fieldgibsonmedia` (a company user account, not an organization). Workflows and the `EMAIL_*` secrets moved with it.
