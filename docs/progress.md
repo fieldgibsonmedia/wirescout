@@ -2,6 +2,16 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-29: Deploy from `main` (deploy job)
+
+- Decided: each finished stage goes from `mvp` into `main` and is tested live, instead of one release at the end.
+- `deploy-app.yml` publishes the web app to GitHub Pages on every push to `main`, at `/wirescout/`, with `404.html` so email links open the app. `.env.production` points it at the cloud Supabase.
+- Scanner workflow: Node 22 and `npm ci --omit=dev`, so the web app's build tools (and the Supabase CLI download) stay out of the live scanner.
+- Cloud database: the 5 new migrations pushed (all 6 match local).
+- Checked: the scanner installed like the workflow (Node 22, `--omit=dev`) and ran once, emailing a throwaway local inbox; type check and build pass; the app built for `/wirescout/` and served like Pages (5 browser checks: deep links, email link, sign in, reload).
+- Not checked: the real Pages deploy and the live app (Ken's steps).
+- Next (Ken, guided): Pages source "GitHub Actions", merge `mvp` into `main`, Supabase dashboard settings, click through the live app. Then step 4.
+
 ## 2026-10-29: Self sign-up (build step 3, job 2)
 
 - Sign-up page linked from sign-in. Only emails in `allowed_email_domains` (5 company domains, or single addresses) get an account: a Supabase "before user created" hook (free plan) refuses the rest.
@@ -11,7 +21,7 @@ Newest first. One entry per job: date, what was done, what's next.
 - Signing up gives no magazine: Ken decided to settle magazine access in step 6 (MODX/Statamic accounts).
 - New rule in `communication.md`: ask before changing any data, even locally.
 - Checked: 37 database tests pass, db lint clean, type check and build pass, 17 browser checks with made-up users (every flow, 320 px, dark mode).
-- Cloud, after merge (Ken, guided): push the 5 new migrations, turn on sign-ups, email confirmations and the hook, paste the 3 templates, set the site URL.
+- Cloud, after the deploy (Ken, guided): turn on sign-ups, email confirmations and the hook, paste the 3 templates, set the site URL.
 - Next: deploy job (GitHub Pages).
 
 ## 2026-10-27: Watch lists web app and dashboard (build step 3)

@@ -13,10 +13,6 @@ Bugs found while working on something else. One entry each: date, what, where, h
 - `supabase/tests/database/access.test.sql`, "A profile is created for each new user", counts every profile and expects 2.
 - Invite a local test user, then run `npx supabase test db`: it fails with "have: 4, want: 2". Passes after `npx supabase db reset`.
 
-## 2026-10-27: The scanner workflow uses Node 20, which is past its end of life
-
-- `.github/workflows/scraper.yml` sets `node-version: "20"`. Node 20 stopped getting security fixes in April 2026.
-
 ## 2026-10-27: `npm audit` reports high-severity issues in `nodemailer` and `undici`
 
 - `nodemailer` 6.10.1 (direct dependency) and `undici` 7.18.2 (through `cheerio`). Already on `main`, not added by the Supabase work.

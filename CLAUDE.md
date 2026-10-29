@@ -39,21 +39,22 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
     - Anything merged to `main` goes live on the next run.
     - Never trigger the workflow (`workflow_dispatch`) and never run `npm start` with real email settings: both email real people.
 - The workflow commits `src/state.json` to `main` after each run ("Update state [skip ci]"). Expect those commits; never edit or revert them.
+- The web app: `.github/workflows/deploy-app.yml` publishes it to GitHub Pages (`kennethzuniga.github.io/wirescout/`) on every push to `main`. It uses the cloud Supabase project.
 - The repo is public: everything committed is visible to anyone.
 - Supabase cloud project: no real users yet. You may push migrations to it after Ken's "approve".
     - Once journalists are invited, it is production: from then on, treat it like any live database (`safety.md`).
 - Develop and test against the local Supabase (`docs/project.md`), never against the cloud project.
-- When the MVP (UI, Supabase) goes live, update this section.
+- When journalists start using the web app, update this section.
 
 ## Git hosting
 
 - GitHub (`kennethzuniga/wirescout`), public.
-- `main` is the live branch. `mvp` collects the MVP work until release.
+- `main` is the live branch. `mvp` collects the MVP work; each finished stage goes from `mvp` into `main`.
     - Branch from the latest `origin/mvp`.
-    - After Ken says "approve" on a job, commit it. Then ask him before merging its branch into `mvp` and pushing `mvp` (`safety.md`, "Never commit or merge without asking"). No PR and no PR text for jobs: the PR rules in `workflow.md` apply only to the release (`mvp` into `main`). Mistakes there can be undone.
-    - Only Ken merges `mvp` into `main`, when the MVP is ready to release.
+    - After Ken says "approve" on a job, commit it. Then ask him before merging its branch into `mvp` and pushing `mvp` (`safety.md`, "Never commit or merge without asking"). No PR and no PR text for jobs: the PR rules in `workflow.md` apply only to releases (`mvp` into `main`). Mistakes there can be undone.
+    - Only Ken merges `mvp` into `main`, once per finished stage. Before each release, merge `origin/main` into `mvp` (it has the scanner's state commits).
     - `main` must stay the GitHub default branch: scheduled workflows run from the default branch, so switching it would put unreleased work live.
-- There is no `gh` CLI. For the release PR: push `mvp`, show Ken the PR title and description, and after he says "approve" give him the GitHub compare link into `main`.
+- There is no `gh` CLI. For a release PR: push `mvp`, show Ken the PR title and description, and after he says "approve" give him the GitHub compare link into `main`.
 - No mention of Claude, Claude Code or AI in branch names, commits or PRs.
 
 ## Security rules

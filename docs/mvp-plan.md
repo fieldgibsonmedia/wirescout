@@ -122,9 +122,9 @@ For each source URL, in order:
 
 ## Branches
 
-- Every MVP job: a branch from `mvp`, with a PR into `mvp`.
-- `main` stays live and untouched until the MVP is ready; then `mvp` is merged into `main` once.
-- `main` keeps getting "Update state" commits from the live scanner. Merge `main` into `mvp` before the release merge.
+- Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.
+- Each finished stage is released: Ken merges `mvp` into `main` through a PR, and it goes live (decided 2026-10-29, so stages are tested live instead of waiting for the whole MVP).
+- `main` keeps getting "Update state" commits from the live scanner. Merge `main` into `mvp` before each release.
 
 ## Build order
 
@@ -133,7 +133,7 @@ Jobs added on 2026-10-27 sit between the steps, so the step numbers stay the sam
 1. Docs and Claude setup
 2. Supabase: database, login, publications per user
 3. Watch lists UI and dashboard: job 1 (the screens), then job 2 (self sign-up)
-    - Deploy job: publish the web app on GitHub Pages
+    - Deploy job: publish the web app on GitHub Pages from `main`, and release each finished stage
 4. New scanner (feeds, auto-detection, health check, source status)
     - Keywords job
 5. Daily digest email
