@@ -1,18 +1,19 @@
 <script setup lang="ts">
-// A watch list: its stories, newest first, 50 at a time, and its sources, added and removed by URL.
-// Opening it marks the stories shown as seen, so the dashboard's new count starts again from zero.
-import { ArrowTopRightOnSquareIcon, PlusIcon } from '@heroicons/vue/20/solid';
-import { onMounted, ref } from 'vue';
+// A watch list in two tabs: Stories (newest first, 50 at a time) and Sources (SourcesTab), which shows how
+// many sources are failing. Opening it marks the stories shown as seen, so the dashboard's new count starts
+// again from zero.
+import { ArrowTopRightOnSquareIcon, ExclamationTriangleIcon } from '@heroicons/vue/20/solid';
+import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
+import { computed, onMounted, ref } from 'vue';
 import ShareMenu from '@/components/ShareMenu.vue';
-import SourceFileImport from '@/components/SourceFileImport.vue';
+import SourcesTab from '@/components/SourcesTab.vue';
 import WatchListMenu from '@/components/WatchListMenu.vue';
 import Alert from '@/components/ui/Alert.vue';
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
-import TextField from '@/components/ui/TextField.vue';
-import { addSources, isWebAddress, SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
+import { SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
 
 const props = defineProps<{
@@ -45,11 +46,8 @@ const loading = ref(true);
 const failed = ref(false);
 const notFound = ref(false);
 
-const newUrl = ref('');
-const urlError = ref('');
-const adding = ref(false);
-const removing = ref('');
-const removeFailed = ref(false);
+const tab = ref('stories');
+const failingSources = computed(() => sources.value.filter((source) => source.problem).length);
 
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -156,51 +154,6 @@ function toArticle(article: {
     };
 }
 
-async function addSource() {
-    urlError.value = '';
-    const url = newUrl.value.trim();
-    if (!isWebAddress(url)) {
-        urlError.value = 'Enter the full web address of a news page, starting with https://';
-        return;
-    }
-    if (sources.value.some((source) => source.url === url)) {
-        urlError.value = 'This source is already in the list.';
-        return;
-    }
-
-    adding.value = true;
-    const added = await addSources(props.id, [url]);
-    adding.value = false;
-
-    if (!added) {
-        urlError.value = "The source couldn't be added. Please try again.";
-        return;
-    }
-
-    newUrl.value = '';
-    await showAdded(added);
-}
-
-async function showAdded(added: Source[]) {
-    sources.value.push(...added);
-    await loadArticles();
-}
-
-async function removeSource(sourceId: string) {
-    removeFailed.value = false;
-    removing.value = sourceId;
-    const { error } = await supabase.from('watch_list_sources').delete().eq('watch_list_id', props.id).eq('source_id', sourceId);
-    removing.value = '';
-
-    if (error) {
-        removeFailed.value = true;
-        return;
-    }
-
-    sources.value = sources.value.filter((source) => source.id !== sourceId);
-    articles.value = articles.value.filter((article) => article.sourceId !== sourceId);
-}
-
 onMounted(load);
 </script>
 
@@ -224,12 +177,24 @@ onMounted(load);
             </template>
         </PageHeader>
 
-        <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
-            <section class="flex flex-col gap-4 lg:col-span-2" aria-labelledby="stories-heading">
-                <h2 id="stories-heading" class="text-xl font-bold">Stories</h2>
+        <TabsRoot v-model="tab" class="flex flex-col gap-4">
+            <TabsList aria-label="Watch list" class="tabs tabs-border">
+                <TabsTrigger value="stories" class="tab data-[state=active]:tab-active">Stories</TabsTrigger>
+                <TabsTrigger value="sources" class="tab gap-2 data-[state=active]:tab-active">
+                    Sources
+                    <span v-if="failingSources > 0" class="badge badge-sm badge-error gap-1">
+                        <ExclamationTriangleIcon class="size-3" aria-hidden="true" />
+                        {{ failingSources }}<span class="sr-only"> failing</span>
+                    </span>
+                </TabsTrigger>
+            </TabsList>
 
+            <TabsContent value="stories" class="flex flex-col gap-4">
                 <Card v-if="articles.length === 0">
-                    <p v-if="sources.length === 0" class="max-w-prose">Add a source to start seeing its stories.</p>
+                    <p v-if="sources.length === 0" class="max-w-prose">
+                        Add a source to start seeing its stories.
+                        <button type="button" class="link" @click="tab = 'sources'">Go to Sources</button>
+                    </p>
                     <p v-else class="max-w-prose">No stories yet. New ones appear here after the next scan.</p>
                 </Card>
 
@@ -258,50 +223,11 @@ onMounted(load);
                     <Alert v-if="moreFailed" type="error">More stories couldn't be loaded. Please try again.</Alert>
                     <Button variant="outline" :busy="loadingMore" @click="loadMore">Load more</Button>
                 </div>
-            </section>
+            </TabsContent>
 
-            <section class="flex flex-col gap-4" aria-labelledby="sources-heading">
-                <h2 id="sources-heading" class="text-xl font-bold">Sources</h2>
-
-                <Card>
-                    <form class="flex flex-col gap-2" novalidate @submit.prevent="addSource">
-                        <TextField
-                            v-model="newUrl"
-                            name="url"
-                            label="News page address"
-                            type="url"
-                            inputmode="url"
-                            autocomplete="url"
-                            placeholder="https://"
-                            :error="urlError"
-                        />
-                        <div>
-                            <Button type="submit" variant="outline" :busy="adding">
-                                <PlusIcon v-if="!adding" class="size-5" aria-hidden="true" />
-                                Add source
-                            </Button>
-                        </div>
-                    </form>
-
-                    <SourceFileImport :watch-list-id="id" :sources="sources" @added="showAdded" />
-
-                    <Alert v-if="removeFailed" type="error">The source couldn't be removed. Please try again.</Alert>
-
-                    <p v-if="sources.length === 0" class="text-base-content/70">No sources yet.</p>
-                    <ul v-else class="flex flex-col divide-y divide-base-300 border-t border-base-300">
-                        <li v-for="source in sources" :key="source.id" class="flex items-center justify-between gap-3 py-2">
-                            <div class="min-w-0">
-                                <p class="font-medium break-words">{{ source.label }}</p>
-                                <p class="text-sm break-words text-base-content/70">{{ source.url }}</p>
-                                <p class="text-sm text-base-content/70">{{ source.status }}</p>
-                            </div>
-                            <Button variant="ghost" :busy="removing === source.id" @click="removeSource(source.id)">
-                                Remove<span class="sr-only"> {{ source.label }}</span>
-                            </Button>
-                        </li>
-                    </ul>
-                </Card>
-            </section>
-        </div>
+            <TabsContent value="sources">
+                <SourcesTab v-model:sources="sources" :watch-list-id="id" @changed="loadArticles" />
+            </TabsContent>
+        </TabsRoot>
     </template>
 </template>

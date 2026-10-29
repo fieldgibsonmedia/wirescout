@@ -1,6 +1,6 @@
 -- Checks that each journalist only reaches their own data. Run: npx supabase test db
 begin;
-select plan(13);
+select plan(17);
 
 -- Two made-up users.
 insert into auth.users (id, email) values
@@ -8,7 +8,8 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000b', 'bob@example.com');
 
 insert into public.sources (id, url) values
-  ('00000000-0000-0000-0000-0000000000f1', 'https://example.com/news');
+  ('00000000-0000-0000-0000-0000000000f1', 'https://example.com/news'),
+  ('00000000-0000-0000-0000-0000000000f2', 'https://example.com/press');
 insert into public.articles (source_id, url, title) values
   ('00000000-0000-0000-0000-0000000000f1', 'https://example.com/news/1', 'Story one');
 
@@ -74,6 +75,15 @@ select throws_ok(
   'A user cannot set a source''s status'
 );
 
+update public.watch_list_sources set source_id = '00000000-0000-0000-0000-0000000000f2'
+where watch_list_id = '00000000-0000-0000-0000-0000000000a1';
+
+select is(
+  (select source_id from public.watch_list_sources where watch_list_id = '00000000-0000-0000-0000-0000000000a1'),
+  '00000000-0000-0000-0000-0000000000f2'::uuid,
+  'A user can swap a source in their own list'
+);
+
 -- As Bob
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-00000000000b", "role": "authenticated"}', true);
 
@@ -100,6 +110,29 @@ select throws_ok(
   '42501',
   null,
   'A user cannot add sources to someone else''s list'
+);
+
+with changed as (
+  update public.watch_list_sources set source_id = '00000000-0000-0000-0000-0000000000f1'
+  where watch_list_id = '00000000-0000-0000-0000-0000000000a1'
+  returning 1
+)
+select is(count(*)::int, 0, 'A user cannot change sources in someone else''s list') from changed;
+
+insert into public.watch_list_sources (watch_list_id, source_id)
+select id, '00000000-0000-0000-0000-0000000000f1' from public.watch_lists;
+
+select throws_ok(
+  $$ update public.watch_list_sources set watch_list_id = '00000000-0000-0000-0000-0000000000a1' $$,
+  '42501',
+  null,
+  'A user cannot move a source into someone else''s list'
+);
+
+select is(
+  (select count(*)::int from public.watch_list_sources),
+  1,
+  'A user sees only the sources in their own lists'
 );
 
 -- Signed out

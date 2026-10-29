@@ -2,6 +2,54 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-29: Sources tab and table
+
+- The watch list has two tabs: **Stories** (default) and **Sources**, with a red badge counting failing sources.
+- Sources is a table (`SourcesTab.vue`, TanStack Table `@tanstack/vue-table` 9.3.1, new dependency, Ken's choice): tick box, Source, Status, Last checked, and Fix plus "⋯" (Edit, Move to…, Remove). Failing sources first; click a header to sort. Search box. Ticked sources get a bar with Move to…, Remove and Clear; the header tick box ticks the sources shown.
+- **Add sources** opens a dialog (new `ui/Dialog.vue`) with Paste links and Upload a file; the single link field is gone.
+- On a phone the header hides and each row stacks into a small card.
+- Checked: type check, build, scanner tests. In the browser (desktop, dark): the tabs and badge, failing first, search, sorting by Last checked, ticking one and all, Clear, adding a link through the dialog.
+- Not checked: the phone layout (the browser window couldn't be resized) and light mode.
+- Next: Keywords job.
+
+## 2026-10-29: Select, move and remove sources
+
+- A **Select** button above the source list shows a tick box on each row. With sources ticked: "3 selected", **Move to…** and **Remove**.
+- Remove asks first ("Remove 3 sources?", Cancel focused, red Remove). Move to… opens a dialog with the user's other watch lists; the sources keep their stories. A source the other list already has is only taken out of this one.
+- The row's "⋯" menu has **Move to…** too (only when the user has another list). No database change: it uses the access rule from Fix sources.
+- Checked: type check, build, scanner tests. In the browser: moved 2 ticked sources, removed 2 ticked sources after the question, moved 1 from its menu into a list that already had it (checked in the database).
+- Not checked: light mode and 320 px.
+- Next: Keywords job.
+
+## 2026-10-29: Paste links
+
+- "Add many at once" has two tabs: **Paste links** (default) and **Upload a file**. The component is now `AddManySources.vue` (was `SourceFileImport.vue`).
+- Paste: one link per line, text around them is fine, a bare domain on its own line gets `https://`. While typing: "4 links ready · 2 lines aren't links", with the bad lines listed. Add checks the links like the upload and clears the box.
+- Checked: type check, build, scanner tests. In the browser: 6 pasted lines (4 links incl. a bare domain, 2 bad lines), Add gave 3 added and 1 "page not found"; the Upload tab with a 13-link file.
+- Not checked: light mode and 320 px; no database or scanner change.
+- Next: Select, move and remove sources job.
+
+## 2026-10-29: Check links
+
+- New Edge Function `check-links`: checks up to 10 links per call with the scanner's own code (`src/scanner/check-link.js`, imported from `src/scanner/`). Signed-in users only (`withSupabase`), public `http(s)` addresses only, at most 15 seconds per link.
+- The single add field, the file upload and the Fix/Edit dialog check links first ("Validating source(s)…"). Working links are added; the others aren't, with one line per reason. Long lists go 10 per call, 3 calls at a time.
+- Scanner: certificate and connection errors are "can't be reached" in Deno too (any fetch `TypeError`).
+- Checked: 17 scanner tests (incl. a local test server: works, 404, 403, no stories, too slow, private addresses), db lint, type check, build. The function served locally: 6 real links in 4.4 s with the right reasons, 401 without sign-in, 11 links refused, CORS preflight OK. In the browser: one bad and one good link in each of the add field and Fix dialog, a 13-link file (8 added, 4 refused with reasons, 1 already in the list).
+- Not checked: the database tests (no migration in this job; the local database has a test user, see `known-issues.md`); the deploy to the cloud.
+- Release order: Ken deploys the function before merging (`npx supabase functions deploy check-links --use-api`), or adding links breaks on the live app.
+- Next: Paste links job.
+
+## 2026-10-29: Fix sources
+
+- Scanner: saves why a source couldn't be read in `sources.problem`: `not_found` (404, 410), `blocked` (401, 403, 429), `unreachable` (timeouts, connection and certificate errors, 5xx), empty otherwise.
+- Source list: the domain (plus the end of the path when two rows share a site), the status line with the reason in red and a warning icon, a Fix button on failing sources, and a "⋯" menu with Edit and Remove on every row.
+- Fix/Edit dialog: the link field and Save; Fix adds one line on the problem. Save swaps the source in this list only and keeps its place; a link already in the list is refused.
+- 1 migration: the `problem` column, plus an access rule letting users change the sources in their own lists (Ken, 2026-10-29; the Move job needs it too).
+- Checked: 13 scanner tests, 42 database tests, db lint, type check, build. A local scan of real sites gave all 4 reasons; in the browser (dark mode, desktop): the rows, Fix with a duplicate and a new link, Edit, Remove.
+- Not checked: 320 px and light mode (the browser window couldn't be resized).
+- Release order: push the migration to the cloud before Ken merges, or the live scanner fails writing `problem`.
+- Next: Check links job.
+
 ## 2026-10-29: New scanner (build step 4)
 
 - `src/scanner/` replaces the prototype: no selectors. Each source is read from its feed (the address itself, one named in the page, or a guessed `/feed`), or else from the page's biggest list of headline links. Newest 50 per source.
@@ -12,7 +60,15 @@ Newest first. One entry per job: date, what was done, what's next.
 - Removed: `scraper.yml`, `src/index.js`, `sites.js`, `state.json`, `src/utils/`, `reset.js`.
 - 13 of the 23 old sources read (the prototype: 9). The other 10 need JavaScript or block bots (`known-issues.md`). AI fallback: not built, decided after we see real failures.
 - Checked: 10 scanner tests, 38 database tests, db lint, type check, build; two local scans (42 then 0 new stories, one health email in Mailpit, none on the second run); the 3 status texts in the browser.
-- Next: release, then the keywords job.
+- Released (PR #5, merged by Ken). Before the merge: migration pushed to the cloud; GitHub secrets `SUPABASE_SECRET_KEY` (Supabase key `wirescout_scanner`) and `ADMIN_EMAIL` added; `EMAIL_*` on the Gmail app password (Ken). The web app deploy passed.
+- First live scan (Ken ran it by hand, 2026-10-29 14:51 UTC): passed in about 2 minutes. 56 sources, 20 working, 36 with no stories, 279 new stories; the health email arrived.
+- Why the 36 fail: 16 wrong links (9 dead, checked in Chrome too; 7 home pages or redirects elsewhere), 8 block GitHub's servers (3 of them work from a normal connection), 5 down or with a broken certificate, 7 need JavaScript. Ken: a wrong link is the journalist's to fix, so the app must show why and let them fix it.
+- Planned from this test and Ken's list (`docs/mvp-plan.md`): Fix sources, Check links, Paste links, Select, move and remove sources, then keywords.
+- Next: the Fix sources job. Its plan, waiting for Ken's "approve":
+    - Scanner: save why a source failed in a new `sources.problem` column (1 migration): `not_found` (404, 410), `blocked` (401, 403, 429), `unreachable` (timeouts, connection and certificate errors, 5xx), empty otherwise (0 stories shows "No stories found"). Unit test for the mapping.
+    - Source list: the domain only (plus the end of the path when two rows share a domain), the status line, a warning icon with the reason and a Fix button on failing sources, and a "⋯" menu with Edit and Remove on every row.
+    - Fix/Edit dialog: one line on the problem (Fix only), the link field, Save. Save swaps the source in this list only; a link already in the list is refused.
+    - Release order: push the migration before Ken merges, or the live scanner fails writing the new column.
 
 ## 2026-10-29: Repo moved to the company GitHub account
 

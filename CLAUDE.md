@@ -35,10 +35,10 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
 
 ## What is live (check it before every change)
 
-- The old prototype scanner: `.github/workflows/scraper.yml` runs on `main` every 4 hours. Step 4 replaces it.
-    - It has failed since 2026-10-27, and `EMAIL_RECIPIENTS` was removed on 2026-10-29, so it emails nobody. Ken treats it as a prototype: don't fix it.
-    - Never trigger the workflow (`workflow_dispatch`) and never run `npm start` with real email settings.
-- The workflow commits `src/state.json` to `main` after each run ("Update state [skip ci]"). Expect those commits; never edit or revert them.
+- The scanner: `.github/workflows/scanner.yml` runs on `main` every hour at :17 (live since 2026-10-29).
+    - It writes stories and source status to the cloud Supabase project with the secret key (`SUPABASE_SECRET_KEY`, Supabase key `wirescout_scanner`).
+    - It emails only `ADMIN_EMAIL` (a developer), when a source breaks. It never emails journalists.
+    - Never trigger the workflow (`workflow_dispatch`), and never run `npm run scan` against the cloud project. Locally, point `EMAIL_*` at Mailpit.
 - The web app: `.github/workflows/deploy-app.yml` publishes it to GitHub Pages (`fieldgibsonmedia.github.io/wirescout/`) on every push to `main`. It uses the cloud Supabase project.
 - The repo is public: everything committed is visible to anyone.
 - Supabase cloud project: Ken's account only, no journalists yet. Sign-ups are open to allowed email domains. You may push migrations to it after Ken's "approve".
@@ -53,7 +53,7 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
 - `main` is the live branch. `mvp` collects the MVP work; each finished stage goes from `mvp` into `main`.
     - Branch from the latest `origin/mvp`.
     - After Ken says "approve" on a job, commit it. Then ask him before merging its branch into `mvp` and pushing `mvp` (`safety.md`, "Never commit or merge without asking"). No PR and no PR text for jobs: the PR rules in `workflow.md` apply only to releases (`mvp` into `main`). Mistakes there can be undone.
-    - Only Ken merges `mvp` into `main`, once per finished stage. Before each release, merge `origin/main` into `mvp` (it has the scanner's state commits).
+    - Only Ken merges `mvp` into `main`, once per finished stage. Before each release, merge `origin/main` into `mvp` (it may have commits made directly on `main`).
     - `main` must stay the GitHub default branch: scheduled workflows run from the default branch, so switching it would put unreleased work live.
 - `gh` is installed and signed in as `fieldgibsonmedia` (the company account Ken works under). For a release PR: push `mvp`, show Ken the PR title and description, and after he says "approve" open it yourself (`gh pr create --base main --head mvp`). Only Ken merges it: merging PRs from here is denied in `.claude/settings.json`.
 - No mention of Claude, Claude Code or AI in branch names, commits or PRs.
@@ -61,6 +61,6 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
 ## Security rules
 
 - `.env` is a secret: never read it into chat, never commit it.
-- Production secrets live in the repo's GitHub Actions secrets (`EMAIL_*`). Never read or change them.
+- Production secrets live in the repo's GitHub Actions secrets (`EMAIL_*`, `SUPABASE_SECRET_KEY`, `ADMIN_EMAIL`). Never read or change them.
 - Personal files in the repo folder are not project files: never read, commit, or reference them.
 - Journalists' email addresses are real people's data: never print or commit them. Use made-up addresses in tests and examples.

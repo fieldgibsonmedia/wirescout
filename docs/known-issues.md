@@ -8,6 +8,10 @@ Bugs found while working on something else. One entry each: date, what, where, h
 - The scanner shows them as "No stories found" and the health email lists them on their first check.
 - Waiting on the AI fallback decision (`docs/mvp-plan.md`, "Scanning without selectors"), once we know how many sources journalists add fail.
 
+## 2026-10-29: The same page can be added twice, as `http://` and `https://`
+
+- Sources are matched by their exact address, so `http://news.example.com/press` and `https://news.example.com/press` are two sources, scanned twice and shown twice in the list.
+
 ## 2026-10-29: A guessed or linked feed can hold more than the page
 
 - When a page names a site-wide feed, or the scanner guesses `/feed`, the feed can include stories the page doesn't show (e.g. blog posts next to press releases). Seen on AXA XL and Capgemini.

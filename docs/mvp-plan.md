@@ -110,6 +110,48 @@ For each source URL, in order:
 - Each source shows its status: "Working", "No stories found", "Last checked".
 - The scanner skips sources no watch list follows anymore.
 
+### Fix sources (job after step 4, agreed 2026-10-29)
+
+A wrong link is the journalist's to fix, so the app shows them which source fails, why, and lets them fix it.
+
+- Each source row shows the domain and a status line: "Working · Last checked 10:40", or a warning icon with the reason. No full link in the list (it crowds it).
+    - Two sources with the same domain also show the end of their path (`swissre.com · news_releases`).
+- Reasons, from the scanner's last check (saved on the source):
+    - "Page not found · check the address" (the site says 404).
+    - "The site blocks Wirescout" (403, 429).
+    - "The site can't be reached" (timeouts, certificate errors).
+    - "No stories found" (anything else).
+- A failing source has a **Fix** button. Every source has a "⋯" menu with **Edit** and **Remove**.
+- Fix and Edit open the same dialog: the link field and Save. Fix adds one line explaining the problem.
+- Save swaps the source in this watch list only (sources are shared, so the shared address never changes). The new link shows "Not checked yet" until the next scan.
+
+### Check links before adding (job after fix sources, agreed 2026-10-29)
+
+- Every way of adding a link (the single field, paste, file upload, the Fix and Edit dialog) checks it first: a spinner and "Validating source(s)…".
+- The check runs the scanner's own reading code in a Supabase Edge Function (free plan): a browser can't fetch other sites.
+- Links that work are added. The others aren't, with their reason:
+    - "X, Y and Z return "page not found". Check the links and try again."
+    - "A, B and C couldn't be added: the site blocks Wirescout."
+    - "The site can't be reached" (down, timeouts, certificate errors), and "No stories found".
+- The function runs on other servers than the hourly scan, so "blocks Wirescout" isn't always the same there: a link can pass and still be blocked on its first scan. The Fix button covers that.
+- Production step: Ken deploys the function to the cloud project.
+
+### Paste links (job after check links, agreed 2026-10-29)
+
+- "Add many at once" has two tabs: **Paste links** (default) and **Upload a file** (the drop zone as before). Replaces the 2026-10-27 "file upload only": paste comes on top of it.
+- Paste: a text area, one link per line; text around the links is fine, as in a file. Same finder and limit (100) as the upload.
+- Checked while typing: "12 links ready · 2 lines aren't links", listing the bad lines so they can be fixed before adding.
+- A bare domain (`presse.macif.fr`) counts: `https://` is added, as for `www.` today.
+- **Add** adds only the good links, with the same result line as the upload.
+
+### Select, move and remove sources (job after paste links, agreed 2026-10-29)
+
+- A **Select** button above the source list shows a checkbox on each row.
+- With sources ticked, a bar shows "3 selected" with **Move to…** and **Remove**.
+- Remove asks first ("Remove 3 sources?", red Remove, Cancel focused first).
+- Move to… lists the user's other watch lists; the sources move there and keep their stories.
+- The row's "⋯" menu also has **Move to…** for one source.
+
 ### Keywords (job after step 4)
 
 - Optional "Only show stories that mention…" per watch list: matches the title and summary, ignoring capitals.
@@ -127,7 +169,7 @@ For each source URL, in order:
 
 - Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.
 - Each finished stage is released: Ken merges `mvp` into `main` through a PR, and it goes live (decided 2026-10-29, so stages are tested live instead of waiting for the whole MVP).
-- `main` keeps getting "Update state" commits from the live scanner. Merge `main` into `mvp` before each release.
+- Merge `main` into `mvp` before each release, in case `main` has commits of its own.
 
 ## Build order
 
@@ -138,6 +180,10 @@ Jobs added on 2026-10-27 sit between the steps, so the step numbers stay the sam
 3. Watch lists UI and dashboard: job 1 (the screens), then job 2 (self sign-up)
     - Deploy job: publish the web app on GitHub Pages from `main`, and release each finished stage
 4. New scanner (feeds, auto-detection, health check, source status)
+    - Fix sources job
+    - Check links job
+    - Paste links job
+    - Select, move and remove sources job
     - Keywords job
 5. Daily digest email
     - Usage report job
