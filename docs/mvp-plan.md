@@ -127,7 +127,7 @@ For each source URL, in order:
 
 - Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.
 - Each finished stage is released: Ken merges `mvp` into `main` through a PR, and it goes live (decided 2026-10-29, so stages are tested live instead of waiting for the whole MVP).
-- `main` keeps getting "Update state" commits from the live scanner. Merge `main` into `mvp` before each release.
+- Merge `main` into `mvp` before each release, in case `main` has commits of its own.
 
 ## Build order
 
