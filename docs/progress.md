@@ -12,7 +12,15 @@ Newest first. One entry per job: date, what was done, what's next.
 - Removed: `scraper.yml`, `src/index.js`, `sites.js`, `state.json`, `src/utils/`, `reset.js`.
 - 13 of the 23 old sources read (the prototype: 9). The other 10 need JavaScript or block bots (`known-issues.md`). AI fallback: not built, decided after we see real failures.
 - Checked: 10 scanner tests, 38 database tests, db lint, type check, build; two local scans (42 then 0 new stories, one health email in Mailpit, none on the second run); the 3 status texts in the browser.
-- Next: release, then the keywords job.
+- Released (PR #5, merged by Ken). Before the merge: migration pushed to the cloud; GitHub secrets `SUPABASE_SECRET_KEY` (Supabase key `wirescout_scanner`) and `ADMIN_EMAIL` added; `EMAIL_*` on the Gmail app password (Ken). The web app deploy passed.
+- First live scan (Ken ran it by hand, 2026-10-29 14:51 UTC): passed in about 2 minutes. 56 sources, 20 working, 36 with no stories, 279 new stories; the health email arrived.
+- Why the 36 fail: 16 wrong links (9 dead, checked in Chrome too; 7 home pages or redirects elsewhere), 8 block GitHub's servers (3 of them work from a normal connection), 5 down or with a broken certificate, 7 need JavaScript. Ken: a wrong link is the journalist's to fix, so the app must show why and let them fix it.
+- Planned from this test and Ken's list (`docs/mvp-plan.md`): Fix sources, Check links, Paste links, Select, move and remove sources, then keywords.
+- Next: the Fix sources job. Its plan, waiting for Ken's "approve":
+    - Scanner: save why a source failed in a new `sources.problem` column (1 migration): `not_found` (404, 410), `blocked` (401, 403, 429), `unreachable` (timeouts, connection and certificate errors, 5xx), empty otherwise (0 stories shows "No stories found"). Unit test for the mapping.
+    - Source list: the domain only (plus the end of the path when two rows share a domain), the status line, a warning icon with the reason and a Fix button on failing sources, and a "⋯" menu with Edit and Remove on every row.
+    - Fix/Edit dialog: one line on the problem (Fix only), the link field, Save. Save swaps the source in this list only; a link already in the list is refused.
+    - Release order: push the migration before Ken merges, or the live scanner fails writing the new column.
 
 ## 2026-10-29: Repo moved to the company GitHub account
 
