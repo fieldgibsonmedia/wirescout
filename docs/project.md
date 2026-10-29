@@ -10,13 +10,13 @@ An internal Field Gibson Media tool for journalists. It watches a curated list o
 - `cheerio` parses each source's HTML with hand-written CSS selectors.
 - `chrono-node` parses article dates.
 - `nodemailer` sends alerts over SMTP (`EMAIL_*` variables).
-- GitHub Actions runs the scanner every 4 hours (`.github/workflows/scraper.yml`).
-- Git: GitHub (`kennethzuniga/wirescout`), public. `main` is live; MVP work goes into `mvp` until release.
+- GitHub Actions runs the scanner every 4 hours (`.github/workflows/scraper.yml`), on Node 22, installing only the runtime packages (`npm ci --omit=dev`).
+- Git: GitHub (`kennethzuniga/wirescout`), public. `main` is live; MVP work goes into `mvp`, and each finished stage is merged into `main`.
 
 The MVP stack is decided in `docs/mvp-plan.md`. Built so far:
 
 - Supabase (Postgres 17 + Auth), developed locally with the Supabase CLI (`npx supabase`, a dev dependency) in Docker.
-- Web app: Vue 3 + TypeScript, Vite, Tailwind + DaisyUI, Reka UI, Vue Router, `@supabase/supabase-js`, `read-excel-file` (bulk source upload). It talks to Supabase directly; access is protected by row-level security.
+- Web app: Vue 3 + TypeScript, Vite, Tailwind + DaisyUI, Reka UI, Vue Router, `@supabase/supabase-js`, `read-excel-file` (bulk source upload). It talks to Supabase directly; access is protected by row-level security. Published on GitHub Pages at `kennethzuniga.github.io/wirescout/`.
 
 ## Layout
 
@@ -26,6 +26,8 @@ All code lives in `src/`: the web app in `src/app/`, and the scanner (moving int
 - `src/app/`: the web app. `pages/` (one file per screen), `components/` (`ui/` holds the shared building blocks, copied from hub), `layouts/`, `lib/supabase.ts` (the connection), `router.ts`.
 - `src/app/lib/database.types.ts`: generated from the local database with `npm run types`. Regenerate after a schema change.
 - `.env.development`: the web app's connection to the local Supabase (public demo values, safe to commit).
+- `.env.production`: the live app's connection to the cloud Supabase project (public URL and publishable key, safe to commit).
+- `.github/workflows/deploy-app.yml`: builds the web app and publishes it to GitHub Pages on every push to `main`.
 - `src/index.js`: fetch each source, extract articles, compare with the last scan, email the new ones.
 - `src/sites.js`: the hardcoded source list, with CSS selectors per source.
 - `src/state.json`: the last scan. The workflow commits it to `main` after every run.
