@@ -197,3 +197,36 @@ export async function replaceSource(watchListId: string, sourceId: string, url: 
 
     return toSource(data);
 }
+
+// Takes sources out of a watch list. Their stories stay in other lists that follow them.
+export async function removeSources(watchListId: string, sourceIds: string[]) {
+    const { error } = await supabase.from('watch_list_sources').delete().eq('watch_list_id', watchListId).in('source_id', sourceIds);
+    return !error;
+}
+
+// Moves sources to another of the user's watch lists; they keep their stories. A source the other list
+// already follows is only taken out of this one. Returns false if they couldn't be moved.
+export async function moveSources(fromWatchListId: string, toWatchListId: string, sourceIds: string[]) {
+    const { data, error } = await supabase
+        .from('watch_list_sources')
+        .select('source_id')
+        .eq('watch_list_id', toWatchListId)
+        .in('source_id', sourceIds);
+    if (error) {
+        return false;
+    }
+
+    const there = new Set(data.map((link) => link.source_id));
+    const toMove = sourceIds.filter((id) => !there.has(id));
+    if (toMove.length > 0) {
+        const moved = await supabase
+            .from('watch_list_sources')
+            .update({ watch_list_id: toWatchListId })
+            .eq('watch_list_id', fromWatchListId)
+            .in('source_id', toMove);
+        if (moved.error) {
+            return false;
+        }
+    }
+    return there.size === 0 || (await removeSources(fromWatchListId, [...there]));
+}

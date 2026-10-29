@@ -2,6 +2,15 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-29: Select, move and remove sources
+
+- A **Select** button above the source list shows a tick box on each row. With sources ticked: "3 selected", **Move to…** and **Remove**.
+- Remove asks first ("Remove 3 sources?", Cancel focused, red Remove). Move to… opens a dialog with the user's other watch lists; the sources keep their stories. A source the other list already has is only taken out of this one.
+- The row's "⋯" menu has **Move to…** too (only when the user has another list). No database change: it uses the access rule from Fix sources.
+- Checked: type check, build, scanner tests. In the browser: moved 2 ticked sources, removed 2 ticked sources after the question, moved 1 from its menu into a list that already had it (checked in the database).
+- Not checked: light mode and 320 px.
+- Next: Keywords job.
+
 ## 2026-10-29: Paste links
 
 - "Add many at once" has two tabs: **Paste links** (default) and **Upload a file**. The component is now `AddManySources.vue` (was `SourceFileImport.vue`).
