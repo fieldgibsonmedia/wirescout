@@ -2,10 +2,11 @@
   "name": "wirescout",
   "version": "1.0.0",
   "description": "Lightweight scraper bot that monitors websites for new articles",
-  "main": "src/index.js",
+  "main": "src/scanner/index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
+    "scan": "node src/scanner/index.js",
+    "test": "node --test \"src/scanner/**/*.test.js\"",
     "dev": "vite",
     "build": "vite build",
     "type-check": "vue-tsc --noEmit",
