@@ -1,36 +1,20 @@
 <script setup lang="ts">
-// A watch list: its stories, newest first, 50 at a time, and its sources, added, fixed, moved and removed by URL.
-// Opening it marks the stories shown as seen, so the dashboard's new count starts again from zero.
-import { ArrowTopRightOnSquareIcon, ExclamationTriangleIcon, PlusIcon } from '@heroicons/vue/20/solid';
+// A watch list in two tabs: Stories (newest first, 50 at a time) and Sources (SourcesTab), which shows how
+// many sources are failing. Opening it marks the stories shown as seen, so the dashboard's new count starts
+// again from zero.
+import { ArrowTopRightOnSquareIcon, ExclamationTriangleIcon } from '@heroicons/vue/20/solid';
+import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
 import { computed, onMounted, ref } from 'vue';
-import AddManySources from '@/components/AddManySources.vue';
 import ShareMenu from '@/components/ShareMenu.vue';
-import SourceMenu from '@/components/SourceMenu.vue';
+import SourcesTab from '@/components/SourcesTab.vue';
 import WatchListMenu from '@/components/WatchListMenu.vue';
 import Alert from '@/components/ui/Alert.vue';
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
-import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
-import FormDialog from '@/components/ui/FormDialog.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
-import SelectField from '@/components/ui/SelectField.vue';
-import TextField from '@/components/ui/TextField.vue';
-import {
-    addSources,
-    checkLinks,
-    checkMessages,
-    isWebAddress,
-    listLabel,
-    moveSources,
-    removeSources,
-    replaceSource,
-    SOURCE_COLUMNS,
-    toSource,
-    type Source,
-} from '@/lib/sources';
+import { SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
-import { watchLists } from '@/lib/watchLists';
 
 const props = defineProps<{
     id: string;
@@ -62,34 +46,8 @@ const loading = ref(true);
 const failed = ref(false);
 const notFound = ref(false);
 
-const newUrl = ref('');
-const urlError = ref('');
-const adding = ref(false);
-const removing = ref('');
-const removeFailed = ref(false);
-
-// Select mode: a tick box on each source, then Move to… or Remove for the ticked ones.
-const selecting = ref(false);
-const selected = ref<string[]>([]);
-const confirmingRemove = ref(false);
-const removeBusy = ref(false);
-const removeError = ref('');
-
-// The Move dialog: the sources being moved (one from its menu, or the ticked ones) and where to.
-const moving = ref<string[]>([]);
-const moveTarget = ref('');
-const moveErrors = ref<Record<string, string>>({});
-const moveBusy = ref(false);
-const moved = ref('');
-
-const otherLists = computed(() => watchLists.value.filter((list) => list.id !== props.id).map((list) => ({ value: list.id, label: list.name })));
-
-// The Fix and Edit dialog: the source being changed, and whether it opened from Fix (it then says what's wrong).
-const editing = ref<Source | null>(null);
-const fixing = ref(false);
-const editUrl = ref('');
-const editErrors = ref<Record<string, string>>({});
-const saving = ref(false);
+const tab = ref('stories');
+const failingSources = computed(() => sources.value.filter((source) => source.problem).length);
 
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -196,174 +154,6 @@ function toArticle(article: {
     };
 }
 
-async function addSource() {
-    urlError.value = '';
-    const url = newUrl.value.trim();
-    if (!isWebAddress(url)) {
-        urlError.value = 'Enter the full web address of a news page, starting with https://';
-        return;
-    }
-    if (sources.value.some((source) => source.url === url)) {
-        urlError.value = 'This source is already in the list.';
-        return;
-    }
-
-    adding.value = true;
-    const problem = await checkLink(url);
-    if (problem) {
-        adding.value = false;
-        urlError.value = problem;
-        return;
-    }
-    const added = await addSources(props.id, [url]);
-    adding.value = false;
-
-    if (!added) {
-        urlError.value = "The source couldn't be added. Please try again.";
-        return;
-    }
-
-    newUrl.value = '';
-    await showAdded(added);
-}
-
-function startEdit(source: Source, fix: boolean) {
-    editing.value = source;
-    fixing.value = fix;
-    editUrl.value = source.url;
-    editErrors.value = {};
-}
-
-async function saveEdit() {
-    const source = editing.value!;
-    const url = editUrl.value.trim();
-    if (url === source.url) {
-        editing.value = null;
-        return;
-    }
-    if (!isWebAddress(url)) {
-        editErrors.value = { url: 'Enter the full web address of a news page, starting with https://' };
-        return;
-    }
-    if (sources.value.some((other) => other.url === url)) {
-        editErrors.value = { url: 'This source is already in the list.' };
-        return;
-    }
-
-    saving.value = true;
-    const problem = await checkLink(url);
-    if (problem) {
-        saving.value = false;
-        editErrors.value = { url: problem };
-        return;
-    }
-    const saved = await replaceSource(props.id, source.id, url);
-    saving.value = false;
-
-    if (!saved) {
-        editErrors.value = { url: "The source couldn't be saved. Please try again." };
-        return;
-    }
-
-    editing.value = null;
-    sources.value = sources.value.map((other) => (other.id === source.id ? saved : other));
-    await loadArticles();
-}
-
-// Checks one link with the scanner's code: why it can't be used, or null if it works.
-async function checkLink(url: string) {
-    const checks = await checkLinks([url]);
-    if (!checks) {
-        return "The link couldn't be checked. Please try again.";
-    }
-    return checks[0].problem ? checkMessages(checks, ['This link'])[0] : null;
-}
-
-async function showAdded(added: Source[]) {
-    sources.value.push(...added);
-    await loadArticles();
-}
-
-async function removeSource(sourceId: string) {
-    moved.value = '';
-    removeFailed.value = false;
-    removing.value = sourceId;
-    const removed = await removeSources(props.id, [sourceId]);
-    removing.value = '';
-
-    if (!removed) {
-        removeFailed.value = true;
-        return;
-    }
-
-    dropSources([sourceId]);
-}
-
-// Takes moved or removed sources, and their stories, off the page.
-function dropSources(sourceIds: string[]) {
-    sources.value = sources.value.filter((source) => !sourceIds.includes(source.id));
-    articles.value = articles.value.filter((article) => !sourceIds.includes(article.sourceId));
-    selected.value = selected.value.filter((id) => !sourceIds.includes(id));
-}
-
-function stopSelecting() {
-    selecting.value = false;
-    selected.value = [];
-}
-
-function startRemoveSelected() {
-    moved.value = '';
-    removeError.value = '';
-    confirmingRemove.value = true;
-}
-
-async function removeSelected() {
-    removeBusy.value = true;
-    const removed = await removeSources(props.id, selected.value);
-    removeBusy.value = false;
-
-    if (!removed) {
-        removeError.value = "The sources couldn't be removed. Please try again.";
-        return;
-    }
-
-    confirmingRemove.value = false;
-    dropSources(selected.value);
-    stopSelecting();
-}
-
-function startMove(sourceIds: string[]) {
-    moved.value = '';
-    moveTarget.value = '';
-    moveErrors.value = {};
-    moving.value = sourceIds;
-}
-
-async function move() {
-    if (!moveTarget.value) {
-        moveErrors.value = { list: 'Choose a watch list.' };
-        return;
-    }
-
-    moveBusy.value = true;
-    const done = await moveSources(props.id, moveTarget.value, moving.value);
-    moveBusy.value = false;
-
-    if (!done) {
-        moveErrors.value = { list: "The sources couldn't be moved. Please try again." };
-        return;
-    }
-
-    const count = moving.value.length;
-    const listName = otherLists.value.find((list) => list.value === moveTarget.value)?.label;
-    moved.value = `${count === 1 ? '1 source' : `${count} sources`} moved to ${listName}.`;
-    dropSources(moving.value);
-    moving.value = [];
-    if (selected.value.length === 0) {
-        stopSelecting();
-    }
-}
-
 onMounted(load);
 </script>
 
@@ -387,12 +177,24 @@ onMounted(load);
             </template>
         </PageHeader>
 
-        <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
-            <section class="flex flex-col gap-4 lg:col-span-2" aria-labelledby="stories-heading">
-                <h2 id="stories-heading" class="text-xl font-bold">Stories</h2>
+        <TabsRoot v-model="tab" class="flex flex-col gap-4">
+            <TabsList aria-label="Watch list" class="tabs tabs-border">
+                <TabsTrigger value="stories" class="tab data-[state=active]:tab-active">Stories</TabsTrigger>
+                <TabsTrigger value="sources" class="tab gap-2 data-[state=active]:tab-active">
+                    Sources
+                    <span v-if="failingSources > 0" class="badge badge-sm badge-error gap-1">
+                        <ExclamationTriangleIcon class="size-3" aria-hidden="true" />
+                        {{ failingSources }}<span class="sr-only"> failing</span>
+                    </span>
+                </TabsTrigger>
+            </TabsList>
 
+            <TabsContent value="stories" class="flex flex-col gap-4">
                 <Card v-if="articles.length === 0">
-                    <p v-if="sources.length === 0" class="max-w-prose">Add a source to start seeing its stories.</p>
+                    <p v-if="sources.length === 0" class="max-w-prose">
+                        Add a source to start seeing its stories.
+                        <button type="button" class="link" @click="tab = 'sources'">Go to Sources</button>
+                    </p>
                     <p v-else class="max-w-prose">No stories yet. New ones appear here after the next scan.</p>
                 </Card>
 
@@ -421,143 +223,11 @@ onMounted(load);
                     <Alert v-if="moreFailed" type="error">More stories couldn't be loaded. Please try again.</Alert>
                     <Button variant="outline" :busy="loadingMore" @click="loadMore">Load more</Button>
                 </div>
-            </section>
+            </TabsContent>
 
-            <section class="flex flex-col gap-4" aria-labelledby="sources-heading">
-                <h2 id="sources-heading" class="text-xl font-bold">Sources</h2>
-
-                <Card>
-                    <form class="flex flex-col gap-2" novalidate @submit.prevent="addSource">
-                        <TextField
-                            v-model="newUrl"
-                            name="url"
-                            label="News page address"
-                            type="url"
-                            inputmode="url"
-                            autocomplete="url"
-                            placeholder="https://"
-                            :error="urlError"
-                        />
-                        <p v-if="adding" role="status" class="text-sm">Validating source…</p>
-                        <div>
-                            <Button type="submit" variant="outline" :busy="adding">
-                                <PlusIcon v-if="!adding" class="size-5" aria-hidden="true" />
-                                Add source
-                            </Button>
-                        </div>
-                    </form>
-
-                    <AddManySources :watch-list-id="id" :sources="sources" @added="showAdded" />
-
-                    <Alert v-if="removeFailed" type="error">The source couldn't be removed. Please try again.</Alert>
-                    <Alert v-if="moved" type="success">{{ moved }}</Alert>
-
-                    <div v-if="sources.length > 0" class="flex flex-wrap items-center justify-end gap-2 border-t border-base-300 pt-4">
-                        <template v-if="selecting">
-                            <p role="status" class="me-auto font-medium">{{ selected.length }} selected</p>
-                            <Button v-if="selected.length > 0 && otherLists.length > 0" variant="outline" @click="startMove(selected)">Move to…</Button>
-                            <Button v-if="selected.length > 0" variant="outline" @click="startRemoveSelected">Remove</Button>
-                            <Button variant="ghost" @click="stopSelecting">Done</Button>
-                        </template>
-                        <Button v-else variant="ghost" @click="selecting = true">Select</Button>
-                    </div>
-
-                    <p v-if="sources.length === 0" class="text-base-content/70">No sources yet.</p>
-                    <ul v-else class="flex flex-col divide-y divide-base-300 border-t border-base-300">
-                        <li
-                            v-for="source in sources"
-                            :key="source.id"
-                            :class="['flex items-center justify-between gap-3 py-2', { 'opacity-50': removing === source.id }]"
-                            :aria-busy="removing === source.id"
-                        >
-                            <div class="flex min-w-0 items-center gap-3">
-                                <input
-                                    v-if="selecting"
-                                    :id="`select-${source.id}`"
-                                    v-model="selected"
-                                    type="checkbox"
-                                    :value="source.id"
-                                    class="checkbox shrink-0"
-                                />
-                                <div class="min-w-0">
-                                    <label v-if="selecting" :for="`select-${source.id}`" class="block cursor-pointer font-medium break-words">
-                                        {{ listLabel(source, sources) }}
-                                    </label>
-                                    <p v-else class="font-medium break-words">{{ listLabel(source, sources) }}</p>
-                                    <p :class="['flex gap-1 text-sm', source.problem ? 'text-error' : 'text-base-content/70']">
-                                        <ExclamationTriangleIcon v-if="source.problem" class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                                        {{ source.status }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="flex shrink-0 items-center gap-1">
-                                <Button v-if="source.problem" variant="outline" @click="startEdit(source, true)">
-                                    Fix<span class="sr-only"> {{ listLabel(source, sources) }}</span>
-                                </Button>
-                                <SourceMenu
-                                    :label="listLabel(source, sources)"
-                                    :can-move="otherLists.length > 0"
-                                    @edit="startEdit(source, false)"
-                                    @move="startMove([source.id])"
-                                    @remove="removeSource(source.id)"
-                                />
-                            </div>
-                        </li>
-                    </ul>
-                </Card>
-
-                <FormDialog
-                    :open="moving.length > 0"
-                    :title="moving.length === 1 ? 'Move source' : `Move ${moving.length} sources`"
-                    description="They keep their stories."
-                    submit-label="Move"
-                    :busy="moveBusy"
-                    :errors="moveErrors"
-                    @update:open="moving = []"
-                    @submit="move"
-                >
-                    <SelectField
-                        v-model="moveTarget"
-                        name="move-to"
-                        label="Watch list"
-                        :options="otherLists"
-                        placeholder="Choose a watch list"
-                        :error="moveErrors.list"
-                    />
-                </FormDialog>
-
-                <ConfirmDialog
-                    v-model:open="confirmingRemove"
-                    :title="selected.length === 1 ? 'Remove 1 source?' : `Remove ${selected.length} sources?`"
-                    description="Their stories leave this list. Other watch lists that follow them keep them."
-                    confirm-label="Remove"
-                    :busy="removeBusy"
-                    :error="removeError"
-                    @confirm="removeSelected"
-                />
-
-                <FormDialog
-                    :open="editing !== null"
-                    :title="fixing ? 'Fix source' : 'Edit source'"
-                    :description="fixing ? (editing?.problem ?? undefined) : undefined"
-                    :busy="saving"
-                    :errors="editErrors"
-                    @update:open="editing = null"
-                    @submit="saveEdit"
-                >
-                    <TextField
-                        v-model="editUrl"
-                        name="url"
-                        label="News page address"
-                        type="url"
-                        inputmode="url"
-                        autocomplete="url"
-                        placeholder="https://"
-                        :error="editErrors.url"
-                    />
-                    <p v-if="saving" role="status" class="text-sm">Validating source…</p>
-                </FormDialog>
-            </section>
-        </div>
+            <TabsContent value="sources">
+                <SourcesTab v-model:sources="sources" :watch-list-id="id" @changed="loadArticles" />
+            </TabsContent>
+        </TabsRoot>
     </template>
 </template>

@@ -2,6 +2,16 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-29: Sources tab and table
+
+- The watch list has two tabs: **Stories** (default) and **Sources**, with a red badge counting failing sources.
+- Sources is a table (`SourcesTab.vue`, TanStack Table `@tanstack/vue-table` 9.3.1, new dependency, Ken's choice): tick box, Source, Status, Last checked, and Fix plus "⋯" (Edit, Move to…, Remove). Failing sources first; click a header to sort. Search box. Ticked sources get a bar with Move to…, Remove and Clear; the header tick box ticks the sources shown.
+- **Add sources** opens a dialog (new `ui/Dialog.vue`) with Paste links and Upload a file; the single link field is gone.
+- On a phone the header hides and each row stacks into a small card.
+- Checked: type check, build, scanner tests. In the browser (desktop, dark): the tabs and badge, failing first, search, sorting by Last checked, ticking one and all, Clear, adding a link through the dialog.
+- Not checked: the phone layout (the browser window couldn't be resized) and light mode.
+- Next: Keywords job.
+
 ## 2026-10-29: Select, move and remove sources
 
 - A **Select** button above the source list shows a tick box on each row. With sources ticked: "3 selected", **Move to…** and **Remove**.
