@@ -1,0 +1,41 @@
+@import 'tailwindcss';
+@plugin 'daisyui' {
+    themes: light --default, dark --prefersdark;
+}
+
+/*
+ * DaisyUI's light and dark themes, with Apple's web blue as the primary colour until Wirescout has a brand
+ * (#0071e3, the blue apple.com uses: white on it passes 4.5:1; Apple's system blue #007aff doesn't)
+ * and 44 px fields and buttons (DESIGN.md, targets).
+ * This file holds the theme only: components use DaisyUI classes plus Tailwind utilities.
+ * Light theme only: DaisyUI's green and red text on their soft backgrounds is 1.9:1 and 2.6:1,
+ * so the "new" badges and error messages use darker shades that pass 4.5:1.
+ */
+@plugin 'daisyui/theme' {
+    name: 'light';
+    default: true;
+    --color-primary: #0071e3;
+    --color-primary-content: #ffffff;
+    --color-success: oklch(0.5 0.12 163);
+    --color-success-content: #ffffff;
+    --color-error: oklch(0.5 0.19 25);
+    --color-error-content: #ffffff;
+    --size-field: 0.275rem;
+}
+
+@plugin 'daisyui/theme' {
+    name: 'dark';
+    prefersdark: true;
+    --color-primary: #0071e3;
+    --color-primary-content: #ffffff;
+    --size-field: 0.275rem;
+}
+
+/*
+ * DaisyUI darkens by 7% on hover and barely at all when pressed, too little to see.
+ * Used by the Button component.
+ */
+@theme inline {
+    --color-primary-hover: color-mix(in oklab, var(--color-primary), black 25%);
+    --color-primary-active: color-mix(in oklab, var(--color-primary), black 50%);
+}
