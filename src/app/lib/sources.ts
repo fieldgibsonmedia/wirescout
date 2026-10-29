@@ -1,8 +1,18 @@
 // News sources, followed by URL. A source is shared by every watch list that follows its URL.
 import { supabase } from '@/lib/supabase';
 
+// status: "Working", why it fails ("Page not found · check the address") or "Not checked yet".
+// lastChecked: when the scanner last checked it ("10:40" today, "28 Oct, 10:40" before), or ''.
 // problem: why the source fails, for the Fix dialog, or null when it works or hasn't been checked yet.
-export type Source = { id: string; url: string; label: string; status: string; problem: string | null };
+export type Source = {
+    id: string;
+    url: string;
+    label: string;
+    status: string;
+    lastChecked: string;
+    lastCheckedAt: string | null;
+    problem: string | null;
+};
 
 // The columns toSource needs.
 export const SOURCE_COLUMNS = 'id, url, name, last_checked_at, stories_found, problem';
@@ -43,7 +53,9 @@ export function toSource(source: SourceRow): Source {
         id: source.id,
         url: source.url,
         label: sourceLabel(source),
-        status: sourceStatus(source, problem?.status),
+        status: source.last_checked_at ? (problem?.status ?? 'Working') : 'Not checked yet',
+        lastChecked: source.last_checked_at ? lastChecked(source.last_checked_at) : '',
+        lastCheckedAt: source.last_checked_at,
         problem: problem?.explanation ?? null,
     };
 }
@@ -62,16 +74,11 @@ export function listLabel(source: Source, sources: Source[]) {
 const timeFormat = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' });
 const dateTimeFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
-// What the scanner found in its last check: "Working · Last checked 10:40", the problem ("No stories found · …")
-// or "Not checked yet".
-function sourceStatus(source: { last_checked_at: string | null }, problem: string | undefined) {
-    if (!source.last_checked_at) {
-        return 'Not checked yet';
-    }
-    const checkedAt = new Date(source.last_checked_at);
+// The time only for today's checks.
+function lastChecked(checkedAtText: string) {
+    const checkedAt = new Date(checkedAtText);
     const isToday = checkedAt.toDateString() === new Date().toDateString();
-    const lastChecked = `Last checked ${(isToday ? timeFormat : dateTimeFormat).format(checkedAt)}`;
-    return `${problem ?? 'Working'} · ${lastChecked}`;
+    return (isToday ? timeFormat : dateTimeFormat).format(checkedAt);
 }
 
 export function isWebAddress(text: string) {

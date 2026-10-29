@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Adds many sources at once, in two tabs:
+// Adds sources, one or many at once (the Add sources dialog), in two tabs:
 // - Paste links: one per line, text around them is fine, and a bare domain on its own line counts.
 //   Lines without a link are listed while typing, so they can be fixed before adding.
 // - Upload a file: drop or choose an .xlsx, .csv or .txt file, and every web address in it is found
@@ -234,9 +234,7 @@ async function add(urls: string[]) {
 </script>
 
 <template>
-    <div class="flex flex-col gap-3 border-t border-base-300 pt-4">
-        <h3 class="font-medium">Add many at once</h3>
-
+    <div class="flex flex-col gap-3">
         <TabsRoot v-model="tab" class="flex flex-col gap-3">
             <TabsList aria-label="How to add sources" class="tabs tabs-border">
                 <TabsTrigger value="paste" class="tab data-[state=active]:tab-active">Paste links</TabsTrigger>
