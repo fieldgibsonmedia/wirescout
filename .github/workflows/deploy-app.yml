@@ -1,6 +1,6 @@
 name: Deploy web app
 
-# Publishes the web app to GitHub Pages (kennethzuniga.github.io/wirescout/) on every push to main.
+# Publishes the web app to GitHub Pages (fieldgibsonmedia.github.io/wirescout/) on every push to main.
 # The scanner's "Update state [skip ci]" commits don't trigger it.
 on:
   push:

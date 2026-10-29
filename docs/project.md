@@ -11,12 +11,12 @@ An internal Field Gibson Media tool for journalists. It watches a curated list o
 - `chrono-node` parses article dates.
 - `nodemailer` sends alerts over SMTP (`EMAIL_*` variables).
 - GitHub Actions runs the scanner every 4 hours (`.github/workflows/scraper.yml`), on Node 22, installing only the runtime packages (`npm ci --omit=dev`).
-- Git: GitHub (`kennethzuniga/wirescout`), public. `main` is live; MVP work goes into `mvp`, and each finished stage is merged into `main`.
+- Git: GitHub (`fieldgibsonmedia/wirescout`), public. `main` is live; MVP work goes into `mvp`, and each finished stage is merged into `main`.
 
 The MVP stack is decided in `docs/mvp-plan.md`. Built so far:
 
 - Supabase (Postgres 17 + Auth), developed locally with the Supabase CLI (`npx supabase`, a dev dependency) in Docker. The cloud project sends account emails through a Gmail account (SMTP, app password), set in its dashboard.
-- Web app: Vue 3 + TypeScript, Vite, Tailwind + DaisyUI, Reka UI, Vue Router, `@supabase/supabase-js`, `read-excel-file` (bulk source upload). It talks to Supabase directly; access is protected by row-level security. Published on GitHub Pages at `kennethzuniga.github.io/wirescout/`.
+- Web app: Vue 3 + TypeScript, Vite, Tailwind + DaisyUI, Reka UI, Vue Router, `@supabase/supabase-js`, `read-excel-file` (bulk source upload). It talks to Supabase directly; access is protected by row-level security. Published on GitHub Pages at `fieldgibsonmedia.github.io/wirescout/`.
 
 ## Layout
 
