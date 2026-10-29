@@ -101,14 +101,14 @@ isOneToOne: false
                   ]
                 },"sources": {
                   Row: {
-                    "created_at": string,"feed_url": string | null,"id": string,"last_checked_at": string | null,"name": string | null,"read_from": string | null,"stories_found": number | null,"url": string
+                    "created_at": string,"feed_url": string | null,"id": string,"last_checked_at": string | null,"name": string | null,"problem": string | null,"read_from": string | null,"stories_found": number | null,"url": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"feed_url"?: string | null,"id"?: string,"last_checked_at"?: string | null,"name"?: string | null,"read_from"?: string | null,"stories_found"?: number | null,"url": string
+                    "created_at"?: string,"feed_url"?: string | null,"id"?: string,"last_checked_at"?: string | null,"name"?: string | null,"problem"?: string | null,"read_from"?: string | null,"stories_found"?: number | null,"url": string
                   }
                   Update: {
-                    "created_at"?: string,"feed_url"?: string | null,"id"?: string,"last_checked_at"?: string | null,"name"?: string | null,"read_from"?: string | null,"stories_found"?: number | null,"url"?: string
+                    "created_at"?: string,"feed_url"?: string | null,"id"?: string,"last_checked_at"?: string | null,"name"?: string | null,"problem"?: string | null,"read_from"?: string | null,"stories_found"?: number | null,"url"?: string
                   }
                   Relationships: [
                     

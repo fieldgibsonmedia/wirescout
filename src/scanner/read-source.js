@@ -43,6 +43,16 @@ export async function readSource(source) {
   return { stories: [], readFrom: null, feedUrl: null };
 }
 
+// Why a source couldn't be read, from the error readSource threw, for the app to show:
+// "not_found", "blocked", "unreachable", or null for anything else.
+export function readProblem(error) {
+  if ([404, 410].includes(error.status)) return "not_found";
+  if ([401, 403, 429].includes(error.status)) return "blocked";
+  // fetch fails with a cause on connection and certificate errors, and with a TimeoutError when the site is too slow.
+  if (error.status >= 500 || error.cause || error.name === "TimeoutError") return "unreachable";
+  return null;
+}
+
 // The feed's stories, or null if it can't be fetched, isn't a feed, or is empty.
 async function tryFeed(feedUrl) {
   try {
@@ -60,6 +70,6 @@ async function fetchText(url) {
     headers: { "User-Agent": USER_AGENT, Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" },
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!response.ok) throw Object.assign(new Error(`HTTP ${response.status}`), { status: response.status });
   return { text: await response.text(), url: response.url };
 }
