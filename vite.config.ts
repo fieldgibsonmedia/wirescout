@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
 export default defineConfig(({ command }) => ({
-    // The live app is published at kennethzuniga.github.io/wirescout/ (.github/workflows/deploy-app.yml).
+    // The live app is published at fieldgibsonmedia.github.io/wirescout/ (.github/workflows/deploy-app.yml).
     base: command === 'build' ? '/wirescout/' : '/',
     plugins: [vue(), tailwindcss()],
     resolve: {

@@ -2,6 +2,27 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-29: New scanner (build step 4)
+
+- `src/scanner/` replaces the prototype: no selectors. Each source is read from its feed (the address itself, one named in the page, or a guessed `/feed`), or else from the page's biggest list of headline links. Newest 50 per source.
+- Saves new stories to Supabase (secret key); stories are never deleted, so a failing source no longer floods the next alert.
+- Only sources that a watch list follows. `scanner.yml` runs every hour at :17, one run at a time.
+- Source status on the watch list page: "Working · Last checked 10:40", "No stories found · …", "Not checked yet". New columns on `sources` (1 migration); users can only set `url` and `name`.
+- Health email to `ADMIN_EMAIL` when a source just broke (0, under half of last time, or unreadable on its first check). Logs show totals only.
+- Removed: `scraper.yml`, `src/index.js`, `sites.js`, `state.json`, `src/utils/`, `reset.js`.
+- 13 of the 23 old sources read (the prototype: 9). The other 10 need JavaScript or block bots (`known-issues.md`). AI fallback: not built, decided after we see real failures.
+- Checked: 10 scanner tests, 38 database tests, db lint, type check, build; two local scans (42 then 0 new stories, one health email in Mailpit, none on the second run); the 3 status texts in the browser.
+- Next: release, then the keywords job.
+
+## 2026-10-29: Repo moved to the company GitHub account
+
+- Ken transferred the repo from `kennethzuniga` to `fieldgibsonmedia` (a company user account, not an organization). Workflows and the `EMAIL_*` secrets moved with it.
+- The web app is now at `fieldgibsonmedia.github.io/wirescout/` (GitHub doesn't redirect the old Pages address). Ken re-ran the deploy and set the Supabase site URL and redirect URL to the new address.
+- Checked: the new address serves the app and its deep links; a password-reset email linked to the new address and worked (Ken).
+- This Mac: `gh` and git use only `fieldgibsonmedia`; the `kennethzuniga` login and saved git password were removed. The old `gh` token was not revoked on GitHub, because Ken uses it on his personal machine.
+- Docs and comments updated to the new account.
+- Next: step 4, the new scanner.
+
 ## 2026-10-29: Deploy from `main` (deploy job)
 
 - Decided: each finished stage goes from `mvp` into `main` and is tested live, instead of one release at the end.
@@ -10,7 +31,12 @@ Newest first. One entry per job: date, what was done, what's next.
 - Cloud database: the 5 new migrations pushed (all 6 match local).
 - Checked: the scanner installed like the workflow (Node 22, `--omit=dev`) and ran once, emailing a throwaway local inbox; type check and build pass; the app built for `/wirescout/` and served like Pages (5 browser checks: deep links, email link, sign in, reload).
 - Not checked: the real Pages deploy and the live app (Ken's steps).
-- Next (Ken, guided): Pages source "GitHub Actions", merge `mvp` into `main`, Supabase dashboard settings, click through the live app. Then step 4.
+- Released (PR #4, merged by Ken): the deploy passed and the app is live.
+- Cloud settings done by Ken: site URL, sign-up hook, 3 email templates, sign-ups on.
+- Email: the cloud SMTP failed (Gmail no longer takes a normal password). Microsoft 365 was ruled out (password SMTP ends December 2026), and Brevo with the company domain needs DNS records IT won't add. Now Gmail with an app password.
+- Ken signed up on the live app, confirmed by email and reached the dashboard.
+- `gh` installed and signed in, so release PRs are opened from here. `EMAIL_RECIPIENTS` removed from GitHub secrets (the old scanner, failing since 2026-10-27, is a prototype).
+- Next: step 4, the new scanner. When it or the digest sends email from GitHub, Ken updates the `EMAIL_*` secrets to the Gmail app password.
 
 ## 2026-10-29: Self sign-up (build step 3, job 2)
 

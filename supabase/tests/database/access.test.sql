@@ -1,6 +1,6 @@
 -- Checks that each journalist only reaches their own data. Run: npx supabase test db
 begin;
-select plan(12);
+select plan(13);
 
 -- Two made-up users.
 insert into auth.users (id, email) values
@@ -65,6 +65,13 @@ select throws_ok(
   '42501',
   null,
   'A user cannot change their profile email'
+);
+
+select throws_ok(
+  $$ insert into public.sources (url, stories_found) values ('https://example.com/other', 10) $$,
+  '42501',
+  null,
+  'A user cannot set a source''s status'
 );
 
 -- As Bob
