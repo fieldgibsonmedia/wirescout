@@ -14,7 +14,17 @@ import Card from '@/components/ui/Card.vue';
 import FormDialog from '@/components/ui/FormDialog.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import TextField from '@/components/ui/TextField.vue';
-import { addSources, isWebAddress, listLabel, replaceSource, SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
+import {
+    addSources,
+    checkLinks,
+    checkMessages,
+    isWebAddress,
+    listLabel,
+    replaceSource,
+    SOURCE_COLUMNS,
+    toSource,
+    type Source,
+} from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
 
 const props = defineProps<{
@@ -178,6 +188,12 @@ async function addSource() {
     }
 
     adding.value = true;
+    const problem = await checkLink(url);
+    if (problem) {
+        adding.value = false;
+        urlError.value = problem;
+        return;
+    }
     const added = await addSources(props.id, [url]);
     adding.value = false;
 
@@ -214,6 +230,12 @@ async function saveEdit() {
     }
 
     saving.value = true;
+    const problem = await checkLink(url);
+    if (problem) {
+        saving.value = false;
+        editErrors.value = { url: problem };
+        return;
+    }
     const saved = await replaceSource(props.id, source.id, url);
     saving.value = false;
 
@@ -225,6 +247,15 @@ async function saveEdit() {
     editing.value = null;
     sources.value = sources.value.map((other) => (other.id === source.id ? saved : other));
     await loadArticles();
+}
+
+// Checks one link with the scanner's code: why it can't be used, or null if it works.
+async function checkLink(url: string) {
+    const checks = await checkLinks([url]);
+    if (!checks) {
+        return "The link couldn't be checked. Please try again.";
+    }
+    return checks[0].problem ? checkMessages(checks, ['This link'])[0] : null;
 }
 
 async function showAdded(added: Source[]) {
@@ -321,6 +352,7 @@ onMounted(load);
                             placeholder="https://"
                             :error="urlError"
                         />
+                        <p v-if="adding" role="status" class="text-sm">Validating source…</p>
                         <div>
                             <Button type="submit" variant="outline" :busy="adding">
                                 <PlusIcon v-if="!adding" class="size-5" aria-hidden="true" />
@@ -377,6 +409,7 @@ onMounted(load);
                         placeholder="https://"
                         :error="editErrors.url"
                     />
+                    <p v-if="saving" role="status" class="text-sm">Validating source…</p>
                 </FormDialog>
             </section>
         </div>

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // Adds many sources at once from a file: drop or choose an .xlsx, .csv or .txt file, and every web address
 // in it is found (no column to pick). The user sees the list, then adds it with one button.
+// Each link is checked first: the ones that fail aren't added, and the user sees why.
 // The Excel reader is only downloaded when an .xlsx file is used.
 import { ArrowUpTrayIcon, PlusIcon } from '@heroicons/vue/20/solid';
 import { computed, ref } from 'vue';
 import Alert from '@/components/ui/Alert.vue';
 import Button from '@/components/ui/Button.vue';
-import { addSources, isWebAddress, type Source } from '@/lib/sources';
+import { addSources, checkLinks, checkMessages, isWebAddress, type LinkCheck, type Source } from '@/lib/sources';
 
 const props = defineProps<{
     watchListId: string;
@@ -31,6 +32,8 @@ const found = ref<string[]>([]);
 const adding = ref(false);
 const addFailed = ref(false);
 const result = ref('');
+// The links that failed their check, one line per reason.
+const notAdded = ref<string[]>([]);
 
 const foundLabel = computed(() => (found.value.length === 1 ? 'Found 1 address' : `Found ${found.value.length} addresses`));
 
@@ -56,6 +59,7 @@ function onChoose() {
 async function readFile(file: File) {
     fileError.value = '';
     result.value = '';
+    notAdded.value = [];
     addFailed.value = false;
     found.value = [];
 
@@ -119,13 +123,22 @@ async function add() {
     const inList = new Set(props.sources.map((source) => source.url));
     const invalid = found.value.filter((url) => !isWebAddress(url));
     const already = found.value.filter((url) => isWebAddress(url) && inList.has(url));
-    const toAdd = found.value.filter((url) => isWebAddress(url) && !inList.has(url));
+    const toCheck = found.value.filter((url) => isWebAddress(url) && !inList.has(url));
 
     addFailed.value = false;
     let added: Source[] = [];
-    if (toAdd.length > 0) {
+    let failed: LinkCheck[] = [];
+    if (toCheck.length > 0) {
         adding.value = true;
-        const response = await addSources(props.watchListId, toAdd);
+        const checks = await checkLinks(toCheck);
+        if (!checks) {
+            adding.value = false;
+            addFailed.value = true;
+            return;
+        }
+        failed = checks.filter((check) => check.problem);
+        const working = checks.filter((check) => !check.problem).map((check) => check.url);
+        const response = working.length > 0 ? await addSources(props.watchListId, working) : [];
         adding.value = false;
 
         if (!response) {
@@ -137,12 +150,14 @@ async function add() {
 
     result.value = [
         `${added.length} added`,
+        failed.length > 0 && `${failed.length} not added`,
         already.length > 0 && `${already.length} already in the list`,
         invalid.length === 1 && "1 isn't a web address",
         invalid.length > 1 && `${invalid.length} aren't web addresses`,
     ]
         .filter(Boolean)
         .join(', ');
+    notAdded.value = checkMessages(failed);
     found.value = [];
     emit('added', added);
 }
@@ -175,12 +190,16 @@ async function add() {
         <p v-if="reading" role="status" class="text-sm">Reading the file…</p>
         <Alert v-if="fileError" type="error">{{ fileError }}</Alert>
         <Alert v-if="result" type="success">{{ result }}.</Alert>
+        <Alert v-if="notAdded.length > 0" type="error">
+            <p v-for="message in notAdded" :key="message" class="break-words">{{ message }}</p>
+        </Alert>
 
         <div v-if="found.length > 0" class="flex flex-col gap-3">
             <p role="status" class="font-medium">{{ foundLabel }}</p>
             <ul class="max-h-64 overflow-y-auto rounded-box border border-base-300 text-sm">
                 <li v-for="url in found" :key="url" class="border-b border-base-300 px-3 py-2 break-words last:border-b-0">{{ url }}</li>
             </ul>
+            <p v-if="adding" role="status" class="text-sm">Validating {{ found.length === 1 ? 'source' : `${found.length} sources` }}…</p>
             <Alert v-if="addFailed" type="error">The sources couldn't be added. Please try again.</Alert>
             <div class="flex flex-wrap gap-3">
                 <Button variant="outline" :busy="adding" @click="add">

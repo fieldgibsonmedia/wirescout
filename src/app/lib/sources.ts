@@ -82,6 +82,61 @@ export function isWebAddress(text: string) {
     return ['http:', 'https:'].includes(url.protocol) && url.hostname.includes('.');
 }
 
+// Why a link can't be added, from the check-links function (the scanner's own check).
+export type LinkCheck = { url: string; problem: 'not_found' | 'blocked' | 'unreachable' | 'no_stories' | null };
+
+// The function takes 10 links per call (its processing limit); a few calls run at a time.
+const CHECK_BATCH = 10;
+const PARALLEL_CHECKS = 3;
+
+// Checks links before they're added: one result per link, or null if the check itself failed.
+export async function checkLinks(urls: string[]): Promise<LinkCheck[] | null> {
+    const batches: string[][] = [];
+    for (let start = 0; start < urls.length; start += CHECK_BATCH) {
+        batches.push(urls.slice(start, start + CHECK_BATCH));
+    }
+
+    const results: LinkCheck[][] = [];
+    let next = 0;
+    let failed = false;
+    async function worker() {
+        while (next < batches.length && !failed) {
+            const index = next++;
+            const { data, error } = await supabase.functions.invoke<{ results: LinkCheck[] }>('check-links', {
+                body: { urls: batches[index] },
+            });
+            if (error || !data) {
+                failed = true;
+                return;
+            }
+            results[index] = data.results;
+        }
+    }
+    await Promise.all(Array.from({ length: PARALLEL_CHECKS }, worker));
+    return failed ? null : results.flat();
+}
+
+const listFormat = new Intl.ListFormat('en-GB');
+
+// One line per reason for the links that failed their check, e.g. 'X and Y return "page not found". …'.
+// Pass ['This link'] as the names when there's only the one link in a field.
+export function checkMessages(failed: LinkCheck[], names = failed.map((check) => check.url)) {
+    const problems = ['not_found', 'blocked', 'unreachable', 'no_stories'] as const;
+    return problems.flatMap((problem) => {
+        const links = names.filter((_, index) => failed[index].problem === problem);
+        if (links.length === 0) {
+            return [];
+        }
+        const list = listFormat.format(links);
+        const one = links.length === 1;
+        if (problem === 'not_found') {
+            return `${list} ${one ? 'returns' : 'return'} "page not found". Check the ${one ? 'link' : 'links'} and try again.`;
+        }
+        const reason = { blocked: 'the site blocks Wirescout', unreachable: "the site can't be reached", no_stories: 'no stories found' }[problem];
+        return `${list} couldn't be added: ${reason}.`;
+    });
+}
+
 // Long address lists are looked up in batches: they travel in the request's URL, which has a size limit.
 const LOOKUP_BATCH = 20;
 
