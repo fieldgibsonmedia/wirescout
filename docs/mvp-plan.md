@@ -177,6 +177,42 @@ A wrong link is the journalist's to fix, so the app shows them which source fail
     - The report also lists the 5 most shared stories of the month.
     - One hourly workflow (`admin.yml`, :40) sends both emails; each is sent once, and a skipped run is caught up.
 
+### Polish before step 6 (agreed 2026-10-30)
+
+Ken's 18 changes from using the live app, in 7 jobs (one branch each, from `origin/mvp`), released together as v0.1.0.
+No Pinia: shared data stays in the small stores in `src/app/lib/` (`watchLists.ts`, `profile.ts`); looked at again in step 6.
+Jobs 1–3 are done (`docs/progress.md`): quick fixes, look and feel, motion.
+
+**Job 4, watch list settings (Ken's items 1, 12):**
+
+- Side nav: each watch list shows a "⋯" button on hover and focus (always on phones), with **Edit** and **Delete**. Same menu as the list page (`WatchListMenu.vue`, reused). The list page reads its name from the `watchLists` store, so a rename from the nav updates the open page too.
+- Keywords move out of the Stories tab into the Edit dialog ("Name" and "Only include stories that mention…"). Rename becomes Edit.
+    - Ken thought keywords would make Wirescout scan only matching stories. They already do the same in effect: stories that don't match never show in the list, the dashboard count or the digest (`watch_list_articles`). The scanner still reads every story, because other lists may follow the same source.
+    - The Stories tab keeps only the search box. `KeywordsFilter.vue` goes; its parsing and limits move into the Edit dialog.
+- No database change.
+
+**Job 5, pin stories (item 13):**
+
+- A pin button on each story card (in the list and on the story page): Pin / Unpin.
+- The Stories tab gets a switch, **All stories · Pinned**. Pinned shows only that list's pinned stories, newest pin first.
+- Pins belong to the watch list, so deleting the list removes them.
+- 1 migration: table `pinned_stories` (watch list, article, pinned at), with access rules (own lists only) and pgTAP tests.
+
+**Job 6, dashboard (items 14, 16, 18):**
+
+- Each list's card: a big number (new stories, or "No new stories"); a small bar chart of stories per day over the last 7 days (after keywords); "24 sources · ⚠ 2 failing" (failing in red, linking to the Sources tab, like the digest); "3 pinned" and "Latest story 2 h ago".
+- 1 migration: a view `watch_list_stats` (security invoker) with the source count, failing count, pinned count, latest story and the 7-day counts.
+- Release notes: a "What's new" card after the list cards (people come for their lists). It shows the latest version's notes; "Earlier versions" expands the rest. The notes live in `src/app/lib/releaseNotes.ts`, updated with each release; no database. The first entry is v0.1.0, listing this stage's changes.
+
+**Job 7, global search (item 2):**
+
+- A search field in the top bar (an icon that opens it on phones). Enter goes to a **Search** page (`/search?q=…`).
+- Stories: every list's matching stories (title and summary, same matching as the list search), each with its list's name, opening its story page.
+- Sources: sources whose name or link matches, each opening its list's Sources tab.
+- No database change: `watch_list_articles` and `watch_list_sources` as they are.
+
+**Release v0.1.0:** after job 7, merge `origin/main` into `mvp`, push the 2 migrations (jobs 5 and 6) to the cloud, then the release PR. Live impact: the web app only.
+
 ## Branches
 
 - Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.
