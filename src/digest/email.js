@@ -31,11 +31,12 @@ export function buildDigest({ lists, profile, appUrl }) {
     minute: "2-digit",
   });
 
+  // from=digest: the app counts the click for the monthly usage report.
   const links = {
-    dashboard: `${appUrl}/`,
-    list: (list) => `${appUrl}/lists/${list.id}`,
-    sources: (list) => `${appUrl}/lists/${list.id}?tab=sources`,
-    story: (list, story) => `${appUrl}/lists/${list.id}/stories/${story.id}`,
+    dashboard: `${appUrl}/?from=digest`,
+    list: (list) => `${appUrl}/lists/${list.id}?from=digest`,
+    sources: (list) => `${appUrl}/lists/${list.id}?tab=sources&from=digest`,
+    story: (list, story) => `${appUrl}/lists/${list.id}/stories/${story.id}?from=digest`,
     settings: `${appUrl}/settings/digest`,
   };
   const subject = `Wirescout: ${plural(totalNew, "new story", "new stories")} in ${plural(listsWithNew, "watch list", "watch lists")}`;
@@ -70,7 +71,7 @@ function buildHtml({ sections, links, footer, dateFormat, subject }) {
   const blocks = sections.map((list) => {
     const warning =
       list.problemCount > 0
-        ? `<a href="${links.sources(list)}" style="color: ${RED}; font-weight: 600; text-decoration: none;">${WARNING} ${problems(list)}</a>`
+        ? `<a href="${escape(links.sources(list))}" style="color: ${RED}; font-weight: 600; text-decoration: none;">${WARNING} ${problems(list)}</a>`
         : "";
     const stories = list.stories
       .map(
