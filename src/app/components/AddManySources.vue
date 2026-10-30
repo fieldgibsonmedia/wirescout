@@ -7,7 +7,7 @@
 // Each link is checked first: the ones that fail aren't added, and the user sees why.
 // The Excel reader is only downloaded when an .xlsx file is used.
 import { ArrowUpTrayIcon, PlusIcon } from '@heroicons/vue/20/solid';
-import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
+import { TabsContent, TabsIndicator, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
 import { computed, ref } from 'vue';
 import Alert from '@/components/ui/Alert.vue';
 import Button from '@/components/ui/Button.vue';
@@ -237,9 +237,10 @@ async function add(urls: string[]) {
     <!-- One fixed height for both tabs and their results, so the dialog never resizes; the content scrolls inside. -->
     <div class="flex h-[28rem] max-h-[calc(100dvh-12rem)] flex-col gap-3 overflow-y-auto">
         <TabsRoot v-model="tab" class="flex flex-col gap-3">
-            <TabsList aria-label="How to add sources" class="tabs tabs-border">
+            <TabsList aria-label="How to add sources" class="tabs tabs-border relative">
                 <TabsTrigger value="paste" class="tab data-[state=active]:tab-active">Paste links</TabsTrigger>
                 <TabsTrigger value="file" class="tab data-[state=active]:tab-active">Upload a file</TabsTrigger>
+                <TabsIndicator class="tab-indicator" />
             </TabsList>
 
             <TabsContent value="paste" class="flex flex-col gap-3">

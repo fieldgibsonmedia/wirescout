@@ -4,7 +4,7 @@
 // again from zero. Stories come from watch_list_articles, which keeps only those matching the list's keywords;
 // the search box narrows them further. ?tab=sources opens the Sources tab (the digest's failing-sources link).
 import { ExclamationTriangleIcon } from '@heroicons/vue/20/solid';
-import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
+import { TabsContent, TabsIndicator, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import KeywordsFilter from '@/components/KeywordsFilter.vue';
@@ -212,7 +212,7 @@ onMounted(load);
         </PageHeader>
 
         <TabsRoot v-model="tab" class="flex flex-col gap-4">
-            <TabsList aria-label="Watch list" class="tabs tabs-border">
+            <TabsList aria-label="Watch list" class="tabs tabs-border relative">
                 <TabsTrigger value="stories" class="tab data-[state=active]:tab-active">Stories</TabsTrigger>
                 <TabsTrigger value="sources" class="tab gap-2 data-[state=active]:tab-active">
                     Sources
@@ -221,6 +221,7 @@ onMounted(load);
                         {{ failingSources }}<span class="sr-only"> failing</span>
                     </span>
                 </TabsTrigger>
+                <TabsIndicator class="tab-indicator" />
             </TabsList>
 
             <TabsContent value="stories" class="flex flex-col gap-4">

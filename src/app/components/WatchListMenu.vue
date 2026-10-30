@@ -88,7 +88,7 @@ const itemClass =
             <EllipsisHorizontalIcon class="size-6" aria-hidden="true" />
         </DropdownMenuTrigger>
         <DropdownMenuPortal>
-            <DropdownMenuContent align="start" :side-offset="4" class="z-30 w-48 rounded-box border border-base-300 bg-base-100 p-2 shadow-sm">
+            <DropdownMenuContent align="start" :side-offset="4" class="menu-pop z-30 w-48 rounded-box border border-base-300 bg-base-100 p-2 shadow-sm">
                 <DropdownMenuItem :class="itemClass" @select="startRename">Rename</DropdownMenuItem>
                 <DropdownMenuItem :class="[itemClass, 'text-error']" @select="startDelete">Delete</DropdownMenuItem>
             </DropdownMenuContent>

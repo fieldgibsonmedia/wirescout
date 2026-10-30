@@ -27,7 +27,7 @@ const itemClass =
             <span class="sr-only">{{ name || 'Account' }}</span>
         </DropdownMenuTrigger>
         <DropdownMenuPortal>
-            <DropdownMenuContent align="end" :side-offset="4" class="z-30 w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-sm">
+            <DropdownMenuContent align="end" :side-offset="4" class="menu-pop z-30 w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-sm">
                 <DropdownMenuItem as-child>
                     <RouterLink :to="{ name: 'account-settings' }" :class="itemClass">Account settings</RouterLink>
                 </DropdownMenuItem>

@@ -148,7 +148,15 @@ onUnmounted(() => {
             </header>
 
             <main class="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 p-4 md:p-8">
-                <RouterView :key="$route.path" />
+                <!-- Each new page fades in (page-enter-active in app.css); the old one goes at once. -->
+                <!-- The wrapper gives the Transition one element: pages have several at their top. -->
+                <RouterView v-slot="{ Component, route }">
+                    <Transition name="page">
+                        <div :key="route.path" class="flex flex-1 flex-col gap-6">
+                            <component :is="Component" />
+                        </div>
+                    </Transition>
+                </RouterView>
             </main>
         </div>
 
