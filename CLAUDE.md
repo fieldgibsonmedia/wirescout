@@ -58,7 +58,7 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
 - GitHub (`fieldgibsonmedia/wirescout`), public.
 - `main` is the live branch. `mvp` collects the MVP work; each finished stage goes from `mvp` into `main`.
     - Branch from the latest `origin/mvp`.
-    - After Ken says "approve" on a job, commit it. Then ask him before merging its branch into `mvp` and pushing `mvp` (`safety.md`, "Never commit or merge without asking"). No PR and no PR text for jobs: the PR rules in `workflow.md` apply only to releases (`mvp` into `main`). Mistakes there can be undone.
+    - After Ken says "approve" on a finished job: commit it, merge its branch into `mvp`, push `mvp` and delete the job branch, all in one go (`safety.md`, "Never commit or merge without asking"). No PR and no PR text for jobs: the PR rules in `workflow.md` apply only to releases (`mvp` into `main`). Mistakes there can be undone.
     - Only Ken merges `mvp` into `main`, once per finished stage. Before each release, merge `origin/main` into `mvp` (it may have commits made directly on `main`).
     - `main` must stay the GitHub default branch: scheduled workflows run from the default branch, so switching it would put unreleased work live.
 - `gh` is installed and signed in as `fieldgibsonmedia` (the company account Ken works under). For a release PR: push `mvp`, show Ken the PR title and description, and after he says "approve" open it yourself (`gh pr create --base main --head mvp`). Only Ken merges it: merging PRs from here is denied in `.claude/settings.json`.

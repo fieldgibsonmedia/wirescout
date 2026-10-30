@@ -23,7 +23,8 @@ Core rule, adapted for Wirescout. Last edited: 2026-10-27.
 
 - Never commit, push or merge anything, on any branch, until Ken has said so in the chat.
 - Leave every change uncommitted in the working tree and tell Ken it's done. He reviews it in his IDE first.
-- Ask again before each merge, even after an "approve" to commit.
+- Ken's "approve" on a finished job covers committing it, merging its branch into `mvp`, pushing `mvp` and deleting the job branch (Ken, 2026-10-30). `mvp` deploys nothing.
+- Merges into `main` stay Ken's.
 
 ## Never commit, push or merge to `main`
 
