@@ -4,6 +4,7 @@
 // again from zero. Stories come from watch_list_articles, which keeps only those matching the list's keywords;
 // the search box narrows them further. ?tab=sources opens the Sources tab (the digest's failing-sources link).
 // The name and keywords follow the watchLists store, so an edit from the side nav shows here too.
+// The Stories tab switches between all stories and the saved ones (newest save first, all at once).
 import { ExclamationTriangleIcon } from '@heroicons/vue/20/solid';
 import { TabsContent, TabsIndicator, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -53,6 +54,14 @@ const loading = ref(true);
 const failed = ref(false);
 const notFound = ref(false);
 
+// Which stories the Stories tab shows.
+const view = ref<'all' | 'saved'>('all');
+// The stories saved in this list, for each card's Save / Saved.
+const savedIds = ref(new Set<number>());
+const savedArticles = ref<Article[]>([]);
+const savedLoading = ref(false);
+const savedFailed = ref(false);
+
 const search = ref('');
 // The search behind the stories shown, for the "No stories match" line.
 const shownSearch = ref('');
@@ -68,12 +77,13 @@ async function load() {
     loading.value = true;
     failed.value = false;
 
-    const [list, listSources] = await Promise.all([
+    const [list, listSources, savedStories] = await Promise.all([
         supabase.from('watch_lists').select('name, last_viewed_at, keywords').eq('id', props.id).maybeSingle(),
         supabase.from('watch_list_sources').select(`sources (${SOURCE_COLUMNS})` as const).eq('watch_list_id', props.id).order('created_at'),
+        supabase.from('saved_stories').select('article_id').eq('watch_list_id', props.id),
     ]);
 
-    if (list.error || listSources.error) {
+    if (list.error || listSources.error || savedStories.error) {
         loading.value = false;
         failed.value = true;
         return;
@@ -88,6 +98,7 @@ async function load() {
     lastViewedAt.value = list.data.last_viewed_at;
     keywords.value = list.data.keywords;
     sources.value = listSources.data.map(({ sources: source }) => toSource(source));
+    savedIds.value = new Set(savedStories.data.map((savedStory) => savedStory.article_id));
 
     await loadArticles();
     loading.value = false;
@@ -161,6 +172,39 @@ function fetchArticles(offset: number, term: string) {
         .order('id', { ascending: false })
         .range(offset, offset + PAGE_SIZE);
 }
+
+async function loadSaved() {
+    savedLoading.value = true;
+    savedFailed.value = false;
+    const { data, error } = await supabase
+        .from('saved_stories')
+        .select('articles (id, url, title, summary, published_at, first_seen_at, source_id)')
+        .eq('watch_list_id', props.id)
+        .order('saved_at', { ascending: false });
+    savedLoading.value = false;
+
+    if (error) {
+        savedFailed.value = true;
+        return;
+    }
+    // A story whose source no user list follows anymore can't be read: leave it out.
+    savedArticles.value = data.flatMap(({ articles: article }) => (article ? [toArticle(article)] : []));
+}
+
+// A story removed from Saved stays in the Saved view until the view is opened again, so a slip can be undone with Save.
+function setSaved(articleId: number, saved: boolean) {
+    if (saved) {
+        savedIds.value.add(articleId);
+    } else {
+        savedIds.value.delete(articleId);
+    }
+}
+
+watch(view, (shown) => {
+    if (shown === 'saved') {
+        loadSaved();
+    }
+});
 
 function toArticle(article: {
     id: number;
@@ -241,9 +285,56 @@ onMounted(load);
             </TabsList>
 
             <TabsContent value="stories" class="flex flex-col gap-4">
-                <SearchField v-if="sources.length > 0" v-model="search" label="Search stories" />
+                <div v-if="sources.length > 0 || savedIds.size > 0" class="flex flex-wrap items-center gap-2">
+                    <div class="join" role="group" aria-label="Show">
+                        <button
+                            v-for="option in [
+                                { value: 'all', label: 'All stories' },
+                                { value: 'saved', label: 'Saved' },
+                            ] as const"
+                            :key="option.value"
+                            type="button"
+                            :class="['btn join-item', view === option.value ? 'btn-primary' : 'border-base-300']"
+                            :aria-pressed="view === option.value"
+                            @click="view = option.value"
+                        >
+                            {{ option.label }}
+                        </button>
+                    </div>
+                    <SearchField v-if="view === 'all' && sources.length > 0" v-model="search" label="Search stories" />
+                </div>
 
-                <Card v-if="articles.length === 0">
+                <template v-if="view === 'saved'">
+                    <div v-if="savedLoading" class="skeleton h-40" aria-busy="true" aria-label="Loading saved stories"></div>
+
+                    <Alert v-else-if="savedFailed" type="error">
+                        <p>The saved stories couldn't be loaded.</p>
+                        <button type="button" class="link mt-2" @click="loadSaved">Try again</button>
+                    </Alert>
+
+                    <Card v-else-if="savedArticles.length === 0">
+                        <p class="max-w-prose">No saved stories yet. Save a story to keep it here.</p>
+                    </Card>
+
+                    <ul v-else class="flex flex-col gap-4">
+                        <li v-for="article in savedArticles" :key="article.id">
+                            <StoryCard
+                                :watch-list-id="id"
+                                :article-id="article.id"
+                                :title="article.title"
+                                :url="article.url"
+                                :summary="article.summary"
+                                :source="article.source"
+                                :date="article.date"
+                                :is-new="article.isNew"
+                                :saved="savedIds.has(article.id)"
+                                @update:saved="setSaved(article.id, $event)"
+                            />
+                        </li>
+                    </ul>
+                </template>
+
+                <Card v-else-if="articles.length === 0">
                     <p v-if="sources.length === 0" class="max-w-prose">
                         Add a source to start seeing its stories.
                         <button type="button" class="link" @click="tab = 'sources'">Go to Sources</button>
@@ -258,6 +349,7 @@ onMounted(load);
                 <ul v-else class="flex flex-col gap-4">
                     <li v-for="article in articles" :key="article.id">
                         <StoryCard
+                            :watch-list-id="id"
                             :article-id="article.id"
                             :title="article.title"
                             :url="article.url"
@@ -265,11 +357,13 @@ onMounted(load);
                             :source="article.source"
                             :date="article.date"
                             :is-new="article.isNew"
+                            :saved="savedIds.has(article.id)"
+                            @update:saved="setSaved(article.id, $event)"
                         />
                     </li>
                 </ul>
 
-                <div v-if="hasMore || moreFailed" class="flex flex-col items-start gap-2">
+                <div v-if="view === 'all' && (hasMore || moreFailed)" class="flex flex-col items-start gap-2">
                     <Alert v-if="moreFailed" type="error">More stories couldn't be loaded. Please try again.</Alert>
                     <Button variant="outline" :busy="loadingMore" @click="loadMore">Load more</Button>
                 </div>
