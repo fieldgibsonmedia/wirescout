@@ -62,7 +62,7 @@ watch(
                                     {{ description }}
                                 </DialogDescription>
                             </div>
-                            <DialogClose class="btn btn-square btn-ghost -me-2 -mt-2" aria-label="Close">
+                            <DialogClose class="btn btn-circle btn-ghost -me-2 -mt-2" aria-label="Close">
                                 <XMarkIcon class="size-6" aria-hidden="true" />
                             </DialogClose>
                         </div>
