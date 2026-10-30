@@ -2,16 +2,16 @@
 // A watch list in two tabs: Stories (newest first, 50 at a time) and Sources (SourcesTab), which shows how
 // many sources are failing. Opening it marks the stories shown as seen, so the dashboard's new count starts
 // again from zero. Stories come from watch_list_articles, which keeps only those matching the list's keywords;
-// the search box narrows them further.
-import { ArrowTopRightOnSquareIcon, ExclamationTriangleIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid';
+// the search box narrows them further. ?tab=sources opens the Sources tab (the digest's failing-sources link).
+import { ExclamationTriangleIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid';
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
 import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import KeywordsFilter from '@/components/KeywordsFilter.vue';
-import ShareMenu from '@/components/ShareMenu.vue';
 import SourcesTab from '@/components/SourcesTab.vue';
+import StoryCard from '@/components/StoryCard.vue';
 import WatchListMenu from '@/components/WatchListMenu.vue';
 import Alert from '@/components/ui/Alert.vue';
-import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
@@ -57,7 +57,7 @@ const shownSearch = ref('');
 // Counts story loads, so an answer that arrives after a newer search started is dropped.
 let request = 0;
 
-const tab = ref('stories');
+const tab = ref(useRoute().query.tab === 'sources' ? 'sources' : 'stories');
 const failingSources = computed(() => sources.value.filter((source) => source.problem).length);
 
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -245,22 +245,14 @@ onMounted(load);
 
                 <ul v-else class="flex flex-col gap-4">
                     <li v-for="article in articles" :key="article.id">
-                        <Card>
-                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-base-content/70">
-                                <Badge v-if="article.isNew" variant="success" size="sm">New</Badge>
-                                <span>{{ article.source }}</span>
-                                <span>{{ article.date }}</span>
-                            </div>
-                            <h3 class="text-lg font-semibold break-words">
-                                <a :href="article.url" target="_blank" rel="noopener" class="link link-hover">
-                                    {{ article.title }}
-                                    <ArrowTopRightOnSquareIcon class="inline size-4" aria-hidden="true" />
-                                    <span class="sr-only">(opens in a new tab)</span>
-                                </a>
-                            </h3>
-                            <p v-if="article.summary" class="max-w-prose">{{ article.summary }}</p>
-                            <ShareMenu :title="article.title" :url="article.url" />
-                        </Card>
+                        <StoryCard
+                            :title="article.title"
+                            :url="article.url"
+                            :summary="article.summary"
+                            :source="article.source"
+                            :date="article.date"
+                            :is-new="article.isNew"
+                        />
                     </li>
                 </ul>
 

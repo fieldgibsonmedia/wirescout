@@ -2,6 +2,18 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-30: Daily digest (build step 5)
+
+- Released before this job (PR #8, merged by Ken): Keywords. Migration pushed first; the web app deploy passed.
+- `src/digest/` and `digest.yml` (every 15 minutes): emails each user whose digest is due (Monday to Friday, their time passed in their time zone, none yet today). Stories since the last digest (7 days at most), through the keywords. No email when nothing is new.
+- Email: one section per list, "Regulators · 5 new stories" and a red "⚠ 3 problematic sources" linking to the Sources tab; up to 5 stories, then "See all new stories on Wirescout". Stories link to their page in the app, never to the source site.
+- App: a story page (`/lists/<list>/stories/<story>`) with "← list name", the story and its Share menu; `?tab=sources` opens the Sources tab; signing in returns to the link that was opened. The story card is now `StoryCard.vue`, shared by the list and the story page.
+- 1 migration: `profiles.last_digest_at`, written only by the sender.
+- Checked: 31 unit tests (14 new: due rule incl. time zones, weekends, clock change, catch-up; the email), 2 new database tests, db lint, type check, build. Local run to Mailpit: 1 digest sent, nothing on the second run; the email's story link, back link, Share menu, Sources tab link, a story from another list refused, signing in from a story link.
+- Not checked: the phone layout (the browser window couldn't be resized); light mode; a real Gmail send (only Mailpit).
+- Release order: push the migration to the cloud before Ken merges, or the digest fails writing `last_digest_at`.
+- Next: usage report job.
+
 ## 2026-10-30: Keywords
 
 - Released before this job (PR #7, merged by Ken on 2026-10-29): the sources fixes. The web app deploy passed.

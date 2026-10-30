@@ -39,6 +39,9 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
     - It writes stories and source status to the cloud Supabase project with the secret key (`SUPABASE_SECRET_KEY`, Supabase key `wirescout_scanner`).
     - It emails only `ADMIN_EMAIL` (a developer), when a source breaks. It never emails journalists.
     - Never trigger the workflow (`workflow_dispatch`), and never run `npm run scan` against the cloud project. Locally, point `EMAIL_*` at Mailpit.
+- The daily digest: `.github/workflows/digest.yml` runs on `main` every 15 minutes (from the release of step 5).
+    - It emails journalists (real people) their digest, with the same `EMAIL_*` and `SUPABASE_SECRET_KEY` secrets as the scanner.
+    - Never trigger the workflow, and never run `npm run digest` against the cloud project. Locally, point `EMAIL_*` at Mailpit.
 - The web app: `.github/workflows/deploy-app.yml` publishes it to GitHub Pages (`fieldgibsonmedia.github.io/wirescout/`) on every push to `main`. It uses the cloud Supabase project.
 - The repo is public: everything committed is visible to anyone.
 - Supabase cloud project: Ken's account only, no journalists yet. Sign-ups are open to allowed email domains. You may push migrations to it after Ken's "approve".
