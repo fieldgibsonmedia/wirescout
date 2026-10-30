@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-30: Motion (polish stage, job 3 of 7)
+
+- In `app.css`, no new dependency: menus grow from their button and fade out (`menu-pop`); dialogs fade in with the box rising a little, and fade out (`dialog-fade`, `dialog-pop`); one tab underline slides between tabs (Reka's `TabsIndicator`, class `tab-indicator`); buttons press in slightly; each new page fades in (a `Transition` around the layout's `RouterView`). Dashboard cards lift on hover.
+- All of it stops with "Reduce motion".
+- Checked: type check, build, 35 unit tests. In the browser (desktop and phone width, dark): each animation running on open and close, the underline sliding in the watch list and the Add sources dialog, the old page gone at once, the dashboard, watch list and Account settings layouts unchanged.
+- Not checked: "Reduce motion" turned on (a system setting); the button press (CSS only).
+- Next: job 4, watch list settings.
+
 ## 2026-10-30: Look and feel (polish stage, job 2 of 7)
 
 - Blue: picking Light in Account settings showed DaisyUI's built-in indigo, because its light theme's selector beat ours. DaisyUI's built-in themes are off now; ours copy their values. #0071e3 in Light, Dark and Auto.
