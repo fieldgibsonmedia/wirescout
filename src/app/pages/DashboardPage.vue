@@ -72,7 +72,7 @@ onMounted(load);
         <li v-for="list in boxes" :key="list.id">
             <RouterLink
                 :to="{ name: 'watch-list', params: { id: list.id } }"
-                class="card h-full border border-base-300 bg-base-100 transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:bg-base-200 motion-reduce:transition-none"
+                class="card h-full border border-base-300 bg-base-100 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:translate-y-0 active:bg-base-200 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
                 <div class="card-body gap-3 p-4 md:p-6">
                     <h2 class="card-title text-lg break-words">{{ list.name }}</h2>

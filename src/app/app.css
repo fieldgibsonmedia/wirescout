@@ -11,7 +11,7 @@
  * DaisyUI's light and dark themes, with Apple's web blue as the primary colour until Wirescout has a brand
  * (#0071e3, the blue apple.com uses: white on it passes 4.5:1; Apple's system blue #007aff doesn't)
  * and 44 px fields and buttons (DESIGN.md, targets).
- * This file holds the theme only: components use DaisyUI classes plus Tailwind utilities.
+ * This file holds the theme and the motion: components use DaisyUI classes plus Tailwind utilities.
  * Light theme only: DaisyUI's green and red text on their soft backgrounds is 1.9:1 and 2.6:1,
  * so the "new" badges and error messages use darker shades that pass 4.5:1.
  * Surfaces: the page is base-200 and everything on it (cards, tables, menus, the side nav and top bar) base-100,
@@ -57,4 +57,128 @@
 @theme inline {
     --color-primary-hover: color-mix(in oklab, var(--color-primary), black 25%);
     --color-primary-active: color-mix(in oklab, var(--color-primary), black 50%);
+}
+
+/*
+ * Motion. Short and quiet: things appear from where they're opened, and buttons react to a press.
+ * Everything here stops with the computer's "Reduce motion" setting (last rule).
+ */
+
+/* Buttons press in slightly. DaisyUI already eases their colours and moves them 0.5 px. */
+.btn {
+    transition-property: color, background-color, border-color, box-shadow, transform, scale, translate;
+}
+
+.btn:active:not(:disabled) {
+    scale: 0.97;
+}
+
+/* Menus (class menu-pop on Reka's DropdownMenuContent) grow from their button, and fade out when closed. */
+@keyframes pop-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+@keyframes pop-out {
+    to {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+.menu-pop {
+    transform-origin: var(--reka-dropdown-menu-content-transform-origin);
+}
+
+.menu-pop[data-state='open'] {
+    animation: pop-in 150ms ease-out;
+}
+
+.menu-pop[data-state='closed'] {
+    animation: pop-out 100ms ease-in;
+}
+
+/* Dialogs: the backdrop fades (dialog-fade on the overlay) and the box rises a little (dialog-pop on the content). */
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes rise-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.5rem) scale(0.97);
+    }
+}
+
+.dialog-fade[data-state='open'] {
+    animation: fade-in 200ms ease-out;
+}
+
+.dialog-fade[data-state='closed'] {
+    animation: fade-out 150ms ease-in;
+}
+
+.dialog-pop[data-state='open'] {
+    animation: rise-in 200ms ease-out;
+}
+
+/*
+ * Tabs: one underline (Reka's TabsIndicator, class tab-indicator) slides to the selected tab,
+ * instead of DaisyUI's, which jumps. Its line is inset like DaisyUI's (the tab's 0.75 rem padding).
+ */
+.tabs-border:has(.tab-indicator) > .tab::before {
+    display: none;
+}
+
+.tab-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: var(--reka-tabs-indicator-size);
+    translate: var(--reka-tabs-indicator-position) 0;
+    padding-inline: 0.75rem;
+    transition:
+        width 250ms ease,
+        translate 250ms ease;
+}
+
+.tab-indicator::before {
+    content: '';
+    display: block;
+    height: 100%;
+    border-radius: var(--radius-field);
+    background-color: currentColor;
+}
+
+/* Pages fade in when you go from one to another (the layout's RouterView). */
+.page-enter-active {
+    animation: fade-in 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn:active:not(:disabled) {
+        scale: none;
+    }
+
+    .menu-pop,
+    .dialog-fade,
+    .dialog-pop,
+    .page-enter-active {
+        animation: none !important;
+    }
+
+    .tab-indicator {
+        transition: none;
+    }
 }
