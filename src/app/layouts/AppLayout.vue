@@ -6,14 +6,16 @@
 import { Bars3Icon, BellAlertIcon, ListBulletIcon, ShareIcon, Squares2X2Icon } from '@heroicons/vue/24/outline';
 import { PlusIcon } from '@heroicons/vue/20/solid';
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
-import { RouterLink, RouterView, useRouter } from 'vue-router';
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
 import NewWatchListDialog from '@/components/NewWatchListDialog.vue';
+import WatchListMenu from '@/components/WatchListMenu.vue';
 import NavItem from '@/components/ui/NavItem.vue';
 import UserMenu from '@/components/ui/UserMenu.vue';
 import { loadProfile, profile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 import { creatingWatchList, loadWatchLists, watchLists } from '@/lib/watchLists';
 
+const route = useRoute();
 const router = useRouter();
 
 const open = ref(false);
@@ -105,7 +107,21 @@ onUnmounted(() => {
                         :to="{ name: 'watch-list', params: { id: list.id } }"
                         :label="list.name"
                         :icon="ListBulletIcon"
-                    />
+                    >
+                        <!-- Shown on hover and focus, while open, and always where the nav is a drawer (phones and tablets). -->
+                        <!-- On the open list, white on the blue highlight. -->
+                        <template #end>
+                            <WatchListMenu
+                                :id="list.id"
+                                :name="list.name"
+                                :keywords="list.keywords"
+                                :trigger-class="[
+                                    'btn-sm absolute end-1 top-1/2 -translate-y-1/2 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:data-[state=open]:opacity-100',
+                                    route.name === 'watch-list' && route.params.id === list.id ? 'text-primary-content' : '',
+                                ].join(' ')"
+                            />
+                        </template>
+                    </NavItem>
                     <li>
                         <button type="button" class="min-h-11 content-center" @click="creatingWatchList = true">
                             <PlusIcon class="size-5" aria-hidden="true" />
