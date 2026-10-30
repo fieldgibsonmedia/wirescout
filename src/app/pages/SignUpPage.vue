@@ -99,6 +99,9 @@ async function signUp() {
             :error="errors.confirmation"
             required
         />
+        <p class="max-w-prose text-sm text-base-content/70">
+            Wirescout counts the days you use it, the stories you share and the digest links you open, to see what's useful. Only the Wirescout team sees it.
+        </p>
 
         <template #links>
             <RouterLink :to="{ name: 'sign-in' }" class="link">I already have an account</RouterLink>

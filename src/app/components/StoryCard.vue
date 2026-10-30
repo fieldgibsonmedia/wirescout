@@ -7,6 +7,7 @@ import Badge from '@/components/ui/Badge.vue';
 import Card from '@/components/ui/Card.vue';
 
 defineProps<{
+    articleId: number;
     title: string;
     url: string;
     summary: string | null;
@@ -31,6 +32,6 @@ defineProps<{
             </a>
         </h3>
         <p v-if="summary" class="max-w-prose">{{ summary }}</p>
-        <ShareMenu :title="title" :url="url" />
+        <ShareMenu :article-id="articleId" :title="title" :url="url" />
     </Card>
 </template>

@@ -7,10 +7,12 @@ import { ArrowUpOnSquareIcon, CheckIcon } from '@heroicons/vue/20/solid';
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from 'reka-ui';
 import { computed, ref } from 'vue';
 import { profile } from '@/lib/profile';
+import { recordUsage } from '@/lib/usage';
 
 const props = defineProps<{
     title: string;
     url: string;
+    articleId: number;
 }>();
 
 const linkedInUrl = computed(() => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(props.url)}`);
@@ -29,6 +31,7 @@ const anyOption = computed(() => Object.values(options.value).some(Boolean));
 const copied = ref(false);
 
 async function copyLink() {
+    recordUsage('share_copy_link', props.articleId);
     await navigator.clipboard.writeText(props.url);
     copied.value = true;
     setTimeout(() => (copied.value = false), 3000);
@@ -48,12 +51,12 @@ const itemClass =
             </DropdownMenuTrigger>
             <DropdownMenuPortal>
                 <DropdownMenuContent align="start" :side-offset="4" class="z-30 w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-sm">
-                    <DropdownMenuItem v-if="options.linkedIn" as-child>
+                    <DropdownMenuItem v-if="options.linkedIn" as-child @select="recordUsage('share_linkedin', articleId)">
                         <a :href="linkedInUrl" target="_blank" rel="noopener" :class="itemClass">
                             LinkedIn<span class="sr-only"> (opens in a new tab)</span>
                         </a>
                     </DropdownMenuItem>
-                    <DropdownMenuItem v-if="options.email" as-child>
+                    <DropdownMenuItem v-if="options.email" as-child @select="recordUsage('share_email', articleId)">
                         <a :href="emailUrl" :class="itemClass">Email</a>
                     </DropdownMenuItem>
                     <DropdownMenuItem v-if="options.copyLink" :class="itemClass" @select="copyLink">Copy link</DropdownMenuItem>

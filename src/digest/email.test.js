@@ -28,17 +28,17 @@ test("the subject counts new stories and the lists that have them", () => {
 test("each list shows its new stories and failing sources, linking into the app", () => {
   const { html, text } = buildDigest({ lists, profile, appUrl });
 
-  assert.match(html, /href="https:\/\/app\.example\.com\/"[^>]*>Wirescout<\/a>/, "the brand opens the dashboard");
+  assert.match(html, /href="https:\/\/app\.example\.com\/\?from=digest"[^>]*>Wirescout<\/a>/, "the brand opens the dashboard");
   assert.match(html, /Regulators<\/a>\s*<div[^>]*>7 new stories</);
-  assert.match(html, /href="https:\/\/app\.example\.com\/lists\/list-1\?tab=sources"[^>]*>⚠︎ 3 problematic sources/);
-  assert.match(html, /href="https:\/\/app\.example\.com\/lists\/list-1\/stories\/1"/);
-  assert.match(html, /href="https:\/\/app\.example\.com\/lists\/list-1"[^>]*>See all new Regulators stories on Wirescout</);
+  assert.match(html, /href="https:\/\/app\.example\.com\/lists\/list-1\?tab=sources&#38;from=digest"[^>]*>⚠︎ 3 problematic sources/);
+  assert.match(html, /href="https:\/\/app\.example\.com\/lists\/list-1\/stories\/1\?from=digest"/);
+  assert.match(html, /href="https:\/\/app\.example\.com\/lists\/list-1\?from=digest"[^>]*>See all new Regulators stories on Wirescout</);
   assert.match(html, /29 Oct, 16:19/);
   assert.doesNotMatch(html, /news\.example\.com\//, "no link to the source site");
 
   assert.match(text, /REGULATORS · 7 new stories/);
-  assert.match(text, /See all new Regulators stories on Wirescout: https:\/\/app\.example\.com\/lists\/list-1/);
-  assert.match(text, /⚠︎ 3 problematic sources: https:\/\/app\.example\.com\/lists\/list-1\?tab=sources/);
+  assert.match(text, /See all new Regulators stories on Wirescout: https:\/\/app\.example\.com\/lists\/list-1\?from=digest/);
+  assert.match(text, /⚠︎ 3 problematic sources: https:\/\/app\.example\.com\/lists\/list-1\?tab=sources&from=digest/);
   assert.match(text, /Change the time or turn it off: https:\/\/app\.example\.com\/settings\/digest/);
 });
 
@@ -46,7 +46,7 @@ test("a list with failing sources but nothing new still shows, without See all",
   const { html } = buildDigest({ lists, profile, appUrl });
   assert.match(html, /Broken<\/a>\s*<div[^>]*>No new stories</);
   assert.match(html, /1 problematic source</);
-  assert.doesNotMatch(html, /lists\/list-4"[^>]*>See all/);
+  assert.doesNotMatch(html, /lists\/list-4\?from=digest"[^>]*>See all/);
 });
 
 test("a list with nothing new and nothing failing is left out", () => {
