@@ -246,6 +246,7 @@ onMounted(load);
                 <ul v-else class="flex flex-col gap-4">
                     <li v-for="article in articles" :key="article.id">
                         <StoryCard
+                            :article-id="article.id"
                             :title="article.title"
                             :url="article.url"
                             :summary="article.summary"

@@ -4,6 +4,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { emailLink, supabase } from '@/lib/supabase';
+import { recordActiveDay, recordUsage } from '@/lib/usage';
 import AccountSettingsPage from '@/pages/AccountSettingsPage.vue';
 import ChannelsSettingsPage from '@/pages/ChannelsSettingsPage.vue';
 import ConfirmPage from '@/pages/ConfirmPage.vue';
@@ -68,5 +69,21 @@ router.beforeEach(async (to) => {
 
     if (to.meta.public && data.session) {
         return { name: 'dashboard' };
+    }
+});
+
+// Usage for the monthly report: the day, and a digest link (?from=digest) once, then the tag is dropped
+// so a reload doesn't count it again.
+router.afterEach(async (to) => {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session || to.meta.public || to.meta.anyone) {
+        return;
+    }
+
+    recordActiveDay(data.session.user.id);
+    if (to.query.from === 'digest') {
+        recordUsage('digest_click', to.name === 'story' ? Number(to.params.storyId) : undefined);
+        const { from: _from, ...query } = to.query;
+        router.replace({ ...to, query });
     }
 });

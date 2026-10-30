@@ -2,6 +2,17 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-30: Usage report
+
+- Released before this job: the digest email layout (PR #11, merged by Ken).
+- App: records each day a person opens it (`active_days`, one row per day), each Share click (LinkedIn, Email, Copy link) and each digest link opened (`usage_events`). Digest links carry `?from=digest`, dropped after counting so a reload doesn't count twice. One line about it on the sign-up page and in Account settings.
+- `src/admin/` and `admin.yml` (hourly, :40): emails `ADMIN_EMAIL` new access requests (once each) and, once a month is over, the usage report (active days per person over 6 months as bars, last month's shares and digest clicks, the 5 most shared stories).
+- 1 migration: `active_days`, `usage_events`, `record_active_day()`, `access_requests.notified_at`, `usage_reports` (September 2026 marked as sent: counting starts in October).
+- Checked: 35 unit tests (4 new), 9 new database tests, db lint, type check, build. In the browser: a signed-out digest link → sign in → the story, recorded 1 day, 1 digest click (a reload didn't add one) and 1 Copy link share; the sign-up and Account settings lines. Local admin run to Mailpit: 1 access request and the usage report (made-up data), nothing on the second run.
+- Not checked: the phone layout and light mode; LinkedIn and Email shares in the browser (same code path as Copy link); real Gmail sending.
+- Release order: push the migration to the cloud before Ken merges, or recording and the admin emails fail.
+- Next: step 6, post from Wirescout.
+
 ## 2026-10-30: Digest email layout
 
 - Released before this job: the digest (PR #9) and the run times :05, :20, :35, :50 (PR #10), both merged by Ken. Ken ran the digest by hand and got his first one.

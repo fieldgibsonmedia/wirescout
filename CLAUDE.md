@@ -42,6 +42,9 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
 - The daily digest: `.github/workflows/digest.yml` runs on `main` every 15 minutes (from the release of step 5).
     - It emails journalists (real people) their digest, with the same `EMAIL_*` and `SUPABASE_SECRET_KEY` secrets as the scanner.
     - Never trigger the workflow, and never run `npm run digest` against the cloud project. Locally, point `EMAIL_*` at Mailpit.
+- The admin emails: `.github/workflows/admin.yml` runs on `main` every hour at :40 (from the release of the usage report job).
+    - It emails only `ADMIN_EMAIL`: new access requests, and the monthly usage report (real names and addresses).
+    - Never trigger the workflow, and never run `npm run admin` against the cloud project. Locally, point `EMAIL_*` at Mailpit.
 - The web app: `.github/workflows/deploy-app.yml` publishes it to GitHub Pages (`fieldgibsonmedia.github.io/wirescout/`) on every push to `main`. It uses the cloud Supabase project.
 - The repo is public: everything committed is visible to anyone.
 - Supabase cloud project: Ken's account only, no journalists yet. Sign-ups are open to allowed email domains. You may push migrations to it after Ken's "approve".

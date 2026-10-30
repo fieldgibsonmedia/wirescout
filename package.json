@@ -7,7 +7,8 @@
   "scripts": {
     "scan": "node src/scanner/index.js",
     "digest": "node src/digest/index.js",
-    "test": "node --test \"src/scanner/**/*.test.js\" \"src/digest/**/*.test.js\"",
+    "admin": "node src/admin/index.js",
+    "test": "node --test \"src/scanner/**/*.test.js\" \"src/digest/**/*.test.js\" \"src/admin/**/*.test.js\"",
     "dev": "vite",
     "build": "vite build",
     "type-check": "vue-tsc --noEmit",

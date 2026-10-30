@@ -252,4 +252,11 @@ async function showPasswordErrors() {
             </label>
         </fieldset>
     </Card>
+
+    <Card>
+        <h2 class="text-xl font-bold">Usage</h2>
+        <p class="max-w-prose text-base-content/70">
+            Wirescout counts the days you use it, the stories you share and the digest links you open, to see what's useful. Only the Wirescout team sees it.
+        </p>
+    </Card>
 </template>

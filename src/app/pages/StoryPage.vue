@@ -92,6 +92,6 @@ onMounted(load);
             <ArrowLeftIcon class="size-4" aria-hidden="true" />
             {{ listName }}
         </RouterLink>
-        <StoryCard v-bind="story" />
+        <StoryCard :article-id="Number(storyId)" v-bind="story" />
     </div>
 </template>

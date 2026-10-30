@@ -25,17 +25,37 @@ export type Database = {
           Tables: {
             "access_requests": {
                   Row: {
-                    "created_at": string,"email": string,"handled_at": string | null,"id": number,"name": string,"reason": string
+                    "created_at": string,"email": string,"handled_at": string | null,"id": number,"name": string,"notified_at": string | null,"reason": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"email": string,"handled_at"?: string | null,"id"?: never,"name": string,"reason": string
+                    "created_at"?: string,"email": string,"handled_at"?: string | null,"id"?: never,"name": string,"notified_at"?: string | null,"reason": string
                   }
                   Update: {
-                    "created_at"?: string,"email"?: string,"handled_at"?: string | null,"id"?: never,"name"?: string,"reason"?: string
+                    "created_at"?: string,"email"?: string,"handled_at"?: string | null,"id"?: never,"name"?: string,"notified_at"?: string | null,"reason"?: string
                   }
                   Relationships: [
                     
+                  ]
+                },"active_days": {
+                  Row: {
+                    "day": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "day": string,"user_id": string
+                  }
+                  Update: {
+                    "day"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "active_days_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"allowed_email_domains": {
                   Row: {
@@ -109,6 +129,52 @@ isOneToOne: false
                   }
                   Update: {
                     "created_at"?: string,"feed_url"?: string | null,"id"?: string,"last_checked_at"?: string | null,"name"?: string | null,"problem"?: string | null,"read_from"?: string | null,"stories_found"?: number | null,"url"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"usage_events": {
+                  Row: {
+                    "action": string,"article_id": number | null,"created_at": string,"id": number,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "action": string,"article_id"?: number | null,"created_at"?: string,"id"?: never,"user_id"?: string
+                  }
+                  Update: {
+                    "action"?: string,"article_id"?: number | null,"created_at"?: string,"id"?: never,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "usage_events_article_id_fkey"
+      columns: ["article_id"]
+isOneToOne: false
+      referencedRelation: "articles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "usage_events_article_id_fkey"
+      columns: ["article_id"]
+isOneToOne: false
+      referencedRelation: "watch_list_articles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "usage_events_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"usage_reports": {
+                  Row: {
+                    "month": string,"sent_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "month": string,"sent_at"?: string
+                  }
+                  Update: {
+                    "month"?: string,"sent_at"?: string
                   }
                   Relationships: [
                     
@@ -236,6 +302,9 @@ isOneToOne: false
                            },
 "mentions_any":
 { Args: { "content": string,"keywords": (string)[] }; Returns: boolean
+                           },
+"record_active_day":
+{ Args: Record<PropertyKey, never>; Returns: undefined
                            }
           }
           Enums: {
