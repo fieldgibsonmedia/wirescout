@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-30: Digest email layout
+
+- Released before this job: the digest (PR #9) and the run times :05, :20, :35, :50 (PR #10), both merged by Ken. Ken ran the digest by hand and got his first one.
+- From Ken's first digest: "Wirescout" above the cards, linking to the dashboard; each watch list in its own card; the list name as a real heading with "382 new stories" under it and the red warning on the right; a full-width blue button "See all new <list> stories on Wirescout".
+- Checked: 31 unit tests; a local digest in Mailpit (desktop width).
+- Not checked: the phone width, Outlook and Gmail rendering.
+- Next: usage report job.
+
 ## 2026-10-30: Daily digest (build step 5)
 
 - Released before this job (PR #8, merged by Ken): Keywords. Migration pushed first; the web app deploy passed.

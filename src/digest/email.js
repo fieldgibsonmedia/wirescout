@@ -32,6 +32,7 @@ export function buildDigest({ lists, profile, appUrl }) {
   });
 
   const links = {
+    dashboard: `${appUrl}/`,
     list: (list) => `${appUrl}/lists/${list.id}`,
     sources: (list) => `${appUrl}/lists/${list.id}?tab=sources`,
     story: (list, story) => `${appUrl}/lists/${list.id}/stories/${story.id}`,
@@ -57,12 +58,12 @@ function buildText({ sections, links, footer, dateFormat }) {
       lines.push("", story.title, `${story.source} · ${dateFormat.format(new Date(story.date))}`, links.story(list, story));
     }
     if (list.newCount > 0) {
-      lines.push("", `See all new stories on Wirescout: ${links.list(list)}`);
+      lines.push("", `${seeAll(list)}: ${links.list(list)}`);
     }
     return lines.join("\n");
   });
 
-  return `${blocks.join("\n\n---\n\n")}\n\n---\n\n${footer}\nChange the time or turn it off: ${links.settings}\n`;
+  return `Wirescout: ${links.dashboard}\n\n${blocks.join("\n\n---\n\n")}\n\n---\n\n${footer}\nChange the time or turn it off: ${links.settings}\n`;
 }
 
 function buildHtml({ sections, links, footer, dateFormat, subject }) {
@@ -81,36 +82,51 @@ function buildHtml({ sections, links, footer, dateFormat, subject }) {
           </td></tr>`,
       )
       .join("");
-    const seeAll =
+    // A full-width button made of a table cell, so Outlook shows it as a button too.
+    const button =
       list.newCount > 0
-        ? `<tr><td style="padding: 12px 0 0;"><a href="${links.list(list)}" style="font-size: 15px; font-weight: 600; color: ${BLUE}; text-decoration: none;">See all new stories on Wirescout →</a></td></tr>`
+        ? `<tr><td style="padding-top: 20px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+              <tr><td align="center" bgcolor="${BLUE}" style="border-radius: 8px;">
+                <a href="${links.list(list)}" style="display: block; padding: 14px 16px; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none;">${escape(seeAll(list))}</a>
+              </td></tr>
+            </table>
+          </td></tr>`
         : "";
 
+    // Each list in its own card, with a gap above it.
     return `
-      <tr><td style="padding: 24px 24px 0;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-          <tr>
-            <td style="padding-bottom: 4px; font-size: 17px; font-weight: 700;">
-              <a href="${links.list(list)}" style="color: ${TEXT}; text-decoration: none;">${escape(list.name)}</a>
-              <span style="font-weight: 400; color: ${MUTED};">· ${newStories(list)}</span>
-            </td>
-            <td align="right" style="padding-bottom: 4px; font-size: 14px; white-space: nowrap;">${warning}</td>
-          </tr>
+      <tr><td style="padding-top: 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #ffffff; border-radius: 12px;">
+          <tr><td style="padding: 24px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td valign="top">
+                  <a href="${links.list(list)}" style="font-size: 20px; font-weight: 700; line-height: 1.3; color: ${TEXT}; text-decoration: none;">${escape(list.name)}</a>
+                  <div style="margin-top: 2px; font-size: 14px; color: ${MUTED};">${newStories(list)}</div>
+                </td>
+                <td valign="top" align="right" style="padding: 4px 0 0 12px; font-size: 14px; white-space: nowrap;">${warning}</td>
+              </tr>
+            </table>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${stories}${button}</table>
+          </td></tr>
         </table>
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${stories}${seeAll}</table>
       </td></tr>`;
   });
 
+  // The brand and the footer sit on the grey background, outside the cards.
   return `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(subject)}</title></head>
 <body style="margin: 0; padding: 0; background: #f5f5f7;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #f5f5f7;">
     <tr><td align="center" style="padding: 24px 12px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background: #ffffff; border-radius: 12px; font-family: ${FONT}; color: ${TEXT};">
-        <tr><td style="padding: 24px 24px 0; font-size: 20px; font-weight: 700;">Wirescout</td></tr>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; font-family: ${FONT}; color: ${TEXT};">
+        <tr><td style="padding: 0 4px;">
+          <a href="${links.dashboard}" style="font-size: 22px; font-weight: 700; color: ${TEXT}; text-decoration: none;">Wirescout</a>
+        </td></tr>
         ${blocks.join("")}
-        <tr><td style="padding: 24px; font-size: 13px; color: ${MUTED};">
+        <tr><td style="padding: 20px 4px 0; font-size: 13px; color: ${MUTED};">
           ${escape(footer)} <a href="${links.settings}" style="color: ${MUTED};">Change the time or turn it off</a>
         </td></tr>
       </table>
@@ -123,6 +139,10 @@ function buildHtml({ sections, links, footer, dateFormat, subject }) {
 
 function newStories(list) {
   return list.newCount > 0 ? plural(list.newCount, "new story", "new stories") : "No new stories";
+}
+
+function seeAll(list) {
+  return `See all new ${list.name} stories on Wirescout`;
 }
 
 function problems(list) {
