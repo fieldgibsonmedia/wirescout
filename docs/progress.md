@@ -2,6 +2,16 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-30: Save stories (polish stage, job 5 of 7)
+
+- Each story card has Save / Saved next to Share (`SaveButton.vue`), in the list and on the story page. Clicking Saved removes it. Ken chose "Save": the word news apps use for "keep for later".
+- The Stories tab has a switch, **All stories · Saved**. Saved shows the list's saved stories, newest save first; a story removed there stays (with Save) until the view is opened again. The search box shows only with All stories.
+- 1 migration: `saved_stories` (watch list, story, saved at), deleted with its list. Users save only stories from their own list's sources, and can't change `saved_at`.
+- Checked: 10 new database tests (all pass; the known profile-count test fails while the local database has test users), db lint, type check, build, 35 unit tests. In the browser (dark, 606 px and desktop; local saved stories, Ken's ok): saving 2 stories, the Saved view in save order, removing one there, the story page showing and removing a save, the empty Saved view; light mode.
+- Not checked: a real phone.
+- Release order: push the migration to the cloud before Ken merges v0.1.0, or the live app can't load a watch list.
+- Next: job 6, dashboard.
+
 ## 2026-10-30: Watch list settings (polish stage, job 4 of 7)
 
 - Side nav: each watch list has a "⋯" menu (Edit, Delete), shown on hover and keyboard focus, always where the nav is a drawer. Same `WatchListMenu.vue` as the list page.
@@ -10,7 +20,7 @@ Newest first. One entry per job: date, what was done, what's next.
 - No database change.
 - Checked: type check, build, 35 unit tests. In the browser (desktop, dark; local test data, Ken's ok): the "⋯" on hover and focus and white on the open list; renaming "QA list 2" with `flood,  Flood ,` from the nav (saved as `flood`); renaming "QA list" with a keyword from its page (title, nav and stories updated), clearing the keyword from the nav (stories back); deleting the other list from the nav (page stayed). Phone width (a 390 px frame): "⋯" always shown, its menu opens. Light mode: the nav on hover.
 - Not checked: a real phone or tablet; the dashboard count after a keyword edit (no new stories locally).
-- Next: job 5, pin stories.
+- Next: job 5, save stories.
 
 ## 2026-10-30: Motion (polish stage, job 3 of 7)
 

@@ -181,7 +181,7 @@ A wrong link is the journalist's to fix, so the app shows them which source fail
 
 Ken's 18 changes from using the live app, in 7 jobs (one branch each, from `origin/mvp`), released together as v0.1.0.
 No Pinia: shared data stays in the small stores in `src/app/lib/` (`watchLists.ts`, `profile.ts`); looked at again in step 6.
-Jobs 1–4 are done (`docs/progress.md`): quick fixes, look and feel, motion, watch list settings.
+Jobs 1–5 are done (`docs/progress.md`): quick fixes, look and feel, motion, watch list settings, save stories.
 
 **Job 4, watch list settings (Ken's items 1, 12):**
 
@@ -191,17 +191,17 @@ Jobs 1–4 are done (`docs/progress.md`): quick fixes, look and feel, motion, wa
     - The Stories tab keeps only the search box. `KeywordsFilter.vue` goes; its parsing and limits move into the Edit dialog.
 - No database change.
 
-**Job 5, pin stories (item 13):**
+**Job 5, save stories (item 13):**
 
-- A pin button on each story card (in the list and on the story page): Pin / Unpin.
-- The Stories tab gets a switch, **All stories · Pinned**. Pinned shows only that list's pinned stories, newest pin first.
-- Pins belong to the watch list, so deleting the list removes them.
-- 1 migration: table `pinned_stories` (watch list, article, pinned at), with access rules (own lists only) and pgTAP tests.
+- A Save button on each story card (in the list and on the story page): Save / Saved. "Save" is the word news apps use for "keep for later" (Ken, 2026-10-30).
+- The Stories tab gets a switch, **All stories · Saved**. Saved shows only that list's saved stories, newest save first.
+- Saved stories belong to the watch list, so deleting the list removes them.
+- 1 migration: table `saved_stories` (watch list, article, saved at), with access rules (own lists only) and pgTAP tests.
 
 **Job 6, dashboard (items 14, 16, 18):**
 
-- Each list's card: a big number (new stories, or "No new stories"); a small bar chart of stories per day over the last 7 days (after keywords); "24 sources · ⚠ 2 failing" (failing in red, linking to the Sources tab, like the digest); "3 pinned" and "Latest story 2 h ago".
-- 1 migration: a view `watch_list_stats` (security invoker) with the source count, failing count, pinned count, latest story and the 7-day counts.
+- Each list's card: a big number (new stories, or "No new stories"); a small bar chart of stories per day over the last 7 days (after keywords); "24 sources · ⚠ 2 failing" (failing in red, linking to the Sources tab, like the digest); "3 saved" and "Latest story 2 h ago".
+- 1 migration: a view `watch_list_stats` (security invoker) with the source count, failing count, saved count, latest story and the 7-day counts.
 - Release notes: a "What's new" card after the list cards (people come for their lists). It shows the latest version's notes; "Earlier versions" expands the rest. The notes live in `src/app/lib/releaseNotes.ts`, updated with each release; no database. The first entry is v0.1.0, listing this stage's changes.
 
 **Job 7, global search (item 2):**
@@ -235,7 +235,7 @@ Jobs added on 2026-10-27 sit between the steps, so the step numbers stay the sam
     - Keywords job
 5. Daily digest email
     - Usage report job
-    - Polish before step 6 (Ken's 18 changes, agreed 2026-10-30), released together as v0.1.0: quick fixes, look and feel, motion, watch list settings (Edit and Delete from the side nav, keywords in the Edit dialog), pin stories, dashboard insights and release notes, global search
+    - Polish before step 6 (Ken's 18 changes, agreed 2026-10-30), released together as v0.1.0: quick fixes, look and feel, motion, watch list settings (Edit and Delete from the side nav, keywords in the Edit dialog), save stories, dashboard insights and release notes, global search
 6. Post from Wirescout (last: it touches the live magazine sites)
 
 ## Known risks

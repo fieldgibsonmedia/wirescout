@@ -119,6 +119,50 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"saved_stories": {
+                  Row: {
+                    "article_id": number,"saved_at": string,"watch_list_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "article_id": number,"saved_at"?: string,"watch_list_id": string
+                  }
+                  Update: {
+                    "article_id"?: number,"saved_at"?: string,"watch_list_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "saved_stories_article_id_fkey"
+      columns: ["article_id"]
+isOneToOne: false
+      referencedRelation: "articles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "saved_stories_article_id_fkey"
+      columns: ["article_id"]
+isOneToOne: false
+      referencedRelation: "watch_list_articles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "saved_stories_watch_list_id_fkey"
+      columns: ["watch_list_id"]
+isOneToOne: false
+      referencedRelation: "watch_list_articles"
+      referencedColumns: ["watch_list_id"]
+    },{
+      foreignKeyName: "saved_stories_watch_list_id_fkey"
+      columns: ["watch_list_id"]
+isOneToOne: false
+      referencedRelation: "watch_list_new_counts"
+      referencedColumns: ["watch_list_id"]
+    },{
+      foreignKeyName: "saved_stories_watch_list_id_fkey"
+      columns: ["watch_list_id"]
+isOneToOne: false
+      referencedRelation: "watch_lists"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"sources": {
                   Row: {
                     "created_at": string,"feed_url": string | null,"id": string,"last_checked_at": string | null,"name": string | null,"problem": string | null,"read_from": string | null,"stories_found": number | null,"url": string
