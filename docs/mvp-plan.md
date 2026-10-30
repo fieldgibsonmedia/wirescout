@@ -155,7 +155,9 @@ A wrong link is the journalist's to fix, so the app shows them which source fail
 ### Keywords (job after step 4)
 
 - Optional "Only show stories that mention…" per watch list: matches the title and summary, ignoring capitals.
-- A search box in the watch list.
+    - Whole words or phrases (Ken, 2026-10-30): "AI" matches "New AI rules", not "said". Up to 20 keywords.
+    - The database does the matching (`watch_list_articles`), so the app, the dashboard counts and the digest agree. Keywords only hide stories; the scanner still saves all of them.
+- A search box in the watch list: any part of a word, within the stories the keywords let through.
 
 ### Usage report (job after step 5)
 
