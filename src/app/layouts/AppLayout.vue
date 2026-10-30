@@ -2,14 +2,16 @@
 // Every signed-in page sits in this layout: the side nav, the top bar with the account menu, and the page.
 // Large screens keep the side nav open. Smaller screens hide it behind the menu button (DaisyUI drawer).
 // The side nav comes first in the page so the Tab order matches what you see: brand and nav, then the top bar.
+// The top bar's search field opens the Search page. On phones it's an icon that opens the field over the bar.
 // Same layout as hub. It stays mounted between pages; only the page in the RouterView changes.
-import { Bars3Icon, BellAlertIcon, ListBulletIcon, ShareIcon, Squares2X2Icon } from '@heroicons/vue/24/outline';
+import { Bars3Icon, BellAlertIcon, ListBulletIcon, MagnifyingGlassIcon, ShareIcon, Squares2X2Icon } from '@heroicons/vue/24/outline';
 import { PlusIcon } from '@heroicons/vue/20/solid';
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
 import NewWatchListDialog from '@/components/NewWatchListDialog.vue';
 import WatchListMenu from '@/components/WatchListMenu.vue';
 import NavItem from '@/components/ui/NavItem.vue';
+import SearchField from '@/components/ui/SearchField.vue';
 import UserMenu from '@/components/ui/UserMenu.vue';
 import { loadProfile, profile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
@@ -28,6 +30,49 @@ const userName = computed(() => profile.value?.full_name || profile.value?.email
 const userInitial = computed(() => profile.value?.full_name?.trim().charAt(0).toUpperCase() ?? '');
 
 const version = __APP_VERSION__;
+
+const search = ref('');
+// Phones only: the search field is open over the top bar.
+const searchOpen = ref(false);
+const searchForm = ref<HTMLFormElement>();
+const searchButton = ref<HTMLButtonElement>();
+
+// On the Search page the field shows what was searched; elsewhere it starts empty.
+watch(
+    () => route.query.q,
+    (query) => {
+        search.value = route.name === 'search' && typeof query === 'string' ? query : '';
+    },
+    { immediate: true },
+);
+
+async function openSearch() {
+    searchOpen.value = true;
+    await nextTick();
+    searchForm.value?.querySelector('input')?.focus();
+}
+
+async function closeSearch() {
+    searchOpen.value = false;
+    await nextTick();
+    searchButton.value?.focus();
+}
+
+// Esc closes the open field on phones. It keeps the text: Chrome would also clear a search field on Esc.
+function closeSearchOnEscape(event: KeyboardEvent) {
+    if (searchOpen.value) {
+        event.preventDefault();
+        closeSearch();
+    }
+}
+
+function submitSearch() {
+    const query = search.value.trim();
+    if (query) {
+        searchOpen.value = false;
+        router.push({ name: 'search', query: { q: query } });
+    }
+}
 
 // The drawer must work from the keyboard (DESIGN.md): the menu button opens and closes it,
 // focus moves into the nav when it opens and back to the button when it closes, and Esc closes it.
@@ -142,7 +187,7 @@ onUnmounted(() => {
 
         <div class="drawer-content flex min-h-screen min-w-0 flex-col">
             <header class="navbar sticky top-0 z-10 gap-2 border-b border-base-300 bg-base-100 px-4">
-                <div class="flex flex-none items-center gap-2 lg:hidden">
+                <div :class="['flex flex-none items-center gap-2 lg:hidden', searchOpen ? 'max-sm:hidden' : '']">
                     <button
                         ref="menuButton"
                         type="button"
@@ -158,7 +203,21 @@ onUnmounted(() => {
                     <RouterLink to="/" class="btn btn-ghost px-2 text-xl font-bold" aria-current="false">Wirescout</RouterLink>
                 </div>
 
-                <div class="ms-auto">
+                <form
+                    ref="searchForm"
+                    role="search"
+                    :class="['min-w-0 flex-1 items-center gap-2 sm:flex sm:flex-none', searchOpen ? 'flex' : 'hidden']"
+                    @submit.prevent="submitSearch"
+                    @keydown.esc="closeSearchOnEscape"
+                >
+                    <SearchField v-model="search" label="Search all watch lists" />
+                    <button v-if="searchOpen" type="button" class="btn btn-ghost sm:hidden" @click="closeSearch">Cancel</button>
+                </form>
+
+                <div :class="['ms-auto flex items-center gap-2', searchOpen ? 'max-sm:hidden' : '']">
+                    <button ref="searchButton" type="button" class="btn btn-circle btn-ghost sm:hidden" aria-label="Search" @click="openSearch">
+                        <MagnifyingGlassIcon class="size-6" aria-hidden="true" />
+                    </button>
                     <UserMenu :name="userName" :initial="userInitial" @sign-out="supabase.auth.signOut()" />
                 </div>
             </header>
