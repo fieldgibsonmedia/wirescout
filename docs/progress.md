@@ -2,6 +2,16 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-30: Watch list settings (polish stage, job 4 of 7)
+
+- Side nav: each watch list has a "⋯" menu (Edit, Delete), shown on hover and keyboard focus, always where the nav is a drawer. Same `WatchListMenu.vue` as the list page.
+- Edit replaces Rename: one dialog with "Name" and "Only include stories that mention…". The Stories tab keeps only the search box; `KeywordsFilter.vue` is gone.
+- The `watchLists` store now holds the keywords. The list page follows it (an edit from the nav updates the title and reloads the stories), and so do the dashboard's counts. Deleting another list from the nav leaves the open page alone.
+- No database change.
+- Checked: type check, build, 35 unit tests. In the browser (desktop, dark; local test data, Ken's ok): the "⋯" on hover and focus and white on the open list; renaming "QA list 2" with `flood,  Flood ,` from the nav (saved as `flood`); renaming "QA list" with a keyword from its page (title, nav and stories updated), clearing the keyword from the nav (stories back); deleting the other list from the nav (page stayed). Phone width (a 390 px frame): "⋯" always shown, its menu opens. Light mode: the nav on hover.
+- Not checked: a real phone or tablet; the dashboard count after a keyword edit (no new stories locally).
+- Next: job 5, pin stories.
+
 ## 2026-10-30: Motion (polish stage, job 3 of 7)
 
 - In `app.css`, no new dependency: menus grow from their button and fade out (`menu-pop`); dialogs fade in with the box rising a little, and fade out (`dialog-fade`, `dialog-pop`); one tab underline slides between tabs (Reka's `TabsIndicator`, class `tab-indicator`); buttons press in slightly; each new page fades in (a `Transition` around the layout's `RouterView`). Dashboard cards lift on hover.

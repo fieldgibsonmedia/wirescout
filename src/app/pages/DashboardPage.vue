@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // One box per watch list with its number of new items. A box opens its list.
 import { PlusIcon } from '@heroicons/vue/20/solid';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
 import Alert from '@/components/ui/Alert.vue';
 import Badge from '@/components/ui/Badge.vue';
@@ -34,6 +34,20 @@ async function load() {
 
     newCounts.value = new Map(counts.data.map((count) => [count.watch_list_id ?? '', count.new_count ?? 0]));
 }
+
+// Keywords decide which stories count, so an edit from a list's menu reloads the counts.
+watch(
+    () => watchLists.value.map((list) => list.keywords.join(',')).join('|'),
+    async () => {
+        if (loading.value) {
+            return;
+        }
+        const counts = await supabase.from('watch_list_new_counts').select('watch_list_id, new_count');
+        if (!counts.error) {
+            newCounts.value = new Map(counts.data.map((count) => [count.watch_list_id ?? '', count.new_count ?? 0]));
+        }
+    },
+);
 
 onMounted(load);
 </script>

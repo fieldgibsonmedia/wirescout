@@ -181,7 +181,7 @@ A wrong link is the journalist's to fix, so the app shows them which source fail
 
 Ken's 18 changes from using the live app, in 7 jobs (one branch each, from `origin/mvp`), released together as v0.1.0.
 No Pinia: shared data stays in the small stores in `src/app/lib/` (`watchLists.ts`, `profile.ts`); looked at again in step 6.
-Jobs 1–3 are done (`docs/progress.md`): quick fixes, look and feel, motion.
+Jobs 1–4 are done (`docs/progress.md`): quick fixes, look and feel, motion, watch list settings.
 
 **Job 4, watch list settings (Ken's items 1, 12):**
 

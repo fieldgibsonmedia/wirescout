@@ -3,11 +3,11 @@
 // many sources are failing. Opening it marks the stories shown as seen, so the dashboard's new count starts
 // again from zero. Stories come from watch_list_articles, which keeps only those matching the list's keywords;
 // the search box narrows them further. ?tab=sources opens the Sources tab (the digest's failing-sources link).
+// The name and keywords follow the watchLists store, so an edit from the side nav shows here too.
 import { ExclamationTriangleIcon } from '@heroicons/vue/20/solid';
 import { TabsContent, TabsIndicator, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import KeywordsFilter from '@/components/KeywordsFilter.vue';
 import SourcesTab from '@/components/SourcesTab.vue';
 import StoryCard from '@/components/StoryCard.vue';
 import WatchListMenu from '@/components/WatchListMenu.vue';
@@ -18,6 +18,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import SearchField from '@/components/ui/SearchField.vue';
 import { SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
+import { watchLists } from '@/lib/watchLists';
 
 const props = defineProps<{
     id: string;
@@ -182,6 +183,21 @@ function toArticle(article: {
     };
 }
 
+// After an edit (here or in the side nav), show the new name, and reload the stories if the keywords changed.
+watch(
+    () => watchLists.value.find((list) => list.id === props.id),
+    (list) => {
+        if (!list || loading.value || notFound.value || failed.value) {
+            return;
+        }
+        name.value = list.name;
+        if (list.keywords.join(',') !== keywords.value.join(',')) {
+            keywords.value = list.keywords;
+            loadArticles();
+        }
+    },
+);
+
 let searchTimer: ReturnType<typeof setTimeout> | undefined;
 watch(search, () => {
     clearTimeout(searchTimer);
@@ -207,7 +223,7 @@ onMounted(load);
     <template v-else>
         <PageHeader :title="name">
             <template #title-end>
-                <WatchListMenu :id="id" :name="name" @renamed="name = $event" />
+                <WatchListMenu :id="id" :name="name" :keywords="keywords" />
             </template>
         </PageHeader>
 
@@ -225,10 +241,7 @@ onMounted(load);
             </TabsList>
 
             <TabsContent value="stories" class="flex flex-col gap-4">
-                <div v-if="sources.length > 0" class="flex flex-col gap-2">
-                    <SearchField v-model="search" label="Search stories" />
-                    <KeywordsFilter v-model:keywords="keywords" :watch-list-id="id" @changed="loadArticles" />
-                </div>
+                <SearchField v-if="sources.length > 0" v-model="search" label="Search stories" />
 
                 <Card v-if="articles.length === 0">
                     <p v-if="sources.length === 0" class="max-w-prose">
