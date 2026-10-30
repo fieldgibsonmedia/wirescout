@@ -2,9 +2,10 @@
 // One story on its own page, opened from the daily digest: a link back to its watch list, then the story
 // with the Share menu and Save. The digest links here instead of to the source site, so sharing happens in the app.
 // It shows only a story from one of the list's sources: anything else is "not in your watch lists".
+// Opened from the Search page, the back link returns to those results instead of the list.
 import { ArrowLeftIcon } from '@heroicons/vue/20/solid';
 import { onMounted, ref } from 'vue';
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 import StoryCard from '@/components/StoryCard.vue';
 import Alert from '@/components/ui/Alert.vue';
 import { sourceLabel } from '@/lib/sources';
@@ -29,6 +30,10 @@ const saved = ref(false);
 const loading = ref(true);
 const failed = ref(false);
 const notFound = ref(false);
+
+// The page this one was opened from, kept by the router in the browser history (also after a reload).
+const previousPage = useRouter().options.history.state.back;
+const searchResults = typeof previousPage === 'string' && previousPage.startsWith('/search') ? previousPage : null;
 
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -91,9 +96,9 @@ onMounted(load);
     </Alert>
 
     <div v-else-if="story" class="flex flex-col gap-4">
-        <RouterLink :to="{ name: 'watch-list', params: { id } }" class="link link-hover inline-flex items-center gap-1 self-start">
+        <RouterLink :to="searchResults ?? { name: 'watch-list', params: { id } }" class="link link-hover inline-flex items-center gap-1 self-start">
             <ArrowLeftIcon class="size-4" aria-hidden="true" />
-            {{ listName }}
+            {{ searchResults ? 'Search results' : listName }}
         </RouterLink>
         <StoryCard v-model:saved="saved" :watch-list-id="id" :article-id="Number(storyId)" v-bind="story" />
     </div>

@@ -123,7 +123,7 @@ watch(term, load, { immediate: true });
             <h2 id="source-results" class="text-xl font-semibold">Sources ({{ sources.length }})</h2>
             <Card>
                 <ul class="divide-y divide-base-300">
-                    <li v-for="source in sources" :key="`${source.watchListId}-${source.id}`" class="flex flex-col gap-1 py-3 first:pt-0 last:pb-0">
+                    <li v-for="source in sources" :key="`${source.watchListId}-${source.id}`" class="flex flex-col gap-1 py-5 first:pt-0 last:pb-0">
                         <RouterLink
                             :to="{ name: 'watch-list', params: { id: source.watchListId }, query: { tab: 'sources' } }"
                             class="link link-hover font-semibold break-words"
@@ -148,7 +148,7 @@ watch(term, load, { immediate: true });
             <p v-if="hasMore" class="text-base-content/70">Showing the {{ STORY_LIMIT }} newest. Add a word to narrow the search.</p>
             <Card>
                 <ul class="divide-y divide-base-300">
-                    <li v-for="story in stories" :key="`${story.watchListId}-${story.id}`" class="flex flex-col gap-1 py-3 first:pt-0 last:pb-0">
+                    <li v-for="story in stories" :key="`${story.watchListId}-${story.id}`" class="flex flex-col gap-2 py-5 first:pt-0 last:pb-0">
                         <span class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-base-content/70">
                             <span class="font-semibold">{{ listName(story.watchListId) }}</span>
                             <span>{{ story.source }}</span>
