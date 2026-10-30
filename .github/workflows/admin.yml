@@ -1,0 +1,47 @@
+name: Admin emails
+
+# Every hour, emails the Wirescout team (ADMIN_EMAIL) new access requests, and the monthly usage report once
+# the month is over. It never emails journalists. Scheduled runs only run from main.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "40 * * * *" # Away from the scanner (:17) and the digest (:05, :20, :35, :50)
+
+permissions:
+  contents: read
+
+# One run at a time, so nothing is sent twice.
+concurrency:
+  group: admin
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      # Only the runtime packages: the web app's build tools stay out.
+      - name: Install dependencies
+        run: npm ci --omit=dev
+
+      - name: Send admin emails
+        env:
+          # The cloud project's public address (also in .env.production).
+          SUPABASE_URL: https://oggitszmyjqqfivrncgb.supabase.co
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
+          EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+        run: npm run admin
