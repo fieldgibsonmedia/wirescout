@@ -2,6 +2,17 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-30: Keywords
+
+- Released before this job (PR #7, merged by Ken on 2026-10-29): the sources fixes. The web app deploy passed.
+- Stories tab: a search box (any part of a word, title and summary) and a line "All stories · Only show stories that mention…" or "Only stories that mention: flood, climate risk · Edit". The dialog takes words or phrases separated by commas; empty shows all stories.
+- Keywords match whole words or phrases, ignoring capitals, in the title or summary. Up to 20.
+- 1 migration: `watch_lists.keywords`, the function `mentions_any`, the view `watch_list_articles` (each list's matching stories), and `watch_list_new_counts` rebuilt on it, so the dashboard counts only matching stories. The digest (step 5) should read from the same view.
+- Checked: 14 new database tests (all pass; the known profile-count test fails while the local database has a test user), db lint, type check, build, 17 scanner tests. In the browser (desktop, dark): search with capitals and part of a word, `%` searched as typed, "No stories match", saving keywords (spaces tidied, repeats dropped, "premium" not matching "premiums"), the 21-keyword error, the empty state, clearing the keywords, the dashboard.
+- Not checked: the phone layout and light mode; the dashboard count with a new story hidden by keywords (covered by the database tests only).
+- Release order: push the migration to the cloud before Ken merges, or the live app can't load stories.
+- Next: step 5, the daily digest.
+
 ## 2026-10-29: Sources fixes after the live test
 
 - Released before this job (PR #6, merged by Ken): Fix sources, Check links, Paste links, Select/move/remove, and the Sources tab. Migration pushed to the cloud right after the merge (16:21 UTC, before the next scan); Ken deployed `check-links`. Live test (Ken): 1 link added, 1 "page not found".
