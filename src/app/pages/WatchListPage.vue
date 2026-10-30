@@ -286,7 +286,8 @@ onMounted(load);
 
             <TabsContent value="stories" class="flex flex-col gap-4">
                 <div v-if="sources.length > 0 || savedIds.size > 0" class="flex flex-wrap items-center gap-2">
-                    <div class="join" role="group" aria-label="Show">
+                    <SearchField v-if="view === 'all' && sources.length > 0" v-model="search" label="Search stories" />
+                    <div class="join ms-auto" role="group" aria-label="Show">
                         <button
                             v-for="option in [
                                 { value: 'all', label: 'All stories' },
@@ -301,7 +302,6 @@ onMounted(load);
                             {{ option.label }}
                         </button>
                     </div>
-                    <SearchField v-if="view === 'all' && sources.length > 0" v-model="search" label="Search stories" />
                 </div>
 
                 <template v-if="view === 'saved'">

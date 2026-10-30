@@ -2,6 +2,19 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-30: UI amends after v0.1.0
+
+- Released before this job: v0.1.0 (PR #13, merged by Ken). The 2 migrations were pushed to the cloud first; the web app deploy passed.
+- From Ken's review:
+    - Sources table: each source's name opens its page on the site in a new tab, failing ones too.
+    - Stories tab: search on the left, All stories · Saved on the right.
+    - Dashboard: "2 sources · ⚠ 1 failing" on one line (the failing link sat higher).
+    - Search page: more space between results. A story opened from it links back to "Search results" (the same search), from the browser history, also after a reload; opened any other way, back to its list.
+- No database change.
+- Checked: type check, build, 35 unit tests. In the browser (dark, desktop; a made-up local user with the 2 seed sources, one marked "not found", Ken's ok): the source links' addresses, the Stories tab in both views, the dashboard line, the search spacing, back to the results (also after a reload), a story opened directly going back to its list. Phone width (390 px frames): the Stories tab and the dashboard.
+- Not checked: a real phone; light mode (no colour changes).
+- Next: step 6, post from Wirescout.
+
 ## 2026-10-30: Global search (polish stage, job 7 of 7)
 
 - Top bar: "Search all watch lists". Enter opens the Search page (`/search?q=…`); the field keeps what was searched there. On phones, a magnifier icon opens the field over the bar, with Cancel (Esc closes it too and keeps the text).

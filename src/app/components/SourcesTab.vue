@@ -1,10 +1,17 @@
 <script setup lang="ts">
 // A watch list's sources as a table (TanStack Table): search, sort by any column (failing sources first by
 // default), tick boxes to move or remove many at once, and a "⋯" menu on each row (Edit, Move to…, Remove),
-// plus Fix on failing sources. "Add sources" opens a dialog to paste links or upload a file.
+// plus Fix on failing sources. Each source's name opens its page on the site, failing or not, to see what's there. "Add sources" opens a dialog to paste links or upload a file.
 // On a phone each row stacks into a small card. Emits changed when the sources change, so the page reloads
 // its stories.
-import { ChevronDownIcon, ChevronUpDownIcon, ChevronUpIcon, ExclamationTriangleIcon, PlusIcon } from '@heroicons/vue/20/solid';
+import {
+    ArrowTopRightOnSquareIcon,
+    ChevronDownIcon,
+    ChevronUpDownIcon,
+    ChevronUpIcon,
+    ExclamationTriangleIcon,
+    PlusIcon,
+} from '@heroicons/vue/20/solid';
 import {
     columnFilteringFeature,
     createFilteredRowModel,
@@ -394,7 +401,13 @@ async function move() {
                                 @click="row.getToggleSelectedHandler()($event)"
                             />
                         </td>
-                        <td class="font-medium break-words max-md:col-start-2 max-md:p-0">{{ listLabel(row.original, sources) }}</td>
+                        <td class="font-medium break-words max-md:col-start-2 max-md:p-0">
+                            <a :href="row.original.url" target="_blank" rel="noopener" class="link link-hover">
+                                {{ listLabel(row.original, sources) }}
+                                <ArrowTopRightOnSquareIcon class="inline size-4" aria-hidden="true" />
+                                <span class="sr-only">(opens in a new tab)</span>
+                            </a>
+                        </td>
                         <td :class="['max-md:col-start-2 max-md:p-0 max-md:text-sm', row.original.problem ? 'text-error' : 'text-base-content/70']">
                             <span class="flex gap-1">
                                 <ExclamationTriangleIcon v-if="row.original.problem" class="mt-0.5 size-4 shrink-0" aria-hidden="true" />

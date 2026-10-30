@@ -177,13 +177,14 @@ onMounted(load);
                 </div>
 
                 <div v-if="list.stats" class="flex flex-col gap-1 text-sm text-base-content/70">
-                    <p>
+                    <!-- A flex row, so the failing link's icon doesn't push its text above the line. -->
+                    <p class="flex flex-wrap items-center gap-x-1">
                         {{ sourcesText(list.stats.sourceCount) }}
                         <template v-if="list.stats.failingCount > 0">
                             ·
                             <RouterLink
                                 :to="{ name: 'watch-list', params: { id: list.id }, query: { tab: 'sources' } }"
-                                class="link relative z-10 inline-flex items-center gap-1 text-error"
+                                class="link relative z-10 flex items-center gap-1 text-error"
                             >
                                 <ExclamationTriangleIcon class="size-4" aria-hidden="true" />
                                 {{ list.stats.failingCount }} failing
