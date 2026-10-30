@@ -159,6 +159,12 @@ isOneToOne: false
       foreignKeyName: "saved_stories_watch_list_id_fkey"
       columns: ["watch_list_id"]
 isOneToOne: false
+      referencedRelation: "watch_list_stats"
+      referencedColumns: ["watch_list_id"]
+    },{
+      foreignKeyName: "saved_stories_watch_list_id_fkey"
+      columns: ["watch_list_id"]
+isOneToOne: false
       referencedRelation: "watch_lists"
       referencedColumns: ["id"]
     }
@@ -283,6 +289,12 @@ isOneToOne: false
       foreignKeyName: "watch_list_sources_watch_list_id_fkey"
       columns: ["watch_list_id"]
 isOneToOne: false
+      referencedRelation: "watch_list_stats"
+      referencedColumns: ["watch_list_id"]
+    },{
+      foreignKeyName: "watch_list_sources_watch_list_id_fkey"
+      columns: ["watch_list_id"]
+isOneToOne: false
       referencedRelation: "watch_lists"
       referencedColumns: ["id"]
     }
@@ -336,6 +348,14 @@ isOneToOne: false
                            "new_count"?: never,"watch_list_id"?: string | null
                          }
                         Relationships: [
+                    
+                  ]
+                },"watch_list_stats": {
+                  Row: {
+                    "daily_counts": (number)[] | null,"failing_count": number | null,"latest_story_at": string | null,"saved_count": number | null,"source_count": number | null,"watch_list_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
                     
                   ]
                 }

@@ -2,6 +2,17 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-30: Dashboard (polish stage, job 6 of 7)
+
+- Each list's card: the new stories as a big number (or "No new stories"), a bar chart of stories per day over the last 7 days (`StoriesChart.vue`; today in blue, earlier days gray, each day's count on hover), "2 sources · ⚠ 1 failing" (the failing part links to the Sources tab), "3 saved · Latest story 2 h ago".
+- The list name's link covers the card; the failing link and the chart sit above it, and a click on the chart still opens the list.
+- "What's new" card after the lists, from `src/app/lib/releaseNotes.ts` (v0.1.0 so far; "Earlier versions" shows once there are two). Job 7 adds its line.
+- 1 migration: the view `watch_list_stats` (sources, failing, saved, latest story, 7 daily counts in the user's time zone, through the keywords).
+- Checked: 6 new database tests (all pass; the known profile-count test fails while the local database has test users), db lint, type check, build, 35 unit tests. In the browser (dark, desktop; no data changed): the card with the seed stories, the chart's label and hover target, the failing link opening the Sources tab, the card and the chart opening the list, the keyboard focus ring; light mode; phone width (a 375 px frame).
+- Not checked: the saved count and a new-story number in the browser (no local saved or new stories; covered by the database tests); a real phone.
+- Release order: push the migration to the cloud before Ken merges v0.1.0, or the dashboard can't load.
+- Next: job 7, global search.
+
 ## 2026-10-30: Save stories (polish stage, job 5 of 7)
 
 - Each story card has Save / Saved next to Share (`SaveButton.vue`), in the list and on the story page. Clicking Saved removes it. Ken chose "Save": the word news apps use for "keep for later".
