@@ -84,7 +84,7 @@ const itemClass =
 
 <template>
     <DropdownMenuRoot>
-        <DropdownMenuTrigger class="btn btn-square btn-ghost" aria-label="Watch list options">
+        <DropdownMenuTrigger class="btn btn-circle btn-ghost" aria-label="Watch list options">
             <EllipsisHorizontalIcon class="size-6" aria-hidden="true" />
         </DropdownMenuTrigger>
         <DropdownMenuPortal>

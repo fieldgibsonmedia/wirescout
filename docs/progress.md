@@ -2,6 +2,17 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-30: Look and feel (polish stage, job 2 of 7)
+
+- Blue: picking Light in Account settings showed DaisyUI's built-in indigo, because its light theme's selector beat ours. DaisyUI's built-in themes are off now; ours copy their values. #0071e3 in Light, Dark and Auto.
+- Surfaces: the page is `base-200` (#f5f5f7 in light, a darker gray in dark), cards, tables, menus, dialogs, the side nav and the top bar `base-100`. The sources table now sits in a white box.
+- 16 px corners on fields, buttons, cards, menus and dialogs. Icon buttons are round.
+- Search boxes: new `ui/SearchField.vue` (Stories and Sources tabs), with the same focus border as the other fields, no gap.
+- Failing sources: a light red row with a red edge. Text on it passes 4.5:1 (5.6 light, 4.9 dark).
+- Checked: type check, build, 35 unit tests. In the browser (phone width, light and dark): the blue in all 3 theme settings, surfaces, the search focus, round buttons, a dialog, the side nav, the failing row, the Move dropdown's focus (no gap already). Local test data (Ken's ok): the 2 seed sources in "QA list", a second list, one source marked "not found".
+- Not checked: desktop width (the browser window couldn't be resized this time).
+- Next: job 3, motion.
+
 ## 2026-10-30: Quick fixes (polish stage, job 1 of 7)
 
 - Released before this job: the usage report (PR #12, merged by Ken). Its migration was already in the cloud (checked).

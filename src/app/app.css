@@ -1,6 +1,10 @@
 @import 'tailwindcss';
+/*
+ * No built-in themes: ours below copy every value from DaisyUI's light and dark, and the built-in light
+ * would win over ours when Light is picked in Account settings (its selector is more specific), bringing back its indigo.
+ */
 @plugin 'daisyui' {
-    themes: light --default, dark --prefersdark;
+    themes: false;
 }
 
 /*
@@ -10,25 +14,40 @@
  * This file holds the theme only: components use DaisyUI classes plus Tailwind utilities.
  * Light theme only: DaisyUI's green and red text on their soft backgrounds is 1.9:1 and 2.6:1,
  * so the "new" badges and error messages use darker shades that pass 4.5:1.
+ * Surfaces: the page is base-200 and everything on it (cards, tables, menus, the side nav and top bar) base-100,
+ * so content stands out: white on light gray (Apple's #f5f5f7), and a lighter gray on a darker one.
+ * 16 px corners on fields, buttons, cards, menus and dialogs.
  */
 @plugin 'daisyui/theme' {
     name: 'light';
     default: true;
+    --color-base-200: #f5f5f7;
+    --color-base-300: #e5e5ea;
     --color-primary: #0071e3;
     --color-primary-content: #ffffff;
     --color-success: oklch(0.5 0.12 163);
     --color-success-content: #ffffff;
     --color-error: oklch(0.5 0.19 25);
     --color-error-content: #ffffff;
+    --radius-field: 1rem;
+    --radius-box: 1rem;
     --size-field: 0.275rem;
 }
 
 @plugin 'daisyui/theme' {
     name: 'dark';
     prefersdark: true;
+    --color-base-200: oklch(20% 0.012 254);
     --color-primary: #0071e3;
     --color-primary-content: #ffffff;
+    --radius-field: 1rem;
+    --radius-box: 1rem;
     --size-field: 0.275rem;
+}
+
+:root,
+[data-theme] {
+    --root-bg: var(--color-base-200);
 }
 
 /*

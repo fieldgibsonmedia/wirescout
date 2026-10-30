@@ -3,7 +3,7 @@
 // many sources are failing. Opening it marks the stories shown as seen, so the dashboard's new count starts
 // again from zero. Stories come from watch_list_articles, which keeps only those matching the list's keywords;
 // the search box narrows them further. ?tab=sources opens the Sources tab (the digest's failing-sources link).
-import { ExclamationTriangleIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid';
+import { ExclamationTriangleIcon } from '@heroicons/vue/20/solid';
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
@@ -15,6 +15,7 @@ import Alert from '@/components/ui/Alert.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import SearchField from '@/components/ui/SearchField.vue';
 import { SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
 
@@ -224,10 +225,7 @@ onMounted(load);
 
             <TabsContent value="stories" class="flex flex-col gap-4">
                 <div v-if="sources.length > 0" class="flex flex-col gap-2">
-                    <label class="input w-full focus-within:outline-primary sm:w-72">
-                        <MagnifyingGlassIcon class="size-5 text-base-content/70" aria-hidden="true" />
-                        <input v-model="search" type="search" placeholder="Search stories" aria-label="Search stories" />
-                    </label>
+                    <SearchField v-model="search" label="Search stories" />
                     <KeywordsFilter v-model:keywords="keywords" :watch-list-id="id" @changed="loadArticles" />
                 </div>
 

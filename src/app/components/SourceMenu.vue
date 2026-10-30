@@ -20,7 +20,7 @@ const itemClass =
 
 <template>
     <DropdownMenuRoot>
-        <DropdownMenuTrigger class="btn btn-square btn-ghost" :aria-label="`Options for ${label}`">
+        <DropdownMenuTrigger class="btn btn-circle btn-ghost" :aria-label="`Options for ${label}`">
             <EllipsisHorizontalIcon class="size-6" aria-hidden="true" />
         </DropdownMenuTrigger>
         <DropdownMenuPortal>

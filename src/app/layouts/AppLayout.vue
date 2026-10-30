@@ -130,7 +130,7 @@ onUnmounted(() => {
                     <button
                         ref="menuButton"
                         type="button"
-                        class="btn btn-square btn-ghost"
+                        class="btn btn-circle btn-ghost"
                         aria-label="Menu"
                         aria-controls="side-nav-panel"
                         :aria-expanded="open"
