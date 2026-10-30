@@ -78,7 +78,7 @@ onMounted(load);
                     <h2 class="card-title text-lg break-words">{{ list.name }}</h2>
                     <div>
                         <Badge v-if="list.newCount > 0" variant="success">{{ list.newCount }} new</Badge>
-                        <Badge v-else>No new items</Badge>
+                        <Badge v-else>No new stories</Badge>
                     </div>
                 </div>
             </RouterLink>
