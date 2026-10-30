@@ -35,6 +35,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `.github/workflows/admin.yml`: emails `ADMIN_EMAIL` new access requests and the monthly usage report, every hour at :40.
 - `src/admin/index.js`: the admin emails (below). `emails.js` writes them, `months.js` picks the months. Tests next to them.
 - `src/app/lib/usage.ts`: records usage for the report (days, shares, digest clicks).
+- `src/app/lib/releaseNotes.ts`: the dashboard's "What's new". Add an entry with each release.
 - `src/digest/index.js`: the digest (below). `due.js` decides who gets one, `email.js` writes it. Tests next to them.
 - `src/scanner/index.js`: the scan (below). `read-source.js` picks feed or page, `feed.js` and `page.js` read them, `health.js` writes the health email. Tests next to them (`*.test.js`).
 - `supabase/config.toml`: local Supabase settings (sign-ups on for allowed emails, the sign-up check, email templates).
