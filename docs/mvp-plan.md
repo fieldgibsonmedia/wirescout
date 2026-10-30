@@ -199,6 +199,7 @@ Jobs added on 2026-10-27 sit between the steps, so the step numbers stay the sam
     - Keywords job
 5. Daily digest email
     - Usage report job
+    - Polish before step 6 (Ken's 18 changes, agreed 2026-10-30), released together as v0.1.0: quick fixes, look and feel, motion, watch list settings (Edit and Delete from the side nav, keywords in the Edit dialog), pin stories, dashboard insights and release notes, global search
 6. Post from Wirescout (last: it touches the live magazine sites)
 
 ## Known risks
