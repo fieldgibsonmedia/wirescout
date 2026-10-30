@@ -5,7 +5,7 @@ name: Daily digest
 on:
   workflow_dispatch:
   schedule:
-    - cron: "4,19,34,49 * * * *" # Off the busy top of the hour, when GitHub delays more runs
+    - cron: "5,20,35,50 * * * *" # Easy to remember, and off the busy top of the hour, when GitHub delays more runs
 
 permissions:
   contents: read

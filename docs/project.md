@@ -30,7 +30,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `.env.production`: the live app's connection to the cloud Supabase project (public URL and publishable key, safe to commit).
 - `.github/workflows/deploy-app.yml`: builds the web app and publishes it to GitHub Pages on every push to `main`.
 - `.github/workflows/scanner.yml`: runs the scanner every hour, at :17.
-- `.github/workflows/digest.yml`: sends the due daily digests every 15 minutes (:04, :19, :34, :49).
+- `.github/workflows/digest.yml`: sends the due daily digests every 15 minutes (:05, :20, :35, :50).
 - `src/digest/index.js`: the digest (below). `due.js` decides who gets one, `email.js` writes it. Tests next to them.
 - `src/scanner/index.js`: the scan (below). `read-source.js` picks feed or page, `feed.js` and `page.js` read them, `health.js` writes the health email. Tests next to them (`*.test.js`).
 - `supabase/config.toml`: local Supabase settings (sign-ups on for allowed emails, the sign-up check, email templates).
