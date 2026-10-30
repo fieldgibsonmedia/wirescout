@@ -1,10 +1,12 @@
 <script setup lang="ts">
 // A watch list in two tabs: Stories (newest first, 50 at a time) and Sources (SourcesTab), which shows how
 // many sources are failing. Opening it marks the stories shown as seen, so the dashboard's new count starts
-// again from zero.
-import { ArrowTopRightOnSquareIcon, ExclamationTriangleIcon } from '@heroicons/vue/20/solid';
+// again from zero. Stories come from watch_list_articles, which keeps only those matching the list's keywords;
+// the search box narrows them further.
+import { ArrowTopRightOnSquareIcon, ExclamationTriangleIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid';
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import KeywordsFilter from '@/components/KeywordsFilter.vue';
 import ShareMenu from '@/components/ShareMenu.vue';
 import SourcesTab from '@/components/SourcesTab.vue';
 import WatchListMenu from '@/components/WatchListMenu.vue';
@@ -33,10 +35,13 @@ type Article = {
 
 // Stories shown per page: "Load more" adds the next ones.
 const PAGE_SIZE = 50;
+// Wait this long after the last key press before searching.
+const SEARCH_DELAY_MS = 300;
 
 const name = ref('');
 // When the user last opened this list: stories first seen after it are new.
 const lastViewedAt = ref('');
+const keywords = ref<string[]>([]);
 const sources = ref<Source[]>([]);
 const articles = ref<Article[]>([]);
 const hasMore = ref(false);
@@ -45,6 +50,12 @@ const moreFailed = ref(false);
 const loading = ref(true);
 const failed = ref(false);
 const notFound = ref(false);
+
+const search = ref('');
+// The search behind the stories shown, for the "No stories match" line.
+const shownSearch = ref('');
+// Counts story loads, so an answer that arrives after a newer search started is dropped.
+let request = 0;
 
 const tab = ref('stories');
 const failingSources = computed(() => sources.value.filter((source) => source.problem).length);
@@ -56,7 +67,7 @@ async function load() {
     failed.value = false;
 
     const [list, listSources] = await Promise.all([
-        supabase.from('watch_lists').select('name, last_viewed_at').eq('id', props.id).maybeSingle(),
+        supabase.from('watch_lists').select('name, last_viewed_at, keywords').eq('id', props.id).maybeSingle(),
         supabase.from('watch_list_sources').select(`sources (${SOURCE_COLUMNS})` as const).eq('watch_list_id', props.id).order('created_at'),
     ]);
 
@@ -73,6 +84,7 @@ async function load() {
 
     name.value = list.data.name;
     lastViewedAt.value = list.data.last_viewed_at;
+    keywords.value = list.data.keywords;
     sources.value = listSources.data.map(({ sources: source }) => toSource(source));
 
     await loadArticles();
@@ -80,13 +92,18 @@ async function load() {
 }
 
 async function loadArticles() {
+    const current = ++request;
+    const term = search.value.trim();
     if (sources.value.length === 0) {
         articles.value = [];
         hasMore.value = false;
         return;
     }
 
-    const { data, error } = await fetchArticles(0);
+    const { data, error } = await fetchArticles(0, term);
+    if (current !== request) {
+        return;
+    }
     if (error) {
         failed.value = true;
         return;
@@ -94,10 +111,12 @@ async function loadArticles() {
 
     articles.value = data.slice(0, PAGE_SIZE).map(toArticle);
     hasMore.value = data.length > PAGE_SIZE;
+    shownSearch.value = term;
 
     // Mark as seen up to the newest story shown (not "now"), so stories found while the page loads stay new.
+    // Not while searching: newer stories the search hides would lose their "New".
     const newest = data[0]?.first_seen_at;
-    if (newest && new Date(newest) > new Date(lastViewedAt.value)) {
+    if (!term && newest && new Date(newest) > new Date(lastViewedAt.value)) {
         await supabase.from('watch_lists').update({ last_viewed_at: newest }).eq('id', props.id);
     }
 }
@@ -105,8 +124,13 @@ async function loadArticles() {
 async function loadMore() {
     moreFailed.value = false;
     loadingMore.value = true;
-    const { data, error } = await fetchArticles(articles.value.length);
+    const current = request;
+    const { data, error } = await fetchArticles(articles.value.length, shownSearch.value);
     loadingMore.value = false;
+
+    if (current !== request) {
+        return;
+    }
 
     if (error) {
         moreFailed.value = true;
@@ -120,14 +144,17 @@ async function loadMore() {
 }
 
 // One page of stories from offset on, plus one more to tell whether there's another page.
-function fetchArticles(offset: number) {
-    return supabase
-        .from('articles')
+// The search matches any part of the title or summary, ignoring capitals.
+function fetchArticles(offset: number, term: string) {
+    let query = supabase
+        .from('watch_list_articles')
         .select('id, url, title, summary, published_at, first_seen_at, source_id')
-        .in(
-            'source_id',
-            sources.value.map((source) => source.id),
-        )
+        .eq('watch_list_id', props.id);
+    if (term) {
+        // % and _ are wildcards in ilike: escape them so they're searched for as typed.
+        query = query.ilike('search_text', `%${term.replace(/[\\%_]/g, '\\$&')}%`);
+    }
+    return query
         .order('first_seen_at', { ascending: false })
         .order('id', { ascending: false })
         .range(offset, offset + PAGE_SIZE);
@@ -153,6 +180,12 @@ function toArticle(article: {
         isNew: new Date(article.first_seen_at) > new Date(lastViewedAt.value),
     };
 }
+
+let searchTimer: ReturnType<typeof setTimeout> | undefined;
+watch(search, () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(loadArticles, SEARCH_DELAY_MS);
+});
 
 onMounted(load);
 </script>
@@ -190,10 +223,22 @@ onMounted(load);
             </TabsList>
 
             <TabsContent value="stories" class="flex flex-col gap-4">
+                <div v-if="sources.length > 0" class="flex flex-col gap-2">
+                    <label class="input w-full focus-within:outline-primary sm:w-72">
+                        <MagnifyingGlassIcon class="size-5 text-base-content/70" aria-hidden="true" />
+                        <input v-model="search" type="search" placeholder="Search stories" aria-label="Search stories" />
+                    </label>
+                    <KeywordsFilter v-model:keywords="keywords" :watch-list-id="id" @changed="loadArticles" />
+                </div>
+
                 <Card v-if="articles.length === 0">
                     <p v-if="sources.length === 0" class="max-w-prose">
                         Add a source to start seeing its stories.
                         <button type="button" class="link" @click="tab = 'sources'">Go to Sources</button>
+                    </p>
+                    <p v-else-if="shownSearch" class="max-w-prose break-words">No stories match "{{ shownSearch }}".</p>
+                    <p v-else-if="keywords.length > 0" class="max-w-prose">
+                        No stories mention these keywords yet. New ones appear here after the next scan.
                     </p>
                     <p v-else class="max-w-prose">No stories yet. New ones appear here after the next scan.</p>
                 </Card>

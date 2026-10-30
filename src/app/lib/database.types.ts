@@ -161,6 +161,12 @@ isOneToOne: false
       foreignKeyName: "watch_list_sources_watch_list_id_fkey"
       columns: ["watch_list_id"]
 isOneToOne: false
+      referencedRelation: "watch_list_articles"
+      referencedColumns: ["watch_list_id"]
+    },{
+      foreignKeyName: "watch_list_sources_watch_list_id_fkey"
+      columns: ["watch_list_id"]
+isOneToOne: false
       referencedRelation: "watch_list_new_counts"
       referencedColumns: ["watch_list_id"]
     },{
@@ -173,14 +179,14 @@ isOneToOne: false
                   ]
                 },"watch_lists": {
                   Row: {
-                    "created_at": string,"id": string,"last_viewed_at": string,"name": string,"user_id": string
+                    "created_at": string,"id": string,"keywords": (string)[],"last_viewed_at": string,"name": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"last_viewed_at"?: string,"name": string,"user_id"?: string
+                    "created_at"?: string,"id"?: string,"keywords"?: (string)[],"last_viewed_at"?: string,"name": string,"user_id"?: string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"last_viewed_at"?: string,"name"?: string,"user_id"?: string
+                    "created_at"?: string,"id"?: string,"keywords"?: (string)[],"last_viewed_at"?: string,"name"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -194,7 +200,21 @@ isOneToOne: false
                 }
           }
           Views: {
-            "watch_list_new_counts": {
+            "watch_list_articles": {
+                  Row: {
+                    "first_seen_at": string,"id": number,"published_at": string | null,"search_text": string | null,"source_id": string,"summary": string | null,"title": string,"url": string,"watch_list_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "articles_source_id_fkey"
+      columns: ["source_id"]
+isOneToOne: false
+      referencedRelation: "sources"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"watch_list_new_counts": {
                   Row: {
                     "new_count": number | null,"watch_list_id": string
                   }
@@ -213,6 +233,9 @@ isOneToOne: false
           Functions: {
             "hook_before_user_created":
 { Args: { "event": Json }; Returns: Json
+                           },
+"mentions_any":
+{ Args: { "content": string,"keywords": (string)[] }; Returns: boolean
                            }
           }
           Enums: {
