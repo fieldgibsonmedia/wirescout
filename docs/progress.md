@@ -2,6 +2,15 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-30: Global search (polish stage, job 7 of 7)
+
+- Top bar: "Search all watch lists". Enter opens the Search page (`/search?q=…`); the field keeps what was searched there. On phones, a magnifier icon opens the field over the bar, with Cancel (Esc closes it too and keeps the text).
+- Search page (`SearchPage.vue`): **Sources** first (name or link contains the search, with their list and any problem in red; each opens its list's Sources tab), then **Stories** (the newest 50 whose title or summary contains it, through each list's keywords, with list, source and date; each opens its story page). More than 50: "Add a word to narrow the search".
+- "What's new" has its line. No database change.
+- Checked: db lint, type check, build, 35 unit tests. In the browser (dark, desktop; local seed data, nothing changed): a source search, a story search with capitals, a search with both, a story and a source result opening the right page, nothing found; phone width (a 390 px frame): open, search, Cancel, Esc; tablet width (768 px frame); light mode.
+- Not checked: the database tests (no migration); a real phone; more than 50 results (no local data for it).
+- Next: release v0.1.0 (merge `origin/main` into `mvp`, push the 2 migrations, release PR).
+
 ## 2026-10-30: Dashboard (polish stage, job 6 of 7)
 
 - Each list's card: the new stories as a big number (or "No new stories"), a bar chart of stories per day over the last 7 days (`StoriesChart.vue`; today in blue, earlier days gray, each day's count on hover), "2 sources · ⚠ 1 failing" (the failing part links to the Sources tab), "3 saved · Latest story 2 h ago".
