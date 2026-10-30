@@ -3,11 +3,12 @@
 // many sources are failing. Opening it marks the stories shown as seen, so the dashboard's new count starts
 // again from zero. Stories come from watch_list_articles, which keeps only those matching the list's keywords;
 // the search box narrows them further. ?tab=sources opens the Sources tab (the digest's failing-sources link).
-import { ExclamationTriangleIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid';
-import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
+// The name and keywords follow the watchLists store, so an edit from the side nav shows here too.
+// The Stories tab switches between all stories and the saved ones (newest save first, all at once).
+import { ExclamationTriangleIcon } from '@heroicons/vue/20/solid';
+import { TabsContent, TabsIndicator, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import KeywordsFilter from '@/components/KeywordsFilter.vue';
 import SourcesTab from '@/components/SourcesTab.vue';
 import StoryCard from '@/components/StoryCard.vue';
 import WatchListMenu from '@/components/WatchListMenu.vue';
@@ -15,8 +16,10 @@ import Alert from '@/components/ui/Alert.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import SearchField from '@/components/ui/SearchField.vue';
 import { SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
+import { watchLists } from '@/lib/watchLists';
 
 const props = defineProps<{
     id: string;
@@ -51,6 +54,14 @@ const loading = ref(true);
 const failed = ref(false);
 const notFound = ref(false);
 
+// Which stories the Stories tab shows.
+const view = ref<'all' | 'saved'>('all');
+// The stories saved in this list, for each card's Save / Saved.
+const savedIds = ref(new Set<number>());
+const savedArticles = ref<Article[]>([]);
+const savedLoading = ref(false);
+const savedFailed = ref(false);
+
 const search = ref('');
 // The search behind the stories shown, for the "No stories match" line.
 const shownSearch = ref('');
@@ -66,12 +77,13 @@ async function load() {
     loading.value = true;
     failed.value = false;
 
-    const [list, listSources] = await Promise.all([
+    const [list, listSources, savedStories] = await Promise.all([
         supabase.from('watch_lists').select('name, last_viewed_at, keywords').eq('id', props.id).maybeSingle(),
         supabase.from('watch_list_sources').select(`sources (${SOURCE_COLUMNS})` as const).eq('watch_list_id', props.id).order('created_at'),
+        supabase.from('saved_stories').select('article_id').eq('watch_list_id', props.id),
     ]);
 
-    if (list.error || listSources.error) {
+    if (list.error || listSources.error || savedStories.error) {
         loading.value = false;
         failed.value = true;
         return;
@@ -86,6 +98,7 @@ async function load() {
     lastViewedAt.value = list.data.last_viewed_at;
     keywords.value = list.data.keywords;
     sources.value = listSources.data.map(({ sources: source }) => toSource(source));
+    savedIds.value = new Set(savedStories.data.map((savedStory) => savedStory.article_id));
 
     await loadArticles();
     loading.value = false;
@@ -160,6 +173,39 @@ function fetchArticles(offset: number, term: string) {
         .range(offset, offset + PAGE_SIZE);
 }
 
+async function loadSaved() {
+    savedLoading.value = true;
+    savedFailed.value = false;
+    const { data, error } = await supabase
+        .from('saved_stories')
+        .select('articles (id, url, title, summary, published_at, first_seen_at, source_id)')
+        .eq('watch_list_id', props.id)
+        .order('saved_at', { ascending: false });
+    savedLoading.value = false;
+
+    if (error) {
+        savedFailed.value = true;
+        return;
+    }
+    // A story whose source no user list follows anymore can't be read: leave it out.
+    savedArticles.value = data.flatMap(({ articles: article }) => (article ? [toArticle(article)] : []));
+}
+
+// A story removed from Saved stays in the Saved view until the view is opened again, so a slip can be undone with Save.
+function setSaved(articleId: number, saved: boolean) {
+    if (saved) {
+        savedIds.value.add(articleId);
+    } else {
+        savedIds.value.delete(articleId);
+    }
+}
+
+watch(view, (shown) => {
+    if (shown === 'saved') {
+        loadSaved();
+    }
+});
+
 function toArticle(article: {
     id: number;
     url: string;
@@ -180,6 +226,21 @@ function toArticle(article: {
         isNew: new Date(article.first_seen_at) > new Date(lastViewedAt.value),
     };
 }
+
+// After an edit (here or in the side nav), show the new name, and reload the stories if the keywords changed.
+watch(
+    () => watchLists.value.find((list) => list.id === props.id),
+    (list) => {
+        if (!list || loading.value || notFound.value || failed.value) {
+            return;
+        }
+        name.value = list.name;
+        if (list.keywords.join(',') !== keywords.value.join(',')) {
+            keywords.value = list.keywords;
+            loadArticles();
+        }
+    },
+);
 
 let searchTimer: ReturnType<typeof setTimeout> | undefined;
 watch(search, () => {
@@ -206,12 +267,12 @@ onMounted(load);
     <template v-else>
         <PageHeader :title="name">
             <template #title-end>
-                <WatchListMenu :id="id" :name="name" @renamed="name = $event" />
+                <WatchListMenu :id="id" :name="name" :keywords="keywords" />
             </template>
         </PageHeader>
 
         <TabsRoot v-model="tab" class="flex flex-col gap-4">
-            <TabsList aria-label="Watch list" class="tabs tabs-border">
+            <TabsList aria-label="Watch list" class="tabs tabs-border relative">
                 <TabsTrigger value="stories" class="tab data-[state=active]:tab-active">Stories</TabsTrigger>
                 <TabsTrigger value="sources" class="tab gap-2 data-[state=active]:tab-active">
                     Sources
@@ -220,18 +281,60 @@ onMounted(load);
                         {{ failingSources }}<span class="sr-only"> failing</span>
                     </span>
                 </TabsTrigger>
+                <TabsIndicator class="tab-indicator" />
             </TabsList>
 
             <TabsContent value="stories" class="flex flex-col gap-4">
-                <div v-if="sources.length > 0" class="flex flex-col gap-2">
-                    <label class="input w-full focus-within:outline-primary sm:w-72">
-                        <MagnifyingGlassIcon class="size-5 text-base-content/70" aria-hidden="true" />
-                        <input v-model="search" type="search" placeholder="Search stories" aria-label="Search stories" />
-                    </label>
-                    <KeywordsFilter v-model:keywords="keywords" :watch-list-id="id" @changed="loadArticles" />
+                <div v-if="sources.length > 0 || savedIds.size > 0" class="flex flex-wrap items-center gap-2">
+                    <div class="join" role="group" aria-label="Show">
+                        <button
+                            v-for="option in [
+                                { value: 'all', label: 'All stories' },
+                                { value: 'saved', label: 'Saved' },
+                            ] as const"
+                            :key="option.value"
+                            type="button"
+                            :class="['btn join-item', view === option.value ? 'btn-primary' : 'border-base-300']"
+                            :aria-pressed="view === option.value"
+                            @click="view = option.value"
+                        >
+                            {{ option.label }}
+                        </button>
+                    </div>
+                    <SearchField v-if="view === 'all' && sources.length > 0" v-model="search" label="Search stories" />
                 </div>
 
-                <Card v-if="articles.length === 0">
+                <template v-if="view === 'saved'">
+                    <div v-if="savedLoading" class="skeleton h-40" aria-busy="true" aria-label="Loading saved stories"></div>
+
+                    <Alert v-else-if="savedFailed" type="error">
+                        <p>The saved stories couldn't be loaded.</p>
+                        <button type="button" class="link mt-2" @click="loadSaved">Try again</button>
+                    </Alert>
+
+                    <Card v-else-if="savedArticles.length === 0">
+                        <p class="max-w-prose">No saved stories yet. Save a story to keep it here.</p>
+                    </Card>
+
+                    <ul v-else class="flex flex-col gap-4">
+                        <li v-for="article in savedArticles" :key="article.id">
+                            <StoryCard
+                                :watch-list-id="id"
+                                :article-id="article.id"
+                                :title="article.title"
+                                :url="article.url"
+                                :summary="article.summary"
+                                :source="article.source"
+                                :date="article.date"
+                                :is-new="article.isNew"
+                                :saved="savedIds.has(article.id)"
+                                @update:saved="setSaved(article.id, $event)"
+                            />
+                        </li>
+                    </ul>
+                </template>
+
+                <Card v-else-if="articles.length === 0">
                     <p v-if="sources.length === 0" class="max-w-prose">
                         Add a source to start seeing its stories.
                         <button type="button" class="link" @click="tab = 'sources'">Go to Sources</button>
@@ -246,6 +349,7 @@ onMounted(load);
                 <ul v-else class="flex flex-col gap-4">
                     <li v-for="article in articles" :key="article.id">
                         <StoryCard
+                            :watch-list-id="id"
                             :article-id="article.id"
                             :title="article.title"
                             :url="article.url"
@@ -253,11 +357,13 @@ onMounted(load);
                             :source="article.source"
                             :date="article.date"
                             :is-new="article.isNew"
+                            :saved="savedIds.has(article.id)"
+                            @update:saved="setSaved(article.id, $event)"
                         />
                     </li>
                 </ul>
 
-                <div v-if="hasMore || moreFailed" class="flex flex-col items-start gap-2">
+                <div v-if="view === 'all' && (hasMore || moreFailed)" class="flex flex-col items-start gap-2">
                     <Alert v-if="moreFailed" type="error">More stories couldn't be loaded. Please try again.</Alert>
                     <Button variant="outline" :busy="loadingMore" @click="loadMore">Load more</Button>
                 </div>

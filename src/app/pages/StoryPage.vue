@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // One story on its own page, opened from the daily digest: a link back to its watch list, then the story
-// with the Share menu. The digest links here instead of to the source site, so sharing happens in the app.
+// with the Share menu and Save. The digest links here instead of to the source site, so sharing happens in the app.
 // It shows only a story from one of the list's sources: anything else is "not in your watch lists".
 import { ArrowLeftIcon } from '@heroicons/vue/20/solid';
 import { onMounted, ref } from 'vue';
@@ -25,6 +25,7 @@ type Story = {
 
 const listName = ref('');
 const story = ref<Story | null>(null);
+const saved = ref(false);
 const loading = ref(true);
 const failed = ref(false);
 const notFound = ref(false);
@@ -37,7 +38,7 @@ async function load() {
     notFound.value = false;
 
     // Row-level security already limits stories to the user's sources; the list's sources narrow it to this list.
-    const [list, listSources, article] = await Promise.all([
+    const [list, listSources, article, savedStory] = await Promise.all([
         supabase.from('watch_lists').select('name').eq('id', props.id).maybeSingle(),
         supabase.from('watch_list_sources').select('source_id').eq('watch_list_id', props.id),
         supabase
@@ -45,10 +46,11 @@ async function load() {
             .select('url, title, summary, published_at, first_seen_at, source_id, sources (url, name)')
             .eq('id', Number(props.storyId))
             .maybeSingle(),
+        supabase.from('saved_stories').select('article_id').eq('watch_list_id', props.id).eq('article_id', Number(props.storyId)).maybeSingle(),
     ]);
     loading.value = false;
 
-    if (list.error || listSources.error || article.error) {
+    if (list.error || listSources.error || article.error || savedStory.error) {
         failed.value = true;
         return;
     }
@@ -59,6 +61,7 @@ async function load() {
     }
 
     listName.value = list.data.name;
+    saved.value = Boolean(savedStory.data);
     story.value = {
         title: article.data.title,
         url: article.data.url,
@@ -92,6 +95,6 @@ onMounted(load);
             <ArrowLeftIcon class="size-4" aria-hidden="true" />
             {{ listName }}
         </RouterLink>
-        <StoryCard :article-id="Number(storyId)" v-bind="story" />
+        <StoryCard v-model:saved="saved" :watch-list-id="id" :article-id="Number(storyId)" v-bind="story" />
     </div>
 </template>

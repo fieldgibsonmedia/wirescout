@@ -2,6 +2,76 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-30: Global search (polish stage, job 7 of 7)
+
+- Top bar: "Search all watch lists". Enter opens the Search page (`/search?q=…`); the field keeps what was searched there. On phones, a magnifier icon opens the field over the bar, with Cancel (Esc closes it too and keeps the text).
+- Search page (`SearchPage.vue`): **Sources** first (name or link contains the search, with their list and any problem in red; each opens its list's Sources tab), then **Stories** (the newest 50 whose title or summary contains it, through each list's keywords, with list, source and date; each opens its story page). More than 50: "Add a word to narrow the search".
+- "What's new" has its line. No database change.
+- Checked: db lint, type check, build, 35 unit tests. In the browser (dark, desktop; local seed data, nothing changed): a source search, a story search with capitals, a search with both, a story and a source result opening the right page, nothing found; phone width (a 390 px frame): open, search, Cancel, Esc; tablet width (768 px frame); light mode.
+- Not checked: the database tests (no migration); a real phone; more than 50 results (no local data for it).
+- Next: release v0.1.0 (merge `origin/main` into `mvp`, push the 2 migrations, release PR).
+
+## 2026-10-30: Dashboard (polish stage, job 6 of 7)
+
+- Each list's card: the new stories as a big number (or "No new stories"), a bar chart of stories per day over the last 7 days (`StoriesChart.vue`; today in blue, earlier days gray, each day's count on hover), "2 sources · ⚠ 1 failing" (the failing part links to the Sources tab), "3 saved · Latest story 2 h ago".
+- The list name's link covers the card; the failing link and the chart sit above it, and a click on the chart still opens the list.
+- "What's new" card after the lists, from `src/app/lib/releaseNotes.ts` (v0.1.0 so far; "Earlier versions" shows once there are two). Job 7 adds its line.
+- 1 migration: the view `watch_list_stats` (sources, failing, saved, latest story, 7 daily counts in the user's time zone, through the keywords).
+- Checked: 6 new database tests (all pass; the known profile-count test fails while the local database has test users), db lint, type check, build, 35 unit tests. In the browser (dark, desktop; no data changed): the card with the seed stories, the chart's label and hover target, the failing link opening the Sources tab, the card and the chart opening the list, the keyboard focus ring; light mode; phone width (a 375 px frame).
+- Not checked: the saved count and a new-story number in the browser (no local saved or new stories; covered by the database tests); a real phone.
+- Release order: push the migration to the cloud before Ken merges v0.1.0, or the dashboard can't load.
+- Next: job 7, global search.
+
+## 2026-10-30: Save stories (polish stage, job 5 of 7)
+
+- Each story card has Save / Saved next to Share (`SaveButton.vue`), in the list and on the story page. Clicking Saved removes it. Ken chose "Save": the word news apps use for "keep for later".
+- The Stories tab has a switch, **All stories · Saved**. Saved shows the list's saved stories, newest save first; a story removed there stays (with Save) until the view is opened again. The search box shows only with All stories.
+- 1 migration: `saved_stories` (watch list, story, saved at), deleted with its list. Users save only stories from their own list's sources, and can't change `saved_at`.
+- Checked: 10 new database tests (all pass; the known profile-count test fails while the local database has test users), db lint, type check, build, 35 unit tests. In the browser (dark, 606 px and desktop; local saved stories, Ken's ok): saving 2 stories, the Saved view in save order, removing one there, the story page showing and removing a save, the empty Saved view; light mode.
+- Not checked: a real phone.
+- Release order: push the migration to the cloud before Ken merges v0.1.0, or the live app can't load a watch list.
+- Next: job 6, dashboard.
+
+## 2026-10-30: Watch list settings (polish stage, job 4 of 7)
+
+- Side nav: each watch list has a "⋯" menu (Edit, Delete), shown on hover and keyboard focus, always where the nav is a drawer. Same `WatchListMenu.vue` as the list page.
+- Edit replaces Rename: one dialog with "Name" and "Only include stories that mention…". The Stories tab keeps only the search box; `KeywordsFilter.vue` is gone.
+- The `watchLists` store now holds the keywords. The list page follows it (an edit from the nav updates the title and reloads the stories), and so do the dashboard's counts. Deleting another list from the nav leaves the open page alone.
+- No database change.
+- Checked: type check, build, 35 unit tests. In the browser (desktop, dark; local test data, Ken's ok): the "⋯" on hover and focus and white on the open list; renaming "QA list 2" with `flood,  Flood ,` from the nav (saved as `flood`); renaming "QA list" with a keyword from its page (title, nav and stories updated), clearing the keyword from the nav (stories back); deleting the other list from the nav (page stayed). Phone width (a 390 px frame): "⋯" always shown, its menu opens. Light mode: the nav on hover.
+- Not checked: a real phone or tablet; the dashboard count after a keyword edit (no new stories locally).
+- Next: job 5, save stories.
+
+## 2026-10-30: Motion (polish stage, job 3 of 7)
+
+- In `app.css`, no new dependency: menus grow from their button and fade out (`menu-pop`); dialogs fade in with the box rising a little, and fade out (`dialog-fade`, `dialog-pop`); one tab underline slides between tabs (Reka's `TabsIndicator`, class `tab-indicator`); buttons press in slightly; each new page fades in (a `Transition` around the layout's `RouterView`). Dashboard cards lift on hover.
+- All of it stops with "Reduce motion".
+- Checked: type check, build, 35 unit tests. In the browser (desktop and phone width, dark): each animation running on open and close, the underline sliding in the watch list and the Add sources dialog, the old page gone at once, the dashboard, watch list and Account settings layouts unchanged.
+- Not checked: "Reduce motion" turned on (a system setting); the button press (CSS only).
+- Next: job 4, watch list settings.
+
+## 2026-10-30: Look and feel (polish stage, job 2 of 7)
+
+- Blue: picking Light in Account settings showed DaisyUI's built-in indigo, because its light theme's selector beat ours. DaisyUI's built-in themes are off now; ours copy their values. #0071e3 in Light, Dark and Auto.
+- Surfaces: the page is `base-200` (#f5f5f7 in light, a darker gray in dark), cards, tables, menus, dialogs, the side nav and the top bar `base-100`. The sources table now sits in a white box.
+- 16 px corners on fields, buttons, cards, menus and dialogs. Icon buttons are round.
+- Search boxes: new `ui/SearchField.vue` (Stories and Sources tabs), with the same focus border as the other fields, no gap.
+- Failing sources: a light red row with a red edge. Text on it passes 4.5:1 (5.6 light, 4.9 dark).
+- Checked: type check, build, 35 unit tests. In the browser (phone width, light and dark): the blue in all 3 theme settings, surfaces, the search focus, round buttons, a dialog, the side nav, the failing row, the Move dropdown's focus (no gap already). Local test data (Ken's ok): the 2 seed sources in "QA list", a second list, one source marked "not found".
+- Not checked: desktop width (the browser window couldn't be resized this time).
+- Next: job 3, motion.
+
+## 2026-10-30: Quick fixes (polish stage, job 1 of 7)
+
+- Released before this job: the usage report (PR #12, merged by Ken). Its migration was already in the cloud (checked).
+- Polish stage planned from Ken's 18 changes (`docs/mvp-plan.md`, "Polish before step 6"), released together as v0.1.0. No Pinia: shared data stays in `src/app/lib/`.
+- Account settings: the Email field starts with the current address; Change email works once it's different.
+- Account menu: the avatar only, with the name's first letter (person icon without a name). The name is for screen readers.
+- Dashboard: "No new stories". Side nav: the version under Settings (`v0.1.0`, from `package.json`).
+- Checked: type check, build, 35 unit tests. In the browser (desktop, dark, with a made-up local account): the email pre-filled and Change email off until it differs, the name kept after a reload, "Q" in the avatar, "No new stories", `v0.1.0`; the dashboard in light mode.
+- Not checked: the phone width (the browser window couldn't be resized); the database tests (no migration).
+- Next: job 2, look and feel.
+
 ## 2026-10-30: Usage report
 
 - Released before this job: the digest email layout (PR #11, merged by Ken).

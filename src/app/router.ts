@@ -12,6 +12,7 @@ import DashboardPage from '@/pages/DashboardPage.vue';
 import DigestSettingsPage from '@/pages/DigestSettingsPage.vue';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage.vue';
 import RequestAccessPage from '@/pages/RequestAccessPage.vue';
+import SearchPage from '@/pages/SearchPage.vue';
 import SetPasswordPage from '@/pages/SetPasswordPage.vue';
 import SignInPage from '@/pages/SignInPage.vue';
 import SignUpPage from '@/pages/SignUpPage.vue';
@@ -35,6 +36,12 @@ export const router = createRouter({
                 { path: '', name: 'dashboard', component: DashboardPage },
                 { path: 'lists/:id', name: 'watch-list', component: WatchListPage, props: true },
                 { path: 'lists/:id/stories/:storyId', name: 'story', component: StoryPage, props: true },
+                {
+                    path: 'search',
+                    name: 'search',
+                    component: SearchPage,
+                    props: (route) => ({ query: typeof route.query.q === 'string' ? route.query.q : '' }),
+                },
                 { path: 'settings/digest', name: 'digest-settings', component: DigestSettingsPage },
                 { path: 'settings/channels', name: 'channels-settings', component: ChannelsSettingsPage },
                 { path: 'account', name: 'account-settings', component: AccountSettingsPage },

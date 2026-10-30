@@ -3,6 +3,7 @@
 // variant: primary (the main action), outline, ghost, error.
 // Pass to (a route) to get a link that looks like a button.
 // Pass busy while a form is sending: the button can't be pressed twice and shows a spinner.
+// Pass disabled while there's nothing to send.
 import { RouterLink, type RouteLocationRaw } from 'vue-router';
 
 withDefaults(
@@ -11,12 +12,14 @@ withDefaults(
         type?: 'button' | 'submit';
         to?: RouteLocationRaw;
         busy?: boolean;
+        disabled?: boolean;
     }>(),
     {
         variant: 'primary',
         type: 'button',
         to: undefined,
         busy: false,
+        disabled: false,
     },
 );
 
@@ -30,7 +33,7 @@ const variants = {
 
 <template>
     <RouterLink v-if="to" :to="to" :class="['btn', variants[variant]]"><slot /></RouterLink>
-    <button v-else :type="type" :disabled="busy" :class="['btn', variants[variant]]">
+    <button v-else :type="type" :disabled="busy || disabled":class="['btn', variants[variant]]">
         <!-- DaisyUI's spinner can't be stopped, so "Reduce motion" users get a label instead. -->
         <template v-if="busy">
             <span class="loading loading-spinner loading-sm motion-reduce:hidden" aria-hidden="true"></span>

@@ -20,11 +20,11 @@ const itemClass =
 
 <template>
     <DropdownMenuRoot>
-        <DropdownMenuTrigger class="btn btn-square btn-ghost" :aria-label="`Options for ${label}`">
+        <DropdownMenuTrigger class="btn btn-circle btn-ghost" :aria-label="`Options for ${label}`">
             <EllipsisHorizontalIcon class="size-6" aria-hidden="true" />
         </DropdownMenuTrigger>
         <DropdownMenuPortal>
-            <DropdownMenuContent align="end" :side-offset="4" class="z-30 w-48 rounded-box border border-base-300 bg-base-100 p-2 shadow-sm">
+            <DropdownMenuContent align="end" :side-offset="4" class="menu-pop z-30 w-48 rounded-box border border-base-300 bg-base-100 p-2 shadow-sm">
                 <DropdownMenuItem :class="itemClass" @select="emit('edit')">Edit</DropdownMenuItem>
                 <DropdownMenuItem :class="itemClass" @select="emit('move')">Move to…</DropdownMenuItem>
                 <DropdownMenuItem :class="[itemClass, 'text-error']" @select="emit('remove')">Remove</DropdownMenuItem>

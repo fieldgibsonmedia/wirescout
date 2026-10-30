@@ -30,8 +30,8 @@ const emit = defineEmits<{
 <template>
     <AlertDialogRoot v-model:open="open">
         <AlertDialogPortal>
-            <AlertDialogOverlay class="modal modal-open">
-                <AlertDialogContent class="modal-box flex flex-col gap-6">
+            <AlertDialogOverlay class="dialog-fade modal modal-open">
+                <AlertDialogContent class="dialog-pop modal-box flex flex-col gap-6">
                     <div class="flex flex-col gap-1">
                         <AlertDialogTitle class="text-xl font-bold">{{ title }}</AlertDialogTitle>
                         <AlertDialogDescription class="text-base-content/70">{{ description }}</AlertDialogDescription>

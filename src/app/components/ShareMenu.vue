@@ -50,7 +50,7 @@ const itemClass =
                 Share<span class="sr-only"> story: {{ title }}</span>
             </DropdownMenuTrigger>
             <DropdownMenuPortal>
-                <DropdownMenuContent align="start" :side-offset="4" class="z-30 w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-sm">
+                <DropdownMenuContent align="start" :side-offset="4" class="menu-pop z-30 w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-sm">
                     <DropdownMenuItem v-if="options.linkedIn" as-child @select="recordUsage('share_linkedin', articleId)">
                         <a :href="linkedInUrl" target="_blank" rel="noopener" :class="itemClass">
                             LinkedIn<span class="sr-only"> (opens in a new tab)</span>

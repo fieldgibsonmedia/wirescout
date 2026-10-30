@@ -4,7 +4,7 @@
 // plus Fix on failing sources. "Add sources" opens a dialog to paste links or upload a file.
 // On a phone each row stacks into a small card. Emits changed when the sources change, so the page reloads
 // its stories.
-import { ChevronDownIcon, ChevronUpDownIcon, ChevronUpIcon, ExclamationTriangleIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/vue/20/solid';
+import { ChevronDownIcon, ChevronUpDownIcon, ChevronUpIcon, ExclamationTriangleIcon, PlusIcon } from '@heroicons/vue/20/solid';
 import {
     columnFilteringFeature,
     createFilteredRowModel,
@@ -30,6 +30,7 @@ import Card from '@/components/ui/Card.vue';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import Dialog from '@/components/ui/Dialog.vue';
 import FormDialog from '@/components/ui/FormDialog.vue';
+import SearchField from '@/components/ui/SearchField.vue';
 import SelectField from '@/components/ui/SelectField.vue';
 import TextField from '@/components/ui/TextField.vue';
 import {
@@ -318,10 +319,7 @@ async function move() {
     <div class="flex flex-col gap-4">
         <!-- Search on the left, actions on the right, so the button doesn't read as the search's submit. -->
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <label class="input w-full focus-within:outline-primary sm:w-72">
-                <MagnifyingGlassIcon class="size-5 text-base-content/70" aria-hidden="true" />
-                <input v-model="search" type="search" placeholder="Search sources" aria-label="Search sources" />
-            </label>
+            <SearchField v-model="search" label="Search sources" />
             <div class="ms-auto">
                 <Button @click="addingSources = true">
                     <PlusIcon class="size-5" aria-hidden="true" />
@@ -333,7 +331,7 @@ async function move() {
         <Alert v-if="removeFailed" type="error">The source couldn't be removed. Please try again.</Alert>
         <Alert v-if="moved" type="success">{{ moved }}</Alert>
 
-        <div v-if="selected.length > 0" class="flex flex-wrap items-center gap-2 rounded-box bg-base-200 p-2">
+        <div v-if="selected.length > 0" class="flex flex-wrap items-center gap-2 rounded-box border border-base-300 bg-base-100 p-2">
             <p role="status" class="me-auto px-2 font-medium">{{ selected.length }} selected</p>
             <Button variant="outline" @click="startMove(selected)">Move to…</Button>
             <Button variant="outline" @click="startRemoveSelected">Remove</Button>
@@ -346,79 +344,83 @@ async function move() {
         <p v-else-if="rows.length === 0" class="text-base-content/70">No sources match “{{ search }}”.</p>
 
         <!-- On a phone the header hides and each row becomes a grid: tick box | source, status, last checked | actions. -->
-        <table v-else class="table">
-            <thead class="max-md:hidden">
-                <tr>
-                    <th class="w-px">
-                        <input
-                            type="checkbox"
-                            class="checkbox"
-                            :checked="allShownSelected"
-                            :indeterminate="!allShownSelected && rows.some((row) => rowSelection[row.id])"
-                            aria-label="Select all sources shown"
-                            @change="toggleAllShown"
-                        />
-                    </th>
-                    <th
-                        v-for="header in table.getHeaderGroups()[0].headers"
-                        :key="header.id"
-                        :aria-sort="header.column.getIsSorted() ? ariaSort[header.column.getIsSorted() as 'asc' | 'desc'] : undefined"
-                    >
-                        <button type="button" class="flex items-center gap-1 font-semibold" @click="header.column.getToggleSortingHandler()?.($event)">
-                            {{ header.column.columnDef.header }}
-                            <ChevronUpIcon v-if="header.column.getIsSorted() === 'asc'" class="size-4" aria-hidden="true" />
-                            <ChevronDownIcon v-else-if="header.column.getIsSorted() === 'desc'" class="size-4" aria-hidden="true" />
-                            <ChevronUpDownIcon v-else class="size-4 text-base-content/40" aria-hidden="true" />
-                        </button>
-                    </th>
-                    <th class="w-px"><span class="sr-only">Actions</span></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr
-                    v-for="row in rows"
-                    :key="row.id"
-                    :class="[
-                        'max-md:grid max-md:grid-cols-[auto_1fr_auto] max-md:items-center max-md:gap-x-3 max-md:py-2',
-                        { 'opacity-50': removing === row.id },
-                    ]"
-                    :aria-busy="removing === row.id"
-                >
-                    <td class="max-md:row-span-3 max-md:p-0">
-                        <input
-                            type="checkbox"
-                            class="checkbox"
-                            :checked="row.getIsSelected()"
-                            :aria-label="`Select ${listLabel(row.original, sources)}`"
-                            @click="row.getToggleSelectedHandler()($event)"
-                        />
-                    </td>
-                    <td class="font-medium break-words max-md:col-start-2 max-md:p-0">{{ listLabel(row.original, sources) }}</td>
-                    <td :class="['max-md:col-start-2 max-md:p-0 max-md:text-sm', row.original.problem ? 'text-error' : 'text-base-content/70']">
-                        <span class="flex gap-1">
-                            <ExclamationTriangleIcon v-if="row.original.problem" class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                            {{ row.original.status }}
-                        </span>
-                    </td>
-                    <td class="whitespace-nowrap text-base-content/70 max-md:col-start-2 max-md:p-0 max-md:text-sm">
-                        <span v-if="row.original.lastChecked" class="md:hidden">Last checked </span>{{ row.original.lastChecked }}
-                    </td>
-                    <td class="max-md:col-start-3 max-md:row-span-3 max-md:row-start-1 max-md:p-0">
-                        <div class="flex items-center justify-end gap-1">
-                            <Button v-if="row.original.problem" variant="outline" @click="startEdit(row.original, true)">
-                                Fix<span class="sr-only"> {{ listLabel(row.original, sources) }}</span>
-                            </Button>
-                            <SourceMenu
-                                :label="listLabel(row.original, sources)"
-                                @edit="startEdit(row.original, false)"
-                                @move="startMove([row.original.id])"
-                                @remove="removeSource(row.original.id)"
+        <div v-else class="overflow-hidden rounded-box border border-base-300 bg-base-100">
+            <table class="table">
+                <thead class="max-md:hidden">
+                    <tr>
+                        <th class="w-px">
+                            <input
+                                type="checkbox"
+                                class="checkbox"
+                                :checked="allShownSelected"
+                                :indeterminate="!allShownSelected && rows.some((row) => rowSelection[row.id])"
+                                aria-label="Select all sources shown"
+                                @change="toggleAllShown"
                             />
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                        </th>
+                        <th
+                            v-for="header in table.getHeaderGroups()[0].headers"
+                            :key="header.id"
+                            :aria-sort="header.column.getIsSorted() ? ariaSort[header.column.getIsSorted() as 'asc' | 'desc'] : undefined"
+                        >
+                            <button type="button" class="flex items-center gap-1 font-semibold" @click="header.column.getToggleSortingHandler()?.($event)">
+                                {{ header.column.columnDef.header }}
+                                <ChevronUpIcon v-if="header.column.getIsSorted() === 'asc'" class="size-4" aria-hidden="true" />
+                                <ChevronDownIcon v-else-if="header.column.getIsSorted() === 'desc'" class="size-4" aria-hidden="true" />
+                                <ChevronUpDownIcon v-else class="size-4 text-base-content/40" aria-hidden="true" />
+                            </button>
+                        </th>
+                        <th class="w-px"><span class="sr-only">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr
+                        v-for="row in rows"
+                        :key="row.id"
+                        :class="[
+                            'max-md:grid max-md:grid-cols-[auto_1fr_auto] max-md:items-center max-md:gap-x-3 max-md:py-2',
+                            { 'opacity-50': removing === row.id },
+                            // Failing sources stand out: a light red row with a red edge.
+                            { 'bg-error/10 shadow-[inset_4px_0_0_var(--color-error)]': row.original.problem },
+                        ]"
+                        :aria-busy="removing === row.id"
+                    >
+                        <td class="max-md:row-span-3 max-md:p-0">
+                            <input
+                                type="checkbox"
+                                class="checkbox"
+                                :checked="row.getIsSelected()"
+                                :aria-label="`Select ${listLabel(row.original, sources)}`"
+                                @click="row.getToggleSelectedHandler()($event)"
+                            />
+                        </td>
+                        <td class="font-medium break-words max-md:col-start-2 max-md:p-0">{{ listLabel(row.original, sources) }}</td>
+                        <td :class="['max-md:col-start-2 max-md:p-0 max-md:text-sm', row.original.problem ? 'text-error' : 'text-base-content/70']">
+                            <span class="flex gap-1">
+                                <ExclamationTriangleIcon v-if="row.original.problem" class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                                {{ row.original.status }}
+                            </span>
+                        </td>
+                        <td class="whitespace-nowrap text-base-content/70 max-md:col-start-2 max-md:p-0 max-md:text-sm">
+                            <span v-if="row.original.lastChecked" class="md:hidden">Last checked </span>{{ row.original.lastChecked }}
+                        </td>
+                        <td class="max-md:col-start-3 max-md:row-span-3 max-md:row-start-1 max-md:p-0">
+                            <div class="flex items-center justify-end gap-1">
+                                <Button v-if="row.original.problem" variant="outline" @click="startEdit(row.original, true)">
+                                    Fix<span class="sr-only"> {{ listLabel(row.original, sources) }}</span>
+                                </Button>
+                                <SourceMenu
+                                    :label="listLabel(row.original, sources)"
+                                    @edit="startEdit(row.original, false)"
+                                    @move="startMove([row.original.id])"
+                                    @remove="removeSource(row.original.id)"
+                                />
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <Dialog v-model:open="addingSources" title="Add sources">

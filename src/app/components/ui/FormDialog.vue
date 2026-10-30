@@ -51,8 +51,8 @@ watch(
     <DialogRoot v-model:open="open">
         <DialogPortal>
             <!-- The overlay holds the dialog so a tall form scrolls inside it instead of being cut off. -->
-            <DialogOverlay class="modal modal-open">
-                <DialogContent class="modal-box">
+            <DialogOverlay class="dialog-fade modal modal-open">
+                <DialogContent class="dialog-pop modal-box">
                     <!-- novalidate: the page checks the form, so every error shows the same way, next to its field. -->
                     <form ref="form" class="flex flex-col gap-6" novalidate @submit.prevent="emit('submit')">
                         <div class="flex items-start justify-between gap-4">
@@ -62,7 +62,7 @@ watch(
                                     {{ description }}
                                 </DialogDescription>
                             </div>
-                            <DialogClose class="btn btn-square btn-ghost -me-2 -mt-2" aria-label="Close">
+                            <DialogClose class="btn btn-circle btn-ghost -me-2 -mt-2" aria-label="Close">
                                 <XMarkIcon class="size-6" aria-hidden="true" />
                             </DialogClose>
                         </div>
