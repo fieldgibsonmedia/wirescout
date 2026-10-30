@@ -22,6 +22,10 @@ const nav = ref<HTMLElement>();
 const side = ref<HTMLElement>();
 
 const userName = computed(() => profile.value?.full_name || profile.value?.email || '');
+// The avatar shows the name's first letter; without a name, the person icon.
+const userInitial = computed(() => profile.value?.full_name?.trim().charAt(0).toUpperCase() ?? '');
+
+const version = __APP_VERSION__;
 
 // The drawer must work from the keyboard (DESIGN.md): the menu button opens and closes it,
 // focus moves into the nav when it opens and back to the button when it closes, and Esc closes it.
@@ -115,6 +119,8 @@ onUnmounted(() => {
                     <NavItem :to="{ name: 'digest-settings' }" label="Daily digest" :icon="BellAlertIcon" />
                     <NavItem :to="{ name: 'channels-settings' }" label="Channels" :icon="ShareIcon" />
                 </ul>
+
+                <p class="px-3 text-xs text-base-content/70">v{{ version }}</p>
             </nav>
         </div>
 
@@ -137,7 +143,7 @@ onUnmounted(() => {
                 </div>
 
                 <div class="ms-auto">
-                    <UserMenu :name="userName" @sign-out="supabase.auth.signOut()" />
+                    <UserMenu :name="userName" :initial="userInitial" @sign-out="supabase.auth.signOut()" />
                 </div>
             </header>
 

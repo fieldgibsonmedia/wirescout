@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // The signed-in person's account: their name, email and password, and the theme on this device.
-import { nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import Alert from '@/components/ui/Alert.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
@@ -20,6 +20,8 @@ const emailError = ref('');
 const emailBusy = ref(false);
 const emailSentTo = ref('');
 const emailFailed = ref(false);
+// The field starts with the current email: Change email works once it's different.
+const emailChanged = computed(() => newEmail.value.trim().toLowerCase() !== profile.value?.email.toLowerCase());
 
 const passwordForm = ref<HTMLFormElement>();
 const currentPassword = ref('');
@@ -42,6 +44,7 @@ watch(
     (current) => {
         if (current) {
             name.value = current.full_name ?? '';
+            newEmail.value = current.email;
         }
     },
     { immediate: true },
@@ -65,11 +68,6 @@ async function changeEmail() {
         emailError.value = 'Enter your new email.';
         return;
     }
-    if (newEmail.value.trim().toLowerCase() === profile.value?.email.toLowerCase()) {
-        emailError.value = 'This is already your email.';
-        return;
-    }
-
     emailBusy.value = true;
     const { error } = await supabase.auth.updateUser({ email: newEmail.value.trim() });
     emailBusy.value = false;
@@ -87,8 +85,9 @@ async function changeEmail() {
         return;
     }
 
+    // The email only changes once both links are clicked: until then the field shows the current one.
     emailSentTo.value = newEmail.value.trim();
-    newEmail.value = '';
+    newEmail.value = profile.value?.email ?? '';
 }
 
 async function changePassword() {
@@ -158,7 +157,7 @@ async function showPasswordErrors() {
     <Card>
         <form class="flex max-w-md flex-col gap-6" novalidate @submit.prevent="saveName" @input="nameSaved = false">
             <h2 class="text-xl font-bold">Your name</h2>
-            <TextField v-model="name" name="full-name" label="Name" autocomplete="name" helper="Shown in the top bar." />
+            <TextField v-model="name" name="full-name" label="Name" autocomplete="name" helper="Its first letter shows in the top bar." />
 
             <div class="flex flex-wrap items-center gap-4">
                 <Button type="submit" :busy="nameBusy">Save</Button>
@@ -174,16 +173,16 @@ async function showPasswordErrors() {
             <TextField
                 v-model="newEmail"
                 name="new-email"
-                label="New email"
+                label="Email"
                 type="email"
                 autocomplete="email"
-                :helper="`Now ${profile?.email ?? ''}. You'll confirm the change from both addresses.`"
+                helper="To change it, type the new one. You'll confirm the change from both addresses."
                 :error="emailError"
                 required
             />
 
             <div class="flex flex-wrap items-center gap-4">
-                <Button type="submit" :busy="emailBusy">Change email</Button>
+                <Button type="submit" :busy="emailBusy" :disabled="!emailChanged">Change email</Button>
                 <Alert v-if="emailSentTo" type="success">
                     Check both inboxes: we've sent a link to {{ profile?.email }} and to {{ emailSentTo }}. Your email changes once
                     both are confirmed.

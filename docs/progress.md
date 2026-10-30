@@ -2,6 +2,17 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-10-30: Quick fixes (polish stage, job 1 of 7)
+
+- Released before this job: the usage report (PR #12, merged by Ken). Its migration was already in the cloud (checked).
+- Polish stage planned from Ken's 18 changes (`docs/mvp-plan.md`, "Polish before step 6"), released together as v0.1.0. No Pinia: shared data stays in `src/app/lib/`.
+- Account settings: the Email field starts with the current address; Change email works once it's different.
+- Account menu: the avatar only, with the name's first letter (person icon without a name). The name is for screen readers.
+- Dashboard: "No new stories". Side nav: the version under Settings (`v0.1.0`, from `package.json`).
+- Checked: type check, build, 35 unit tests. In the browser (desktop, dark, with a made-up local account): the email pre-filled and Change email off until it differs, the name kept after a reload, "Q" in the avatar, "No new stories", `v0.1.0`; the dashboard in light mode.
+- Not checked: the phone width (the browser window couldn't be resized); the database tests (no migration).
+- Next: job 2, look and feel.
+
 ## 2026-10-30: Usage report
 
 - Released before this job: the digest email layout (PR #11, merged by Ken).
