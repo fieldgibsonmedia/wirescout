@@ -2,6 +2,12 @@
 
 Bugs found while working on something else. One entry each: date, what, where, how to see it.
 
+## 2026-10-30: GitHub starts scheduled runs late
+
+- The scanner, set for :17, ran at 09:58 and 10:54 UTC on 2026-10-30: about 40 minutes late. The digest's first scheduled run (11:19) didn't happen at all after the merge; Ken started it by hand.
+- So a digest can arrive 30–60 minutes after the chosen time. If that's too late, a more punctual trigger (an outside scheduler starting the workflow) is an option.
+- See it: GitHub → Actions → a workflow's runs, against its cron times.
+
 ## 2026-10-29: 10 of the 23 old sources can't be read without a browser
 
 - Munich Re, Lloyd's, Hannover Re, Bank of England, Gallagher Re, Zurich, AIG (global), Tokio Marine, BaFin, Geneva Association: their pages build the story list with JavaScript, or turn away anything that isn't a browser. (Count from 2026-10-29; BaFin and Munich Re have stories only in menus.)
