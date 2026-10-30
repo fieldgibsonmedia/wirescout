@@ -12,6 +12,7 @@ An internal Field Gibson Media tool for journalists. It watches a curated list o
     - `nodemailer` sends the health email to a developer over SMTP (`EMAIL_*`, `ADMIN_EMAIL`).
     - GitHub Actions runs it every hour (`.github/workflows/scanner.yml`), installing only the runtime packages (`npm ci --omit=dev`).
 - Daily digest: Node.js 22, same packages as the scanner. GitHub Actions runs it every 15 minutes (`.github/workflows/digest.yml`).
+- Admin emails: the same again, every hour (`.github/workflows/admin.yml`).
 - Git: GitHub (`fieldgibsonmedia/wirescout`), public. `main` is live; MVP work goes into `mvp`, and each finished stage is merged into `main`.
 
 The MVP stack is decided in `docs/mvp-plan.md`. Built so far:
@@ -21,7 +22,7 @@ The MVP stack is decided in `docs/mvp-plan.md`. Built so far:
 
 ## Layout
 
-All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner/`, the daily digest in `src/digest/`.
+All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner/`, the daily digest in `src/digest/`, the admin emails in `src/admin/`.
 
 - `index.html`, `vite.config.ts`, `tsconfig.json`: the web app's entry page and build settings.
 - `src/app/`: the web app. `pages/` (one file per screen), `components/` (`ui/` holds the shared building blocks, copied from hub), `layouts/`, `lib/supabase.ts` (the connection), `router.ts`.
@@ -31,6 +32,9 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `.github/workflows/deploy-app.yml`: builds the web app and publishes it to GitHub Pages on every push to `main`.
 - `.github/workflows/scanner.yml`: runs the scanner every hour, at :17.
 - `.github/workflows/digest.yml`: sends the due daily digests every 15 minutes (:05, :20, :35, :50).
+- `.github/workflows/admin.yml`: emails `ADMIN_EMAIL` new access requests and the monthly usage report, every hour at :40.
+- `src/admin/index.js`: the admin emails (below). `emails.js` writes them, `months.js` picks the months. Tests next to them.
+- `src/app/lib/usage.ts`: records usage for the report (days, shares, digest clicks).
 - `src/digest/index.js`: the digest (below). `due.js` decides who gets one, `email.js` writes it. Tests next to them.
 - `src/scanner/index.js`: the scan (below). `read-source.js` picks feed or page, `feed.js` and `page.js` read them, `health.js` writes the health email. Tests next to them (`*.test.js`).
 - `supabase/config.toml`: local Supabase settings (sign-ups on for allowed emails, the sign-up check, email templates).
@@ -62,6 +66,13 @@ The logs show only totals: the repo is public, and which sources people follow i
 3. Email up to 5 stories per list, each linking to its page in the app (`/lists/<list>/stories/<story>`), never to the source site. Failing sources link to the list's Sources tab.
 4. No new stories in any list: no email. Either way, `profiles.last_digest_at` records that today's digest is done.
 
+## Usage and admin emails
+
+- The app records, per person: each day they open it (`active_days`), each Share click and each digest link they open (`usage_events`). Users can only add their own rows; only the secret key reads them.
+- Every hour, `admin.yml` emails `ADMIN_EMAIL`:
+    - new access requests, once each (`access_requests.notified_at`);
+    - once a month is over, the usage report: active days per person for the last 6 months, last month's shares and digest clicks, and the 5 most shared stories. Each month once (`usage_reports`).
+
 ## Install
 
 ```bash
@@ -74,13 +85,19 @@ npm ci
 - Copy `.env.example` to `.env`, with the local secret key from `npx supabase status`.
 - Point `EMAIL_*` at Mailpit (host `127.0.0.1`, port `54325`, no user or password) and `ADMIN_EMAIL` at a made-up address.
 - `npm run scan`, then see the stories in the app and any health email in Mailpit.
-- `npm test`: the scanner's and the digest's tests.
+- `npm test`: the scanner's, the digest's and the admin emails' tests.
 
 ## Run the daily digest (dev environment)
 
 - Same `.env` as the scanner, plus `APP_URL=http://127.0.0.1:3000`, with `EMAIL_*` pointing at Mailpit.
 - `npm run digest`: emails every local user whose digest is due. See them in Mailpit.
 - To send one again today, clear `last_digest_at` on the user's profile in Studio.
+
+## Run the admin emails (dev environment)
+
+- Same `.env` as the scanner, with `ADMIN_EMAIL` at a made-up address and `EMAIL_*` pointing at Mailpit.
+- `npm run admin`: sends new access requests, and last month's usage report if it hasn't gone yet. See them in Mailpit.
+- To send a report again, delete its month from `usage_reports` in Studio.
 
 ## Run the web app (dev environment)
 

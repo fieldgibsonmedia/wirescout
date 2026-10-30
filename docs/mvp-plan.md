@@ -172,6 +172,10 @@ A wrong link is the journalist's to fix, so the app shows them which source fail
 - Recipient in the GitHub secret `ADMIN_EMAIL` (Ken sets it; the address is never committed).
 - The same job emails Ken new access requests within a few hours.
 - Journalists are told about the tracking in one line.
+- Agreed with Ken on 2026-10-30:
+    - Also counts digest clicks (links opened from the digest, tagged `?from=digest`), not opens: open tracking needs an image, which Apple Mail always loads and Outlook blocks.
+    - The report also lists the 5 most shared stories of the month.
+    - One hourly workflow (`admin.yml`, :40) sends both emails; each is sent once, and a skipped run is caught up.
 
 ## Branches
 
