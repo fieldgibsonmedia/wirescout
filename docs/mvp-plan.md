@@ -80,6 +80,12 @@ For each source URL, in order:
 - Monday to Friday, each user gets **one** email at the time they picked, in their own time zone (7:00 unless they change it, or never if they turn it off): a section per watch list, the new-item counts, and a link to the dashboard.
     - The sender runs on a schedule and sends to everyone whose time has passed since its last run (how often: decided in step 5). GitHub's scheduled runs can start late, so it arrives "around" that time.
 - This replaces the earlier idea of a separate email per list.
+- Agreed with Ken on 2026-10-30:
+    - Sent every 15 minutes to whoever is due; a skipped run is caught up the same day, never the next.
+    - Stories found since the last digest (at most 7 days back), through the keywords. No email when nothing is new.
+    - One section per list: "Regulators · 5 new stories", and on the right a red "⚠ 3 problematic sources" linking to the list's Sources tab. A list with failing sources but nothing new still shows.
+    - Up to 5 stories per list, then "See all new stories on Wirescout". Each story links to its own page in the app (back link to its list, Share menu), never to the source site, so the activity stays in Wirescout.
+    - Signing in returns to the link that was opened.
 
 ### Dashboard
 

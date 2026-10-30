@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import Alert from '@/components/ui/Alert.vue';
 import TextField from '@/components/ui/TextField.vue';
 import FormLayout from '@/layouts/FormLayout.vue';
 import { emailLink, supabase } from '@/lib/supabase';
 
 const router = useRouter();
+// The page to open after signing in. Only a path in this app: "//site" would leave it.
+const redirect = useRoute().query.redirect;
+const next = typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : null;
 
 const email = ref('');
 const password = ref('');
@@ -41,7 +44,7 @@ async function signIn() {
         return;
     }
 
-    router.push({ name: 'dashboard' });
+    router.push(next ?? { name: 'dashboard' });
 }
 </script>
 

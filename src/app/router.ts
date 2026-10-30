@@ -14,6 +14,7 @@ import RequestAccessPage from '@/pages/RequestAccessPage.vue';
 import SetPasswordPage from '@/pages/SetPasswordPage.vue';
 import SignInPage from '@/pages/SignInPage.vue';
 import SignUpPage from '@/pages/SignUpPage.vue';
+import StoryPage from '@/pages/StoryPage.vue';
 import WatchListPage from '@/pages/WatchListPage.vue';
 
 declare module 'vue-router' {
@@ -32,6 +33,7 @@ export const router = createRouter({
             children: [
                 { path: '', name: 'dashboard', component: DashboardPage },
                 { path: 'lists/:id', name: 'watch-list', component: WatchListPage, props: true },
+                { path: 'lists/:id/stories/:storyId', name: 'story', component: StoryPage, props: true },
                 { path: 'settings/digest', name: 'digest-settings', component: DigestSettingsPage },
                 { path: 'settings/channels', name: 'channels-settings', component: ChannelsSettingsPage },
                 { path: 'account', name: 'account-settings', component: AccountSettingsPage },
@@ -59,8 +61,9 @@ router.beforeEach(async (to) => {
         }
     }
 
+    // Signed out: sign in first, then back to the page the link opened (e.g. a story from the digest).
     if (!to.meta.public && !to.meta.anyone && !data.session) {
-        return { name: 'sign-in' };
+        return { name: 'sign-in', query: to.name === 'dashboard' ? {} : { redirect: to.fullPath } };
     }
 
     if (to.meta.public && data.session) {

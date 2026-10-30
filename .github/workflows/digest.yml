@@ -1,0 +1,48 @@
+name: Daily digest
+
+# Every 15 minutes, emails each journalist whose digest time has passed (Monday to Friday, in their time zone)
+# the new stories in their watch lists, once a day. Scheduled runs only run from main.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "4,19,34,49 * * * *" # Off the busy top of the hour, when GitHub delays more runs
+
+permissions:
+  contents: read
+
+# One run at a time, so nobody gets the same digest twice.
+concurrency:
+  group: digest
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      # The digest needs only the runtime packages: the web app's build tools stay out.
+      - name: Install dependencies
+        run: npm ci --omit=dev
+
+      - name: Send due digests
+        env:
+          # The cloud project's public address (also in .env.production).
+          SUPABASE_URL: https://oggitszmyjqqfivrncgb.supabase.co
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
+          EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          # The live web app, for the links in the email.
+          APP_URL: https://fieldgibsonmedia.github.io/wirescout
+        run: npm run digest

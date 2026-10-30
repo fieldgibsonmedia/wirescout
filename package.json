@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "scan": "node src/scanner/index.js",
-    "test": "node --test \"src/scanner/**/*.test.js\"",
+    "digest": "node src/digest/index.js",
+    "test": "node --test \"src/scanner/**/*.test.js\" \"src/digest/**/*.test.js\"",
     "dev": "vite",
     "build": "vite build",
     "type-check": "vue-tsc --noEmit",
