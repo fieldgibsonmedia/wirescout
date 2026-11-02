@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-02: Post to MODX database (step 6, job 2)
+
+- One migration (`20261102131014_post_to_modx.sql`): posting settings on `publications` (`cms`, `cms_url`, `article_parent_id`, `article_template_id`, all or none), `magazine_connections` (users read their own rows without the session and never write them; one Wirescout user per MODX account, ignoring capitals), `publish_log` (insert-only, even with the secret key).
+- Seed fills the 4 local `.test` magazines. The approved decisions are recorded in `docs/mvp-plan.md`.
+- 17 new access tests; all 100 database tests pass. `database.types.ts` regenerated.
+- Next: job 3, the Edge Functions.
+
 ## 2026-11-02: Step 6 decisions (plan only, no code)
 
 - Ken answered the plan's 3 open questions (`docs/post-to-modx-plan.md`): the Send dialog with a Claude Haiku 5.5 suggested title and 100–250 word brief, editable, source link last, no mention of Wirescout; drafts go to In Brief (News on Corporate Disclosures), ids in the plan; own MODX accounts only. Also: all 4 magazines offered to everyone, the magazine's login is the gate; 3 failed connect attempts then a 15-minute wait; a new `draft-text` function and the `ANTHROPIC_API_KEY` secret.
