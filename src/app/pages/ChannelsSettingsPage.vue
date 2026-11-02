@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Where the user can share stories: the magazines they send drafts to, signed in with their own account
-// there, and the share options their stories' Share menu shows.
+// there, and the share options their stories' Share menu shows. A magazine Wirescout can't reach yet shows greyed
+// out with "Coming soon..." and can't be added.
 import { onMounted, ref, watch } from 'vue';
 import AddMagazineDialog from '@/components/AddMagazineDialog.vue';
 import Alert from '@/components/ui/Alert.vue';
@@ -90,14 +91,18 @@ async function save() {
         <ul v-if="!magazinesFailed" class="flex flex-col divide-y divide-base-300 border-t border-base-300">
             <li v-for="magazine in magazines" :key="magazine.id" class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
                 <span class="flex flex-col">
-                    <span class="font-medium">{{ magazine.name }}</span>
+                    <span v-if="magazine.comingSoon" class="flex flex-wrap items-center gap-2">
+                        <span class="font-medium text-base-content/50">{{ magazine.name }}</span>
+                        <Badge variant="outline" size="sm">Coming soon...</Badge>
+                    </span>
+                    <span v-else class="font-medium">{{ magazine.name }}</span>
                     <span v-if="magazine.connectedAs" class="flex flex-wrap items-center gap-2 text-sm text-base-content/70">
                         Connected as {{ magazine.connectedAs }}
                         <Badge v-if="magazine.needsSignIn" variant="outline" size="sm">Needs sign-in</Badge>
                     </span>
                 </span>
                 <span class="flex gap-2">
-                    <Button v-if="!magazine.connectedAs || magazine.needsSignIn" variant="outline" @click="add(magazine)">
+                    <Button v-if="!magazine.comingSoon && (!magazine.connectedAs || magazine.needsSignIn)" variant="outline" @click="add(magazine)">
                         {{ magazine.connectedAs ? 'Sign in again' : 'Add magazine' }}
                     </Button>
                     <Button v-if="magazine.connectedAs" variant="ghost" :busy="disconnecting === magazine.id" @click="disconnect(magazine)">

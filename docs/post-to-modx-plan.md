@@ -91,6 +91,7 @@ As planned:
 2. Deploy the 3 functions.
 3. Push the migration, then fill the 4 `publications` rows (`cms_url`, `article_parent_id`, `article_template_id`), read from each site's database by its maintainer.
 4. Confirm each magazine's `connectors/index.php` answers over HTTPS from outside (the research found no restriction in the corporate-disclosures nginx config; the other 3 sites need the same check).
+    - **Result 2026-11-02:** Corporate Disclosures answers. The other 3 are behind a Cloudflare bot check (403 "Just a moment...") and show as "Coming soon..." (`publications.coming_soon`) until Cloudflare lets `/connectors/` through for Wirescout, ideally only for requests carrying a secret header the functions send (Supabase has no fixed address to allow).
 5. One journalist with a MODX account tries Connect and Post draft on one magazine before the rest are announced.
 
 ## Jobs, in order (one branch each, from `origin/mvp`)
