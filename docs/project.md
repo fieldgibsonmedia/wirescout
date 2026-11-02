@@ -42,6 +42,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `supabase/templates/`: the account emails (confirm account, new password, email change). The cloud project needs the same templates pasted into its dashboard.
 - `supabase/migrations/`: the database schema and access rules, one SQL file per change.
 - `supabase/functions/check-links/`: an Edge Function that checks links before they're added, with the scanner's own code (`src/scanner/check-link.js`). Up to 10 links per call, signed-in users only.
+- `supabase/functions/magazine-connect/`, `post-draft/`, `draft-text/`: posting drafts to the magazines' MODX (`docs/post-to-modx-plan.md`), with `_shared/magazines.ts`. Their code lives in `src/publish/`: `modx.js` (the MODX connector), `session-crypto.js` (locks the stored sessions), `draft.js` (the suggested draft text). Tests next to them. `modx-staging-test.js` is the proven reference for the connector calls.
 - `supabase/tests/database/`: access tests (pgTAP).
 - `supabase/seed.sql`: made-up sources and articles, loaded into the local database on every reset.
 
@@ -123,7 +124,9 @@ npm ci
 - Start: `npx supabase start`. Stop: `npx supabase stop`.
 - Local URLs and demo keys: `npx supabase status`. Local emails (account and password emails) go to Mailpit at http://127.0.0.1:54324.
 - New schema change: `npx supabase migration new <name>`, then `npx supabase db reset` to rebuild the local database.
-- Edge Functions (`check-links`) run with the local Supabase. If it was started before a function existed, run `npx supabase functions serve`.
+- Edge Functions run with the local Supabase. If it was started before a function existed, run `npx supabase functions serve --env-file supabase/functions/.env`.
+    - The posting functions need `MAGAZINE_SESSION_KEY` in `supabase/functions/.env` (never committed; any `openssl rand -base64 32`). `ANTHROPIC_API_KEY` is optional: without it the Send dialog uses the story's own text.
+    - They reach the local magazine copies on their own ports (`http://host.docker.internal:8081` to `8084`, set in the seed): inside Docker the `.test` names point at the container itself. The magazine's web container must be running.
 
 ## Before a PR
 
