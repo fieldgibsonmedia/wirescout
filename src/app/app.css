@@ -100,6 +100,15 @@
     animation: pop-out 100ms ease-in;
 }
 
+/*
+ * An open dialog locks the page twice: DaisyUI hides the overflow on <html>, Reka UI on <body>. With both,
+ * <body> becomes its own scroll box, so the sticky side nav and top bar move with the page. Reka's lock
+ * alone keeps the page still, so DaisyUI's is turned off.
+ */
+:root:has(.modal-open) {
+    overflow: visible;
+}
+
 /* Dialogs: the backdrop fades (dialog-fade on the overlay) and the box rises a little (dialog-pop on the content). */
 @keyframes fade-in {
     from {

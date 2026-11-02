@@ -13,6 +13,7 @@ import WatchListMenu from '@/components/WatchListMenu.vue';
 import NavItem from '@/components/ui/NavItem.vue';
 import SearchField from '@/components/ui/SearchField.vue';
 import UserMenu from '@/components/ui/UserMenu.vue';
+import { loadMagazines } from '@/lib/magazines';
 import { loadProfile, profile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 import { creatingWatchList, loadWatchLists, watchLists } from '@/lib/watchLists';
@@ -117,6 +118,7 @@ onMounted(() => {
     document.addEventListener('keydown', closeOnEscape);
     loadProfile();
     loadWatchLists();
+    loadMagazines();
 });
 
 onUnmounted(() => {
