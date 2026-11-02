@@ -2,6 +2,15 @@
 // with the version from package.json, in words a journalist would use.
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
+        version: '0.2.0',
+        notes: [
+            "Send a story to Corporate Disclosures as a draft: add the magazine once with your own MODX login in Settings → Channels, then pick Send to Corporate Disclosures in the story's Share menu.",
+            'The draft comes with a suggested title and short brief, ending with the source link. Edit them as you like before you send.',
+            "You'll see when a story was already sent to a magazine, so it isn't posted twice.",
+            'Environmental Finance, InsuranceERM and Insurance Asset Risk are coming soon.',
+        ],
+    },
+    {
         version: '0.1.0',
         notes: [
             'The dashboard shows each watch list at a glance: new stories, the last 7 days, its sources and any that fail, and its saved stories.',
