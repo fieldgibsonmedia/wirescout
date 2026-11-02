@@ -99,6 +99,7 @@ async function signIn() {
     if (!username.value.trim()) missing.username = 'Enter your username.';
     if (!password.value) missing.password = 'Enter your password.';
     errors.value = missing;
+    failed.value = '';
     if (Object.keys(missing).length) {
         return;
     }
@@ -109,7 +110,13 @@ async function signIn() {
     password.value = '';
 
     if (!result.ok) {
-        errors.value = { password: result.error };
+        // A wrong username or password goes under the fields; anything else (e.g. the magazine isn't responding)
+        // above the buttons, so it doesn't read as a password problem.
+        if (result.refused) {
+            errors.value = { password: result.error };
+        } else {
+            failed.value = result.error;
+        }
         return;
     }
     notice.value = '';
@@ -166,6 +173,7 @@ async function send() {
             <Alert v-if="notice" type="info">{{ notice }}</Alert>
             <p v-else>You haven't added {{ magazine.name }} yet. Sign in with your own account there, the one you use in its MODX manager.</p>
             <MagazineSignInFields v-model:username="username" v-model:password="password" :magazine="magazine.name" :errors="errors" />
+            <Alert v-if="failed" type="error">{{ failed }}</Alert>
             <!-- The same footer as FormDialog, like the app's other dialogs. -->
             <div class="flex justify-end gap-3 border-t border-base-300 pt-6">
                 <DialogClose as-child>
@@ -226,6 +234,9 @@ async function send() {
                     {{ earlierSend && step !== 'sent' ? 'Send anyway' : 'Send' }}
                 </Button>
             </div>
+            <p v-if="step === 'edit'" class="text-sm text-base-content/70">
+                Wirescout uses AI to write drafts, and AI can make mistakes. Please check your draft before sending.
+            </p>
         </form>
     </Dialog>
 </template>

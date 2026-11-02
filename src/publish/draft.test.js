@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { after, before, test } from "node:test";
-import { draftHtml, fetchStoryText, readableText, suggestDraft } from "./draft.js";
+import { draftHtml, fetchStoryText, readableText, shortenBrief, suggestDraft } from "./draft.js";
 
 const STORY = { title: "Insurer posts record results", summary: "Premiums rose 12%.", url: "https://news.example.com/press/1" };
 
@@ -35,6 +35,31 @@ test("the suggested draft is the model's title and brief, with the source link l
   assert.ok(client.request.messages[0].content.includes("The page text"));
 });
 
+test("the model is asked for 100 to 250 characters, and a longer brief is cut to fit", async () => {
+  const longBrief = Array.from({ length: 5 }, (_, index) => `Paragraph ${index + 1} says the insurer's premiums rose sharply this year, driven by new business in Asia.`).join("\n\n");
+  const client = fakeClient(reply({ title: "Record half for insurer", brief: longBrief }));
+  const draft = await suggestDraft(client, STORY, "The page text");
+
+  assert.ok(client.request.system.includes("100 to 250 characters"));
+  const brief = draft.content.replace(/\n\nSource: .*$/, "");
+  assert.ok(brief.length <= 250, `${brief.length} characters`);
+  assert.equal(brief.split("\n\n").length, 2);
+});
+
+test("a brief over 250 characters keeps the whole sentences that fit", () => {
+  const first = "Premiums rose 12% in the first half, the insurer said on Tuesday, as new business in Asia grew faster than expected.";
+  const second = "Profit doubled to a record, helped by fewer large claims.";
+  const third = "The company also raised its full-year outlook and announced a new share buyback programme worth several hundred million.";
+  assert.equal(shortenBrief(`${first} ${second} ${third}`), `${first} ${second}`);
+  assert.equal(shortenBrief("Short brief.\n\nSecond paragraph.\n\nThird paragraph."), "Short brief.\n\nSecond paragraph.");
+});
+
+test("a single sentence over 250 characters is cut after a whole word", () => {
+  const brief = shortenBrief("word ".repeat(80).trim());
+  assert.ok(brief.length <= 250);
+  assert.ok(brief.endsWith("word…"));
+});
+
 test("without the page, the model, or a usable answer, the story's own title and summary are used", async () => {
   const fallback = { title: STORY.title, content: "Premiums rose 12%.\n\nSource: https://news.example.com/press/1", suggested: false };
 
@@ -43,6 +68,14 @@ test("without the page, the model, or a usable answer, the story's own title and
   assert.deepEqual(await suggestDraft(fakeClient(new Error("overloaded")), STORY, "The page text"), fallback);
   assert.deepEqual(await suggestDraft(fakeClient(reply({ title: "x", brief: "y" }, "refusal")), STORY, "The page text"), fallback);
   assert.deepEqual(await suggestDraft(fakeClient(reply({ title: "", brief: "" })), STORY, "The page text"), fallback);
+});
+
+test("a long story summary used as the fallback is cut to 250 characters too", async () => {
+  const summary = "Premiums rose 12% in the first half, the insurer said on Tuesday, as new business in Asia grew faster than expected. ".repeat(4).trim();
+  const draft = await suggestDraft(null, { ...STORY, summary }, null);
+  const brief = draft.content.replace(/\n\nSource: .*$/, "");
+  assert.ok(brief.length <= 250, `${brief.length} characters`);
+  assert.ok(draft.content.endsWith("Source: https://news.example.com/press/1"));
 });
 
 test("a story without a summary still ends with the source link", async () => {

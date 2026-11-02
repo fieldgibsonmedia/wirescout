@@ -21,7 +21,7 @@ New decision to record, on approval:
 | --- | --- | --- |
 | Posting | A Supabase Edge Function posts straight to the magazine's MODX connector, signed in as the journalist's own MODX account. No change to any magazine. | No endpoint to write and maintain on 4 sites; MODX enforces who may post where; $0 (Edge Functions are on the free tier) |
 | Magazine access | A journalist connects a magazine by entering their MODX username and password once. The function swaps them for a MODX session and keeps that, encrypted, in Supabase. The password is never stored. All 4 magazines are offered to everyone; the magazine's own login decides who gets in. | Settles the open question "who may post to which magazine": whoever has a MODX account there. No admin step: `user_publications` is no longer needed for sending (Ken, 2026-11-02) |
-| Draft text | Title and a 100–250 word news brief suggested by Claude Haiku 5.5 from the story's page, editable by the journalist before sending. The last line is the source link. No mention of Wirescout. | Saves the journalist the first draft; a person still approves every word; the model only sees the real article, so it can't invent facts from a two-line summary (Ken, 2026-11-02) |
+| Draft text | Title and a 100–250 character news brief (1 or 2 paragraphs) suggested by Claude Haiku 5.5 from the story's page, editable by the journalist before sending. The last line is the source link. No mention of Wirescout. | Saves the journalist the first draft; a person still approves every word; the model only sees the real article, so it can't invent facts from a two-line summary (Ken, 2026-11-02) |
 | Statamic later | Same function, a second adapter. The app doesn't change. | As planned on 2026-10-27, only the adapter is swapped |
 
 Everything else in the plan stays: drafts only, "Post draft to <magazine>" in the Share menu, the confirm step names the magazine.
@@ -39,7 +39,7 @@ Everything else in the plan stays: drafts only, "Post draft to <magazine>" in th
 Heading **Send draft to {Magazine}**, then the line **You're sending this as {MODX username}**, then two editable fields and a **Send** button:
 
 - **Title:** suggested by Claude Haiku 5.5; falls back to the story's original title.
-- **Content:** a news brief of 100–250 words suggested by Claude Haiku 5.5 from the story's page; falls back to the story's original summary when the page can't be fetched. The last line is always `Source: <full story link>` (the link as text and as a link). No summary field.
+- **Content:** a news brief of 100–250 characters (1 or 2 paragraphs, cut to fit if the model writes more) suggested by Claude Haiku 5.5 from the story's page; falls back to the story's original summary when the page can't be fetched. The last line is always `Source: <full story link>` (the link as text and as a link). No summary field.
 - The journalist edits both fields freely. What is sent is what they see.
 - The draft never mentions Wirescout or AI. The publish log records `ai_assisted` for us only.
 
