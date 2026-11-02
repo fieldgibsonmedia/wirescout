@@ -2,7 +2,7 @@
 // exactly as the manager page does. Proven against all 4 magazines in src/publish/modx-staging-test.js.
 // Used by the magazine-connect and post-draft Edge Functions.
 //
-// site: a publications row ({ cms_url, article_parent_id, article_template_id }).
+// site: a publications row ({ name, cms_url, article_parent_id, article_template_id }).
 // session: { cookie, token }, from login. It's as powerful as a signed-in manager tab: keep it server-side.
 //
 // Every call returns { ok: true, ... } or { ok: false, reason, message }:
@@ -107,7 +107,7 @@ async function callConnector(site, action, fields, session) {
   } catch {
     // Unreachable, too slow, or not JSON (e.g. a server error page).
     if (response?.status === 401) return { ok: false, reason: "signed_out", message: "Please sign in again." };
-    return { ok: false, reason: "error", message: "The magazine couldn't be reached." };
+    return { ok: false, reason: "error", message: `${site.name} isn't responding right now. Please try again in a few minutes.` };
   }
 
   if (response.status === 401 || json?.code === 401) {

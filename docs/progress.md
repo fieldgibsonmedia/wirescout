@@ -2,6 +2,15 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-02: Fixes after the first look at the release (step 6)
+
+- Share menu: no more "Coming soon..." magazines. It lists only the magazines the user added, then Add a magazine. Channels still shows the 3 greyed out.
+- Draft text: 100 to 250 characters (not words), 1 or 2 paragraphs, as Ken asked. The model is asked for that, and `shortenBrief` (`src/publish/draft.js`) cuts anything longer after the last whole sentence that fits. The fallback (the story's own summary) is cut the same way.
+- Send dialog: a note under the buttons: "Wirescout uses AI to write drafts, and AI can make mistakes. Please check your draft before sending."
+- Sign-in errors: a magazine that doesn't answer now says "<Magazine> isn't responding right now. Please try again in a few minutes." in a box above the buttons, not under the password field. A wrong username or password still shows under the field.
+- Checked: 59 unit tests (5 new), type-check, build; in the browser: the Share menu, Channels, the Send dialog note, and both sign-in errors (local Corporate Disclosures copy stopped, then a made-up account). Not checked: a real AI draft (no `ANTHROPIC_API_KEY` locally).
+- Release: `draft-text`, `magazine-connect` and `post-draft` use the changed code, so all 3 need redeploying.
+
 ## 2026-11-02: Post to MODX release, part 1, and "Coming soon..." magazines (step 6, job 5)
 
 - Production steps run by Ken: both function secrets set, the 3 migrations pushed, the 3 functions deployed, the 4 `publications` rows filled with the live addresses and ids (checked on each live site).

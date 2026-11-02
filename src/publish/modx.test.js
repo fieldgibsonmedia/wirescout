@@ -55,7 +55,7 @@ let site;
 
 before(async () => {
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  site = { cms_url: `http://127.0.0.1:${server.address().port}`, article_parent_id: 19, article_template_id: 3 };
+  site = { name: "Example Magazine", cms_url: `http://127.0.0.1:${server.address().port}`, article_parent_id: 19, article_template_id: 3 };
 });
 after(() => server.closeAllConnections() || server.close());
 
@@ -107,7 +107,11 @@ test("after logout the session stops working", async () => {
 
 test("a site that is down or broken is an error, not a refusal", async () => {
   const broken = await login({ ...site, cms_url: `${site.cms_url}/broken` }, ACCOUNT.username, ACCOUNT.password);
-  assert.deepEqual(broken, { ok: false, reason: "error", message: "The magazine couldn't be reached." });
+  assert.deepEqual(broken, {
+    ok: false,
+    reason: "error",
+    message: "Example Magazine isn't responding right now. Please try again in a few minutes.",
+  });
 });
 
 test("the edit link opens the draft in the MODX manager", () => {
