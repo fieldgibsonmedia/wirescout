@@ -133,14 +133,14 @@ isOneToOne: false
                   ]
                 },"publications": {
                   Row: {
-                    "article_parent_id": number | null,"article_template_id": number | null,"cms": string | null,"cms_url": string | null,"id": number,"name": string,"slug": string
+                    "article_parent_id": number | null,"article_template_id": number | null,"cms": string | null,"cms_url": string | null,"coming_soon": boolean,"id": number,"name": string,"slug": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "article_parent_id"?: number | null,"article_template_id"?: number | null,"cms"?: string | null,"cms_url"?: string | null,"id"?: never,"name": string,"slug": string
+                    "article_parent_id"?: number | null,"article_template_id"?: number | null,"cms"?: string | null,"cms_url"?: string | null,"coming_soon"?: boolean,"id"?: never,"name": string,"slug": string
                   }
                   Update: {
-                    "article_parent_id"?: number | null,"article_template_id"?: number | null,"cms"?: string | null,"cms_url"?: string | null,"id"?: never,"name"?: string,"slug"?: string
+                    "article_parent_id"?: number | null,"article_template_id"?: number | null,"cms"?: string | null,"cms_url"?: string | null,"coming_soon"?: boolean,"id"?: never,"name"?: string,"slug"?: string
                   }
                   Relationships: [
                     

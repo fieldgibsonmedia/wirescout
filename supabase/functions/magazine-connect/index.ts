@@ -6,7 +6,7 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
 import { login, logout } from "../../../src/publish/modx.js";
 import { encryptSession } from "../../../src/publish/session-crypto.js";
-import { loadConnection, loadSite, logPublish, reply } from "../_shared/magazines.ts";
+import { comingSoon, loadConnection, loadSite, logPublish, reply } from "../_shared/magazines.ts";
 
 // 3 wrong passwords, then a 15-minute wait: far below any magazine's own lockout (20 or 50 attempts),
 // so Wirescout can never get a journalist blocked on their magazine.
@@ -34,6 +34,8 @@ export default {
     }
 
     if (body.action !== "connect") return reply(400, { error: "Send action connect or disconnect." });
+    // Disconnecting above still works, so nobody is stuck with a connection to a magazine that's paused.
+    if (site.coming_soon) return comingSoon(site);
     const username = typeof body.username === "string" ? body.username.trim() : "";
     const password = typeof body.password === "string" ? body.password : "";
     if (!username || !password) return reply(400, { error: "Enter your username and password." });

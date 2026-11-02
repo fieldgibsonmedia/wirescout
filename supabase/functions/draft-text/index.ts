@@ -7,7 +7,7 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import Anthropic from "@anthropic-ai/sdk";
 import { withSupabase } from "@supabase/server";
 import { fetchStoryText, suggestDraft } from "../../../src/publish/draft.js";
-import { loadSite, logPublish, reply } from "../_shared/magazines.ts";
+import { comingSoon, loadSite, logPublish, reply } from "../_shared/magazines.ts";
 
 // Keeps the model's cost bounded (under a cent each): a journalist sends a few drafts a day.
 const MAX_SUGGESTIONS_PER_HOUR = 10;
@@ -28,6 +28,7 @@ export default {
 
     const site = await loadSite(admin, body.publication_id);
     if (!site) return reply(400, { error: "Unknown magazine." });
+    if (site.coming_soon) return comingSoon(site);
 
     const since = new Date(Date.now() - 60 * 60_000).toISOString();
     const { count } = await admin

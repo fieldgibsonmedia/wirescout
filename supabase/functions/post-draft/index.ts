@@ -7,7 +7,7 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
 import { createDraft, editLink } from "../../../src/publish/modx.js";
 import { draftHtml } from "../../../src/publish/draft.js";
-import { loadConnection, loadSite, logPublish, markNeedsSignIn, reply } from "../_shared/magazines.ts";
+import { comingSoon, loadConnection, loadSite, logPublish, markNeedsSignIn, reply } from "../_shared/magazines.ts";
 
 // MODX keeps a page title in 255 characters.
 const MAX_TITLE_LENGTH = 255;
@@ -30,6 +30,7 @@ export default {
 
     const site = await loadSite(admin, body.publication_id);
     if (!site) return reply(400, { error: "Unknown magazine." });
+    if (site.coming_soon) return comingSoon(site);
 
     const connection = await loadConnection(admin, userId, site.id);
     if (!connection?.session || connection.status !== "connected") {

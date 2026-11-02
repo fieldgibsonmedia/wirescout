@@ -9,6 +9,8 @@ export type Site = {
   cms_url: string;
   article_parent_id: number;
   article_template_id: number;
+  // Shown greyed out in the app ("Coming soon..."): no connecting, drafts or suggestions yet.
+  coming_soon: boolean;
 };
 
 // A magazine that is set up for posting through MODX, or null.
@@ -16,7 +18,7 @@ export async function loadSite(admin: SupabaseClient, publicationId: unknown): P
   if (!Number.isInteger(publicationId)) return null;
   const { data } = await admin
     .from("publications")
-    .select("id, name, cms_url, article_parent_id, article_template_id")
+    .select("id, name, cms_url, article_parent_id, article_template_id, coming_soon")
     .eq("id", publicationId)
     .eq("cms", "modx")
     .maybeSingle();
@@ -61,6 +63,10 @@ type LogEntry = {
 
 export async function logPublish(admin: SupabaseClient, entry: LogEntry) {
   await admin.from("publish_log").insert(entry);
+}
+
+export function comingSoon(site: Site) {
+  return reply(409, { error: `${site.name} is coming soon.` });
 }
 
 export function reply(status: number, body: Record<string, unknown>) {
