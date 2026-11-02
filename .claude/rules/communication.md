@@ -22,6 +22,8 @@ When there is a list of jobs, issues or decisions:
 
 Never work through the whole list in one go.
 
+Finish the current item properly before offering the next: look for what else needs fixing in it first (Ken, 2026-11-02).
+
 ## Guiding Ken through steps only he can run
 
 - Only steps the rules give to Ken: production, his accounts, his devices. Run everything else yourself.

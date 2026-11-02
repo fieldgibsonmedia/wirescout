@@ -91,6 +91,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"magazine_connections": {
+                  Row: {
+                    "cms_username": string,"connected_at": string,"last_used_at": string | null,"publication_id": number,"session_ciphertext": string,"status": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cms_username": string,"connected_at"?: string,"last_used_at"?: string | null,"publication_id": number,"session_ciphertext": string,"status"?: string,"user_id": string
+                  }
+                  Update: {
+                    "cms_username"?: string,"connected_at"?: string,"last_used_at"?: string | null,"publication_id"?: number,"session_ciphertext"?: string,"status"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "magazine_connections_publication_id_fkey"
+      columns: ["publication_id"]
+isOneToOne: false
+      referencedRelation: "publications"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "magazine_connections_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"profiles": {
                   Row: {
                     "created_at": string,"digest_time": string | null,"email": string,"full_name": string | null,"id": string,"last_digest_at": string | null,"share_copy_link": boolean,"share_email": boolean,"share_linkedin": boolean,"time_zone": string
@@ -107,17 +133,55 @@ isOneToOne: false
                   ]
                 },"publications": {
                   Row: {
-                    "id": number,"name": string,"slug": string
+                    "article_parent_id": number | null,"article_template_id": number | null,"cms": string | null,"cms_url": string | null,"coming_soon": boolean,"id": number,"name": string,"slug": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "id"?: never,"name": string,"slug": string
+                    "article_parent_id"?: number | null,"article_template_id"?: number | null,"cms"?: string | null,"cms_url"?: string | null,"coming_soon"?: boolean,"id"?: never,"name": string,"slug": string
                   }
                   Update: {
-                    "id"?: never,"name"?: string,"slug"?: string
+                    "article_parent_id"?: number | null,"article_template_id"?: number | null,"cms"?: string | null,"cms_url"?: string | null,"coming_soon"?: boolean,"id"?: never,"name"?: string,"slug"?: string
                   }
                   Relationships: [
                     
+                  ]
+                },"publish_log": {
+                  Row: {
+                    "action": string,"ai_assisted": boolean,"article_id": number | null,"cms_resource_id": number | null,"created_at": string,"id": number,"publication_id": number,"result": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "action": string,"ai_assisted"?: boolean,"article_id"?: number | null,"cms_resource_id"?: number | null,"created_at"?: string,"id"?: never,"publication_id": number,"result": string,"user_id": string
+                  }
+                  Update: {
+                    "action"?: string,"ai_assisted"?: boolean,"article_id"?: number | null,"cms_resource_id"?: number | null,"created_at"?: string,"id"?: never,"publication_id"?: number,"result"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "publish_log_article_id_fkey"
+      columns: ["article_id"]
+isOneToOne: false
+      referencedRelation: "articles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "publish_log_article_id_fkey"
+      columns: ["article_id"]
+isOneToOne: false
+      referencedRelation: "watch_list_articles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "publish_log_publication_id_fkey"
+      columns: ["publication_id"]
+isOneToOne: false
+      referencedRelation: "publications"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "publish_log_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"saved_stories": {
                   Row: {
@@ -369,6 +433,11 @@ isOneToOne: false
                            },
 "record_active_day":
 { Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"story_sends":
+{ Args: { "article_ids": (number)[] }; Returns: {
+              "article_id": number,"edit_url": string,"publication_id": number,"sent_at": string,"sent_by": string,"sent_by_me": boolean
+            }[]
                            }
           }
           Enums: {

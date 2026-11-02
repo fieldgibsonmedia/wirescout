@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// A message at the top of a page (DaisyUI alert). type: error, success, info.
+// A message at the top of a page (DaisyUI alert). type: error, warning, success, info.
 // Errors interrupt screen readers right away; the others wait their turn.
 withDefaults(
     defineProps<{
-        type?: 'error' | 'success' | 'info';
+        type?: 'error' | 'warning' | 'success' | 'info';
     }>(),
     {
         type: 'info',
@@ -12,6 +12,7 @@ withDefaults(
 
 const types = {
     error: 'alert-error',
+    warning: 'alert-warning',
     success: 'alert-success',
     info: 'alert-info',
 };

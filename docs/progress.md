@@ -2,6 +2,55 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-02: Post to MODX release, part 1, and "Coming soon..." magazines (step 6, job 5)
+
+- Production steps run by Ken: both function secrets set, the 3 migrations pushed, the 3 functions deployed, the 4 `publications` rows filled with the live addresses and ids (checked on each live site).
+- Release step 4 found a blocker: Environmental Finance, InsuranceERM and Insurance Asset Risk sit behind a Cloudflare bot check (HTTP 403 "Just a moment...", even on the home page), so the functions can't reach them. Corporate Disclosures answers (401, as expected).
+- Ken's call: show those 3 greyed out with "Coming soon..." instead of hiding them, so the team asks for the Cloudflare allowance. New `publications.coming_soon` column (migration `20261102190249`), set for the 3; Settings → Channels and the Share menu show them disabled; `magazine-connect` (connect only), `post-draft` and `draft-text` refuse them. Turning one on: `update public.publications set coming_soon = false where slug = '<slug>';`
+- Checked: all 110 database tests (3 new), lint, 55 unit tests, type-check, build; the 3 functions called locally as a made-up user (coming-soon magazine refused, disconnect still works, Corporate Disclosures passes); both screens looked at in the browser.
+- Next: push this migration and redeploy the 3 functions, release `mvp` into `main`, then the trial with one journalist on Corporate Disclosures. Separately: a Cloudflare rule letting `/connectors/` through for Wirescout (whoever manages Cloudflare for the 3 sites).
+
+## 2026-11-02: Post to MODX app (step 6, job 4)
+
+- Settings → Channels: the 4 magazines, Add magazine (own MODX sign-in), Connected as …, Disconnect. Share menu: Send to each added magazine, then Add a magazine. Send dialog: suggested title and text, editable; Open in <magazine> after sending.
+- Duplicates (Ken's idea, 2026-11-02): a warning when anyone already sent the story to that magazine, with Open existing story and Send anyway; "Sent to <magazine>" on the story card; a clear message when MODX refuses a same-title article. New function `story_sends`, 6 database tests.
+- Also: an eye button on every password field; the sticky side nav no longer moves while a dialog is open; focus returns to Share after the dialog; MODX field errors are read from `data`.
+- Ken tested end to end: signed in to the local Corporate Disclosures copy with `wirescout-test` and sent drafts.
+- Next: job 5, the release (production steps in the plan).
+
+## 2026-11-02: Post to MODX functions (step 6, job 3)
+
+- 3 Edge Functions: `magazine-connect` (connect, disconnect; 3 failed sign-ins then a 15-minute wait), `post-draft`, `draft-text` (Claude Haiku 5.5, 10 per user per hour, falls back to the story's own text). Shared code in `src/publish/` (`modx.js`, `session-crypto.js`, `draft.js`), 19 new unit tests against a fake MODX and a fake model reply.
+- New migration: `draft_text` as a `publish_log` action. Seed: the local magazines on their own ports, so the functions can reach them.
+- Checked locally with a made-up user: every error answer, the fallback draft text, and real refusals from the local Corporate Disclosures copy (a made-up username) with the 4th try blocked.
+- Not checked: a real sign-in and draft (needs Ken's test account password, in job 4's dialog), and a real Haiku call (needs the API key).
+- Next: job 4, the app (Channels settings and the Share menu).
+
+## 2026-11-02: Post to MODX database (step 6, job 2)
+
+- One migration (`20261102131014_post_to_modx.sql`): posting settings on `publications` (`cms`, `cms_url`, `article_parent_id`, `article_template_id`, all or none), `magazine_connections` (users read their own rows without the session and never write them; one Wirescout user per MODX account, ignoring capitals), `publish_log` (insert-only, even with the secret key).
+- Seed fills the 4 local `.test` magazines. The approved decisions are recorded in `docs/mvp-plan.md`.
+- 17 new access tests; all 100 database tests pass. `database.types.ts` regenerated.
+- Next: job 3, the Edge Functions.
+
+## 2026-11-02: Step 6 decisions (plan only, no code)
+
+- Ken answered the plan's 3 open questions (`docs/post-to-modx-plan.md`): the Send dialog with a Claude Haiku 5.5 suggested title and 100–250 word brief, editable, source link last, no mention of Wirescout; drafts go to In Brief (News on Corporate Disclosures), ids in the plan; own MODX accounts only. Also: all 4 magazines offered to everyone, the magazine's login is the gate; 3 failed connect attempts then a 15-minute wait; a new `draft-text` function and the `ANTHROPIC_API_KEY` secret.
+- Noted in `docs/known-issues.md`: the sign-in screen has no "Stay signed in" option.
+- Next: Ken's "approve" on job 2, the database.
+
+## 2026-11-02: MODX posting research and staging test (step 6, job 1)
+
+- Research: Wirescout can post drafts to a MODX magazine through the connector the MODX manager itself uses, as the journalist's own account, with no change to any magazine. Verified in the MODX 2.8.3 source (corporate-disclosures repo) and the 3.x branch. Report: `docs/modx-integration-research.md`.
+- Plan for step 6, waiting for approval: `docs/post-to-modx-plan.md`. It replaces the "receive draft endpoint per site" decision with an Edge Function calling the MODX connector directly.
+- Staging test: `src/publish/modx-staging-test.js` and `docs/modx-staging-test.md`, against the local corporate-disclosures Docker copy (`http://cd.test`). Its PHP container pointed at the repo's old folder and was recreated; the site and the connector now answer locally.
+- Checked without any account: a wrong login returns MODX's JSON refusal; a connector call without the token returns 401. The script parses.
+- Run with Ken's ok, on the test account `wirescout-test` (Editor role): **11 of 11 passed**. Login, draft create, read back, publish, unpublish, bin, logout, and refusals without a token, with a wrong token and after logout. Finding: MODX reports a refusal as HTTP 200 with `code: 401` unless the request carries `X-Requested-With: XMLHttpRequest`; the script sends it now and the plan records it.
+- Then the same test on local copies of the other 3 magazines (environmental-finance.com, insuranceassetrisk.com, insuranceerm.com; MODX 2.8.1), each with its own `wirescout-test` account: **11 of 11 on each**. All 4 sites have the same layout; only the section and template ids differ (table in `docs/modx-staging-test.md`).
+- Not tested: a MODX 3 site; template variables; an account without `publish_document`; image upload.
+- Plain-words summary with a diagram, for anyone new to it: `docs/post-to-modx-in-plain-words.md`.
+- Next: Ken's "approve" on `docs/post-to-modx-plan.md` (3 open questions at its end), then job 2, the database.
+
 ## 2026-10-30: UI amends after v0.1.0
 
 - Released before this job: v0.1.0 (PR #13, merged by Ken). The 2 migrations were pushed to the cloud first; the web app deploy passed.

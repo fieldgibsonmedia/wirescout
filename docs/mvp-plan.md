@@ -19,7 +19,7 @@ Agreed with Ken on 2026-10-27. Turns the prototype into an internal MVP for more
 | Architecture | Decoupled but small: static app + Supabase + scanner | Each part is free to host; no API layer to maintain |
 | Scanner | GitHub Actions on a schedule, state in Supabase | Free (public repo); stops committing `state.json` to `main` |
 | Email | A Gmail account over SMTP, with an app password | Microsoft 365 ends password SMTP in December 2026, and a company-domain sender (e.g. Brevo) needs DNS records IT won't add |
-| Posting | Supabase Edge Function calls a "receive draft" endpoint on each site | CMS credentials stay server-side |
+| Posting | A Supabase Edge Function posts straight to the magazine's MODX connector, signed in as the journalist's own MODX account (decided 2026-11-02, `docs/post-to-modx-plan.md`) | No endpoint to write on 4 sites; MODX enforces who may post where; the session stays server-side, encrypted |
 | Sharing | LinkedIn and email through share links: LinkedIn's share window and the user's own email app | No setup, no logins to expire, free; the journalist posts or sends as themselves |
 | Look | Apple's web blue (`#0071E3`) as the primary colour until Wirescout has a brand | Apple's system blue `#007AFF` is too light for white button text (4.0:1) |
 | Bulk sources | File upload (`.xlsx`, `.csv`, `.txt`) with `read-excel-file`, loaded only for `.xlsx` | People expect to upload a file; paste-only was rejected. Keeps the app small for everyone else |
@@ -94,12 +94,12 @@ For each source URL, in order:
 
 ### Post from Wirescout
 
-- "Post draft to <magazine>" is an option in each story's Share menu: one entry per magazine the user may post to, and none for users without a magazine.
+- "Send to <magazine>" is an option in each story's Share menu: one entry per magazine. Not connected yet: the same dialog asks for the MODX sign-in first.
 - The confirm step names the magazine ("Post draft to Insurance Asset Risk?").
 - Stories go in as **drafts** so an editor still reviews them.
-- All 4 magazines run on MODX today, and MODX has no ready-made API for creating articles. Each site needs one small "receive draft" endpoint.
-- All 4 are moving to Statamic (months away). Its API is read-only, so it will need the same endpoint. Wirescout doesn't change: only the endpoint on each site is swapped.
-- **Open, decided in step 6:** who may post to which magazine. A user can write for several magazines, and should only reach the ones where they have a writer or editor account in MODX (later Statamic, through the users-service). Until then an admin adds magazines by hand; nothing is linked from the email domain (decided 2026-10-29).
+- All 4 magazines run on MODX today. No site changes: Wirescout calls the same connector the MODX manager uses, as the journalist (decided 2026-11-02, `docs/post-to-modx-plan.md`).
+- All 4 are moving to Statamic (months away). Same function, a second adapter; the app doesn't change.
+- **Decided 2026-11-02:** who may post to which magazine is whoever has their own MODX account there. A journalist connects a magazine once with their MODX username and password; the password is never stored. All 4 magazines are offered to everyone, and `user_publications` no longer gates posting.
 
 ### Self sign-up (job 2 of step 3)
 

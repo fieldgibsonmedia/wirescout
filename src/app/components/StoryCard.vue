@@ -1,13 +1,15 @@
 <script setup lang="ts">
-// One story: "New" marker, source and date, the title (opens the story on its own site), summary,
-// the Share menu and Save. Used in the watch list and on the story's own page. Bind the saved state with v-model:saved.
+// One story: "New" marker, source and date, "Sent to <magazine>" when someone already sent it there,
+// the title (opens the story on its own site), summary, the Share menu and Save. Used in the watch list and on the story's own page. Bind the saved state with v-model:saved.
 import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/20/solid';
+import { computed, watch } from 'vue';
 import SaveButton from '@/components/SaveButton.vue';
 import ShareMenu from '@/components/ShareMenu.vue';
 import Badge from '@/components/ui/Badge.vue';
 import Card from '@/components/ui/Card.vue';
+import { loadStorySends, magazines, storySends } from '@/lib/magazines';
 
-defineProps<{
+const props = defineProps<{
     watchListId: string;
     articleId: number;
     title: string;
@@ -19,6 +21,10 @@ defineProps<{
 }>();
 
 const saved = defineModel<boolean>('saved', { required: true });
+
+watch(() => props.articleId, loadStorySends, { immediate: true });
+
+const sentTo = computed(() => magazines.value.filter((magazine) => storySends.value.get(props.articleId)?.has(magazine.id)));
 </script>
 
 <template>
@@ -27,6 +33,7 @@ const saved = defineModel<boolean>('saved', { required: true });
             <Badge v-if="isNew" variant="success" size="sm">New</Badge>
             <span>{{ source }}</span>
             <span>{{ date }}</span>
+            <Badge v-for="magazine in sentTo" :key="magazine.id" variant="outline" size="sm">Sent to {{ magazine.name }}</Badge>
         </div>
         <h3 class="text-lg font-semibold break-words">
             <a :href="url" target="_blank" rel="noopener" class="link link-hover">

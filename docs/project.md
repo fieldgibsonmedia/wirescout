@@ -35,6 +35,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `.github/workflows/admin.yml`: emails `ADMIN_EMAIL` new access requests and the monthly usage report, every hour at :40.
 - `src/admin/index.js`: the admin emails (below). `emails.js` writes them, `months.js` picks the months. Tests next to them.
 - `src/app/lib/usage.ts`: records usage for the report (days, shares, digest clicks).
+- `src/app/lib/magazines.ts`: the magazines, the user's connections and who already sent which story (`story_sends`), for Settings → Channels, the Share menu and the Send dialog (`components/SendDraftDialog.vue`).
 - `src/app/lib/releaseNotes.ts`: the dashboard's "What's new". Add an entry with each release.
 - `src/digest/index.js`: the digest (below). `due.js` decides who gets one, `email.js` writes it. Tests next to them.
 - `src/scanner/index.js`: the scan (below). `read-source.js` picks feed or page, `feed.js` and `page.js` read them, `health.js` writes the health email. Tests next to them (`*.test.js`).
@@ -42,6 +43,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `supabase/templates/`: the account emails (confirm account, new password, email change). The cloud project needs the same templates pasted into its dashboard.
 - `supabase/migrations/`: the database schema and access rules, one SQL file per change.
 - `supabase/functions/check-links/`: an Edge Function that checks links before they're added, with the scanner's own code (`src/scanner/check-link.js`). Up to 10 links per call, signed-in users only.
+- `supabase/functions/magazine-connect/`, `post-draft/`, `draft-text/`: posting drafts to the magazines' MODX (`docs/post-to-modx-plan.md`), with `_shared/magazines.ts`. Their code lives in `src/publish/`: `modx.js` (the MODX connector), `session-crypto.js` (locks the stored sessions), `draft.js` (the suggested draft text). Tests next to them. `modx-staging-test.js` is the proven reference for the connector calls.
 - `supabase/tests/database/`: access tests (pgTAP).
 - `supabase/seed.sql`: made-up sources and articles, loaded into the local database on every reset.
 
@@ -107,14 +109,14 @@ npm ci
 3. To get a local test user:
     - Create an account on the sign-up page with a made-up address at an allowed domain (e.g. `test@fieldgibsonmedia.com`).
     - Open the email in Mailpit and click Confirm.
-    - Optional, to see a magazine under Settings → Channels: Table Editor → `user_publications` → Insert row, with the user and a `publication_id` (1 Environmental Finance, 2 InsuranceERM, 3 Insurance Asset Risk, 4 Corporate Disclosures).
+    - Optional, to send a draft: start the magazine's local copy (`docs/modx-staging-test.md`) and the functions (below), then Settings → Channels → Add magazine with its `wirescout-test` account.
 4. Add `https://news.example.com/press` or `https://regulator.example.org/updates` to a watch list to see the seed articles.
 
 ## Admin tasks (in Studio, or the cloud dashboard)
 
 - **Let someone sign up:** Table Editor → `allowed_email_domains` → Insert row, with a domain (`example.com`) or one full address. Lower case.
 - **Access requests:** Table Editor → `access_requests`. Add the address to the allowed list, reply by email, then set `handled_at` to now.
-- **A magazine for a user:** Table Editor → `user_publications` → Insert row.
+- **A magazine for a user:** nothing to do. Every magazine is offered to everyone; the journalist adds it with their own MODX account (Settings → Channels).
 - **A leaver:** their account stays until you delete it: Authentication → Users → the user → Delete. Their watch lists go with it.
 
 ## Local Supabase
@@ -123,7 +125,9 @@ npm ci
 - Start: `npx supabase start`. Stop: `npx supabase stop`.
 - Local URLs and demo keys: `npx supabase status`. Local emails (account and password emails) go to Mailpit at http://127.0.0.1:54324.
 - New schema change: `npx supabase migration new <name>`, then `npx supabase db reset` to rebuild the local database.
-- Edge Functions (`check-links`) run with the local Supabase. If it was started before a function existed, run `npx supabase functions serve`.
+- Edge Functions run with the local Supabase. If it was started before a function existed, run `npx supabase functions serve --env-file supabase/functions/.env`.
+    - The posting functions need `MAGAZINE_SESSION_KEY` in `supabase/functions/.env` (never committed; any `openssl rand -base64 32`). `ANTHROPIC_API_KEY` is optional: without it the Send dialog uses the story's own text.
+    - They reach the local magazine copies on their own ports (`http://host.docker.internal:8081` to `8084`, set in the seed): inside Docker the `.test` names point at the container itself. The magazine's web container must be running.
 
 ## Before a PR
 
