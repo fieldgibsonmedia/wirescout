@@ -1,6 +1,6 @@
 # Post to MODX: implementation plan (step 6)
 
-Status: **decided 2026-11-02, waiting for Ken's "approve" on job 2**. The staging test passed on 2026-11-02 on local copies of all 4 magazines (11 of 11 each, `docs/modx-staging-test.md`). Nothing here is built yet.
+Status: **approved 2026-11-02; job 2 (database) in progress**. The staging test passed on 2026-11-02 on local copies of all 4 magazines (11 of 11 each, `docs/modx-staging-test.md`). Nothing here is built yet.
 
 Research and verdicts: `docs/modx-integration-research.md`.
 
