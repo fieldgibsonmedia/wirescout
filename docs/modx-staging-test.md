@@ -32,7 +32,7 @@ All four run MODX Revolution 2.8 with the same layout, and each has a local Dock
 
 The `.test` host names resolve through the local traefik (`/etc/hosts` has them). InsuranceERM's compose file has a second database on port 3309 that clashes with Environmental Finance's; start it with `docker compose up -d ierm-web ierm-php mysql`.
 
-The ids above are the values the site registry (`docs/post-to-modx-plan.md`) needs; production ids must be read again on each live site before use.
+The article section above is where the test created its draft. Where real drafts go is decided in `docs/post-to-modx-plan.md` (In Brief on three sites, News on Corporate Disclosures); production ids must be read again on each live site before use.
 
 ## The staging MODX (corporate-disclosures, the first one tested)
 
