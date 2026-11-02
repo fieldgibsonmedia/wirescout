@@ -3,6 +3,7 @@
 // MODX username and password, and Wirescout keeps the session, never the password.
 import { ref, watch } from 'vue';
 import MagazineSignInFields from '@/components/MagazineSignInFields.vue';
+import Alert from '@/components/ui/Alert.vue';
 import FormDialog from '@/components/ui/FormDialog.vue';
 import { connectMagazine, type Magazine } from '@/lib/magazines';
 
@@ -15,6 +16,8 @@ const open = defineModel<boolean>('open', { default: false });
 const username = ref('');
 const password = ref('');
 const errors = ref<Record<string, string>>({});
+// Not about the username or password (e.g. the magazine isn't responding): shown above the buttons.
+const failed = ref('');
 const busy = ref(false);
 
 watch(open, (isOpen) => {
@@ -22,6 +25,7 @@ watch(open, (isOpen) => {
         username.value = props.magazine.connectedAs ?? '';
         password.value = '';
         errors.value = {};
+        failed.value = '';
     }
 });
 
@@ -30,6 +34,7 @@ async function connect() {
     if (!username.value.trim()) missing.username = 'Enter your username.';
     if (!password.value) missing.password = 'Enter your password.';
     errors.value = missing;
+    failed.value = '';
     if (Object.keys(missing).length) {
         return;
     }
@@ -40,7 +45,11 @@ async function connect() {
     password.value = '';
 
     if (!result.ok) {
-        errors.value = { password: result.error };
+        if (result.refused) {
+            errors.value = { password: result.error };
+        } else {
+            failed.value = result.error;
+        }
         return;
     }
     open.value = false;
@@ -58,5 +67,6 @@ async function connect() {
         @submit="connect"
     >
         <MagazineSignInFields v-model:username="username" v-model:password="password" :magazine="magazine.name" :errors="errors" />
+        <Alert v-if="failed" type="error" class="mt-4">{{ failed }}</Alert>
     </FormDialog>
 </template>

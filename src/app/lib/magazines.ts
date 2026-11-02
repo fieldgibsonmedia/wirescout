@@ -41,7 +41,8 @@ export async function loadMagazines() {
 }
 
 // duplicate: the magazine already has an article with this title, and existingUrl opens it (post-draft only).
-type Failure = { ok: false; error: string; needsSignIn?: boolean; duplicate?: boolean; existingUrl?: string };
+// refused: the magazine turned the sign-in down (wrong username or password), so the error belongs under the fields.
+type Failure = { ok: false; error: string; needsSignIn?: boolean; duplicate?: boolean; existingUrl?: string; refused?: boolean };
 
 // Calls an Edge Function. A refusal comes back as the function's own message (e.g. MODX's words).
 async function call<T>(name: string, body: Record<string, unknown>): Promise<({ ok: true } & T) | Failure> {
@@ -58,6 +59,7 @@ async function call<T>(name: string, body: Record<string, unknown>): Promise<({ 
             needsSignIn: answer.status === 'needs_sign_in',
             duplicate: answer.status === 'duplicate',
             existingUrl: answer.existing_url ?? undefined,
+            refused: error.context.status === 422,
         };
     }
     return { ok: false, error: "Wirescout couldn't be reached. Please try again." };
