@@ -39,6 +39,9 @@ const server = createServer(async (request, response) => {
   }
   if (fields.action === "resource/create") {
     if (fields.parent === "999") return send(200, { success: false, message: "You do not have permission to create documents here." });
+    if (fields.pagetitle === "Taken") {
+      return send(200, { success: false, message: "", total: 1, data: [{ id: "alias", msg: "Resource 7 is already using the URI taken." }], object: [] });
+    }
     lastCreate = fields;
     return send(200, { success: true, object: { id: 501 } });
   }
@@ -83,6 +86,12 @@ test("a permission refusal comes back in MODX's words", async () => {
   const { session } = await login(site, ACCOUNT.username, ACCOUNT.password);
   const result = await createDraft({ ...site, article_parent_id: 999 }, session, { title: "A title", content: "" });
   assert.deepEqual(result, { ok: false, reason: "refused", message: "You do not have permission to create documents here." });
+});
+
+test("an article with the same title already there is a duplicate, with that article's id", async () => {
+  const { session } = await login(site, ACCOUNT.username, ACCOUNT.password);
+  const result = await createDraft(site, session, { title: "Taken", content: "" });
+  assert.deepEqual(result, { ok: false, reason: "duplicate", existingId: 7, message: "Resource 7 is already using the URI taken." });
 });
 
 test("an expired or wrong session is refused", async () => {
