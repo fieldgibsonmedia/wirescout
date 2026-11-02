@@ -1,6 +1,6 @@
 # Post to MODX: implementation plan (step 6)
 
-Status: **approved 2026-11-02; job 2 (database) in progress**. The staging test passed on 2026-11-02 on local copies of all 4 magazines (11 of 11 each, `docs/modx-staging-test.md`). Nothing here is built yet.
+Status: **approved 2026-11-02; jobs 2 (database) and 3 (functions) built**. The staging test passed on 2026-11-02 on local copies of all 4 magazines (11 of 11 each, `docs/modx-staging-test.md`). Nothing here is built yet.
 
 Research and verdicts: `docs/modx-integration-research.md`.
 
@@ -62,10 +62,10 @@ The same Add magazine form is used from Settings → Channels. No browser cookie
 
 ## Edge Functions (Deno, `supabase/functions/`)
 
-- `magazine-connect`: actions `connect`, `disconnect`, `status`. Signed-in users only (Supabase JWT). Rate limit: 3 failed connect attempts per user per magazine, then a 15-minute wait (Ken, 2026-11-02). That is far below any magazine's own lockout (InsuranceERM blocks after 20 wrong passwords, the others after 50), so Wirescout can never lock a journalist out of their magazine. The password is never logged.
-- `draft-text`: `{ article_id }`. Fetches the story page and returns `{ title, content }` from Claude Haiku 5.5, or the fallbacks. Signed-in users only. 10 calls per user per hour.
-- `post-draft`: `{ article_id, publication_id }`. Checks the user follows that article in one of their lists and holds a connection to that magazine, then creates the draft.
-- Shared `modx.ts`: `login`, `logout`, `createDraft`, `getResource`, all taking a site record and a session. The token travels in the `modAuth` request header (PHP exposes it as `HTTP_MODAUTH`), the cookie in `Cookie`, and every call carries `X-Requested-With: XMLHttpRequest` so MODX returns real HTTP status codes. A refusal is HTTP 401 or a body with `code: 401`. All as in `src/publish/modx-staging-test.js`, which stays as the reference.
+- `magazine-connect`: actions `connect`, `disconnect` (no `status`: the app reads the user's own rows in `magazine_connections`). Signed-in users only (Supabase JWT). Rate limit: 3 failed connect attempts per user per magazine, then a 15-minute wait (Ken, 2026-11-02). That is far below any magazine's own lockout (InsuranceERM blocks after 20 wrong passwords, the others after 50), so Wirescout can never lock a journalist out of their magazine. The password is never logged.
+- `draft-text`: `{ article_id, publication_id }`. Fetches the story page and returns `{ title, content, suggested }` from Claude Haiku 5.5, or the fallbacks. Signed-in users only. 10 calls per user per hour, counted in `publish_log` (action `draft_text`, Ken 2026-11-02); after that, the fallbacks.
+- `post-draft`: `{ article_id, publication_id, title, content, ai_assisted }` (what the journalist sees in the dialog). Checks the user follows that article in one of their lists and holds a connection to that magazine, then creates the draft. An expired session (HTTP 401) answers `needs_sign_in`; a refusal is shown as MODX words it.
+- Shared `src/publish/modx.js` (plain JS, like `check-links` shares the scanner's code, so Node's test runner covers it): `login`, `logout`, `createDraft`, `getResource`, all taking a site record and a session. The token travels in the `modAuth` request header (PHP exposes it as `HTTP_MODAUTH`), the cookie in `Cookie`, and every call carries `X-Requested-With: XMLHttpRequest` so MODX returns real HTTP status codes. A refusal is HTTP 401 or a body with `code: 401`. All as in `src/publish/modx-staging-test.js`, which stays as the reference.
 - Encryption: AES-256-GCM in the function, with the key in the function secret `MAGAZINE_SESSION_KEY` (32 bytes, base64). Ken sets it in the cloud; `.env.example` lists the name only.
 - `ANTHROPIC_API_KEY`: function secret for `draft-text`. Same handling.
 - Secrets never reach the app or the logs: the functions return `status` and `cms_username` only.

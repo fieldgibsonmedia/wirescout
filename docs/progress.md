@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-02: Post to MODX functions (step 6, job 3)
+
+- 3 Edge Functions: `magazine-connect` (connect, disconnect; 3 failed sign-ins then a 15-minute wait), `post-draft`, `draft-text` (Claude Haiku 5.5, 10 per user per hour, falls back to the story's own text). Shared code in `src/publish/` (`modx.js`, `session-crypto.js`, `draft.js`), 19 new unit tests against a fake MODX and a fake model reply.
+- New migration: `draft_text` as a `publish_log` action. Seed: the local magazines on their own ports, so the functions can reach them.
+- Checked locally with a made-up user: every error answer, the fallback draft text, and real refusals from the local Corporate Disclosures copy (a made-up username) with the 4th try blocked.
+- Not checked: a real sign-in and draft (needs Ken's test account password, in job 4's dialog), and a real Haiku call (needs the API key).
+- Next: job 4, the app (Channels settings and the Share menu).
+
 ## 2026-11-02: Post to MODX database (step 6, job 2)
 
 - One migration (`20261102131014_post_to_modx.sql`): posting settings on `publications` (`cms`, `cms_url`, `article_parent_id`, `article_template_id`, all or none), `magazine_connections` (users read their own rows without the session and never write them; one Wirescout user per MODX account, ignoring capitals), `publish_log` (insert-only, even with the secret key).
