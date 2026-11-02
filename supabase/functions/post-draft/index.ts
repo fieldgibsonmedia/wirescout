@@ -1,7 +1,8 @@
 // Sends a story to a magazine as an unpublished MODX draft, as the journalist's own account
 // (docs/post-to-modx-plan.md). Body: { article_id, publication_id, title, content, ai_assisted }.
 // title and content are what the journalist sees in the Send dialog: what is sent is what they see.
-// Answers { id, edit_url } or { error, status: "needs_sign_in" }. Signed-in users only.
+// Answers { id, edit_url }, or { error } with status "needs_sign_in" or "duplicate" (+ existing_url).
+// Signed-in users only.
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
 import { createDraft, editLink } from "../../../src/publish/modx.js";
@@ -49,6 +50,17 @@ export default {
     if (!draft.ok && draft.reason === "signed_out") {
       await markNeedsSignIn(admin, userId, site.id);
       return reply(409, { status: "needs_sign_in", error: `Sign in to ${site.name} again to send this draft.` });
+    }
+    // Same title as an article already there: maybe the same story, sent before. Changing the title alone
+    // would only hide a duplicate, so the user is asked to check that article first.
+    if (!draft.ok && draft.reason === "duplicate") {
+      return reply(409, {
+        status: "duplicate",
+        error: `${site.name} already has a story with this title, so it may have been sent before. ${
+          draft.existingId ? "Open it to check." : `Check the stories in ${site.name}.`
+        } If it's a different story, give it its own title.`,
+        existing_url: draft.existingId ? editLink(site, draft.existingId) : null,
+      });
     }
     // A refusal is shown as MODX words it, e.g. no permission to create documents in that section.
     if (!draft.ok) return reply(draft.reason === "refused" ? 422 : 502, { error: draft.message });
