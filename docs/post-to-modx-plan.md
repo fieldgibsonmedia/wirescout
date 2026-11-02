@@ -1,6 +1,6 @@
 # Post to MODX: implementation plan (step 6)
 
-Status: **approved 2026-11-02; jobs 2 (database) and 3 (functions) built**. The staging test passed on 2026-11-02 on local copies of all 4 magazines (11 of 11 each, `docs/modx-staging-test.md`). Nothing here is built yet.
+Status: **approved 2026-11-02; jobs 2 (database), 3 (functions) and 4 (app) built**. Next: job 5, the release. The staging test passed on 2026-11-02 on local copies of all 4 magazines (11 of 11 each, `docs/modx-staging-test.md`). Nothing here is built yet.
 
 Research and verdicts: `docs/modx-integration-research.md`.
 
@@ -71,6 +71,14 @@ The same Add magazine form is used from Settings → Channels. No browser cookie
 - Secrets never reach the app or the logs: the functions return `status` and `cms_username` only.
 
 ## App (`src/app/`)
+
+As built (job 4, with Ken's changes of 2026-11-02):
+
+- Share menu: one "Send to <magazine>" per magazine the user added, then "Add a magazine" (opens Channels), then Copy link, Email, LinkedIn.
+- Send dialog: the info note ("You're sending this as …"), the editable title and text, Cancel and Send. After sending, the confirmation and "Open in <magazine>" replace the fields; Send stays greyed out.
+- Duplicates: the dialog warns when anyone already sent the story to that magazine (`story_sends`, by story, not title), with "Open existing story" and "Send anyway". If MODX refuses a same-title article, the error says it may have been sent before, with "Open existing story", and Send waits for a new title. The story card shows "Sent to <magazine>".
+
+As planned:
 
 - Settings → Channels: all 4 magazines, each Connected as <username> with Disconnect, or an Add magazine button opening the shared form. Reuses the existing dialog and button components.
 - Share menu: one "Send to <magazine>" entry per magazine. Connected: the Send dialog. Not connected: the same dialog in its Add magazine state, then the Send form. After Send, a toast with the link.

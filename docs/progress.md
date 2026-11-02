@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-02: Post to MODX app (step 6, job 4)
+
+- Settings → Channels: the 4 magazines, Add magazine (own MODX sign-in), Connected as …, Disconnect. Share menu: Send to each added magazine, then Add a magazine. Send dialog: suggested title and text, editable; Open in <magazine> after sending.
+- Duplicates (Ken's idea, 2026-11-02): a warning when anyone already sent the story to that magazine, with Open existing story and Send anyway; "Sent to <magazine>" on the story card; a clear message when MODX refuses a same-title article. New function `story_sends`, 6 database tests.
+- Also: an eye button on every password field; the sticky side nav no longer moves while a dialog is open; focus returns to Share after the dialog; MODX field errors are read from `data`.
+- Ken tested end to end: signed in to the local Corporate Disclosures copy with `wirescout-test` and sent drafts.
+- Next: job 5, the release (production steps in the plan).
+
 ## 2026-11-02: Post to MODX functions (step 6, job 3)
 
 - 3 Edge Functions: `magazine-connect` (connect, disconnect; 3 failed sign-ins then a 15-minute wait), `post-draft`, `draft-text` (Claude Haiku 5.5, 10 per user per hour, falls back to the story's own text). Shared code in `src/publish/` (`modx.js`, `session-crypto.js`, `draft.js`), 19 new unit tests against a fake MODX and a fake model reply.
