@@ -1,7 +1,7 @@
 -- Checks the post-to-MODX tables: users see their own connections but never the session, never write
 -- them, and can't touch the publish log. Run: npx supabase test db
 begin;
-select plan(17);
+select plan(18);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000c1', 'jana@example.com'),
@@ -121,6 +121,12 @@ select lives_ok(
   $$insert into public.publish_log (user_id, publication_id, action, result, cms_resource_id, ai_assisted)
     values ('00000000-0000-0000-0000-0000000000c1', 4, 'post_draft', 'ok', 501, true)$$,
   'The functions add to the publish log'
+);
+
+select lives_ok(
+  $$insert into public.publish_log (user_id, publication_id, article_id, action, result)
+    values ('00000000-0000-0000-0000-0000000000c1', 4, null, 'draft_text', 'ok')$$,
+  'The functions log each suggested draft text'
 );
 
 select throws_ok(
