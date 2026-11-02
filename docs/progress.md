@@ -2,6 +2,18 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-02: MODX posting research and staging test (step 6, job 1)
+
+- Research: Wirescout can post drafts to a MODX magazine through the connector the MODX manager itself uses, as the journalist's own account, with no change to any magazine. Verified in the MODX 2.8.3 source (corporate-disclosures repo) and the 3.x branch. Report: `docs/modx-integration-research.md`.
+- Plan for step 6, waiting for approval: `docs/post-to-modx-plan.md`. It replaces the "receive draft endpoint per site" decision with an Edge Function calling the MODX connector directly.
+- Staging test: `src/publish/modx-staging-test.js` and `docs/modx-staging-test.md`, against the local corporate-disclosures Docker copy (`http://cd.test`). Its PHP container pointed at the repo's old folder and was recreated; the site and the connector now answer locally.
+- Checked without any account: a wrong login returns MODX's JSON refusal; a connector call without the token returns 401. The script parses.
+- Run with Ken's ok, on the test account `wirescout-test` (Editor role): **11 of 11 passed**. Login, draft create, read back, publish, unpublish, bin, logout, and refusals without a token, with a wrong token and after logout. Finding: MODX reports a refusal as HTTP 200 with `code: 401` unless the request carries `X-Requested-With: XMLHttpRequest`; the script sends it now and the plan records it.
+- Then the same test on local copies of the other 3 magazines (environmental-finance.com, insuranceassetrisk.com, insuranceerm.com; MODX 2.8.1), each with its own `wirescout-test` account: **11 of 11 on each**. All 4 sites have the same layout; only the section and template ids differ (table in `docs/modx-staging-test.md`).
+- Not tested: a MODX 3 site; template variables; an account without `publish_document`; image upload.
+- Plain-words summary with a diagram, for anyone new to it: `docs/post-to-modx-in-plain-words.md`.
+- Next: Ken's "approve" on `docs/post-to-modx-plan.md` (3 open questions at its end), then job 2, the database.
+
 ## 2026-10-30: UI amends after v0.1.0
 
 - Released before this job: v0.1.0 (PR #13, merged by Ken). The 2 migrations were pushed to the cloud first; the web app deploy passed.
