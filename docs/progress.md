@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-02: Post to MODX release, part 1, and "Coming soon..." magazines (step 6, job 5)
+
+- Production steps run by Ken: both function secrets set, the 3 migrations pushed, the 3 functions deployed, the 4 `publications` rows filled with the live addresses and ids (checked on each live site).
+- Release step 4 found a blocker: Environmental Finance, InsuranceERM and Insurance Asset Risk sit behind a Cloudflare bot check (HTTP 403 "Just a moment...", even on the home page), so the functions can't reach them. Corporate Disclosures answers (401, as expected).
+- Ken's call: show those 3 greyed out with "Coming soon..." instead of hiding them, so the team asks for the Cloudflare allowance. New `publications.coming_soon` column (migration `20261102190249`), set for the 3; Settings → Channels and the Share menu show them disabled; `magazine-connect` (connect only), `post-draft` and `draft-text` refuse them. Turning one on: `update public.publications set coming_soon = false where slug = '<slug>';`
+- Checked: all 110 database tests (3 new), lint, 55 unit tests, type-check, build; the 3 functions called locally as a made-up user (coming-soon magazine refused, disconnect still works, Corporate Disclosures passes); both screens looked at in the browser.
+- Next: push this migration and redeploy the 3 functions, release `mvp` into `main`, then the trial with one journalist on Corporate Disclosures. Separately: a Cloudflare rule letting `/connectors/` through for Wirescout (whoever manages Cloudflare for the 3 sites).
+
 ## 2026-11-02: Post to MODX app (step 6, job 4)
 
 - Settings → Channels: the 4 magazines, Add magazine (own MODX sign-in), Connected as …, Disconnect. Share menu: Send to each added magazine, then Add a magazine. Send dialog: suggested title and text, editable; Open in <magazine> after sending.
