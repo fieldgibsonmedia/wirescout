@@ -234,6 +234,9 @@ async function send() {
                     {{ earlierSend && step !== 'sent' ? 'Send anyway' : 'Send' }}
                 </Button>
             </div>
+            <p v-if="step === 'edit'" class="text-sm text-base-content/70">
+                Wirescout uses AI to write drafts, and AI can make mistakes. Please check your draft before sending.
+            </p>
         </form>
     </Dialog>
 </template>
