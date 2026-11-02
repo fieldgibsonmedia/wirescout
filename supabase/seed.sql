@@ -13,8 +13,9 @@ insert into public.articles (source_id, url, title, summary, published_at, first
   ('00000000-0000-0000-0000-00000000005b', 'https://regulator.example.org/updates/2', 'Updated guidance on solvency reporting', null, null, now() - interval '5 hours');
 
 -- Post to MODX: the local Docker copies of the magazines (docs/modx-staging-test.md), with the draft
--- sections decided in docs/post-to-modx-plan.md. The cloud project's ids are read from each live site.
-update public.publications set cms = 'modx', cms_url = 'http://ef.test', article_parent_id = 77814, article_template_id = 3 where slug = 'environmental-finance';
-update public.publications set cms = 'modx', cms_url = 'http://ierm.test', article_parent_id = 65468, article_template_id = 8 where slug = 'insuranceerm';
-update public.publications set cms = 'modx', cms_url = 'http://iar.test', article_parent_id = 31708, article_template_id = 4 where slug = 'insurance-asset-risk';
-update public.publications set cms = 'modx', cms_url = 'http://cd.test', article_parent_id = 19, article_template_id = 3 where slug = 'corporate-disclosures';
+-- sections decided in docs/post-to-modx-plan.md. Each site's own port, as the functions run inside Docker,
+-- where the .test names don't reach the sites. The cloud project's ids are read from each live site.
+update public.publications set cms = 'modx', cms_url = 'http://host.docker.internal:8081', article_parent_id = 77814, article_template_id = 3 where slug = 'environmental-finance';
+update public.publications set cms = 'modx', cms_url = 'http://host.docker.internal:8082', article_parent_id = 65468, article_template_id = 8 where slug = 'insuranceerm';
+update public.publications set cms = 'modx', cms_url = 'http://host.docker.internal:8083', article_parent_id = 31708, article_template_id = 4 where slug = 'insurance-asset-risk';
+update public.publications set cms = 'modx', cms_url = 'http://host.docker.internal:8084', article_parent_id = 19, article_template_id = 3 where slug = 'corporate-disclosures';
