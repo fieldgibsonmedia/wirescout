@@ -2,6 +2,12 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-02: Step 6 decisions (plan only, no code)
+
+- Ken answered the plan's 3 open questions (`docs/post-to-modx-plan.md`): the Send dialog with a Claude Haiku 5.5 suggested title and 100–250 word brief, editable, source link last, no mention of Wirescout; drafts go to In Brief (News on Corporate Disclosures), ids in the plan; own MODX accounts only. Also: all 4 magazines offered to everyone, the magazine's login is the gate; 3 failed connect attempts then a 15-minute wait; a new `draft-text` function and the `ANTHROPIC_API_KEY` secret.
+- Noted in `docs/known-issues.md`: the sign-in screen has no "Stay signed in" option.
+- Next: Ken's "approve" on job 2, the database.
+
 ## 2026-11-02: MODX posting research and staging test (step 6, job 1)
 
 - Research: Wirescout can post drafts to a MODX magazine through the connector the MODX manager itself uses, as the journalist's own account, with no change to any magazine. Verified in the MODX 2.8.3 source (corporate-disclosures repo) and the 3.x branch. Report: `docs/modx-integration-research.md`.
