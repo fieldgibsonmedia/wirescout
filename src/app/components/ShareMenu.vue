@@ -3,13 +3,15 @@
 // switched on in Settings → Channels. LinkedIn and Email open the user's own LinkedIn or email app
 // with the story filled in, so they post or send it as themselves.
 // Above them, one "Send to <magazine>" per magazine the user added (Settings → Channels), and "Add a magazine",
-// which opens Channels: a journalist only sees the magazines they work for.
+// which opens Channels: a journalist only sees the magazines they work for. Magazines Wirescout can't reach yet
+// show greyed out with "Coming soon...", so journalists see what's on the way.
 // Reka UI gives the menu's behaviour (arrow keys, Esc, focus back on the button); DaisyUI's menu gives the look.
 import { ArrowUpOnSquareIcon, CheckIcon } from '@heroicons/vue/20/solid';
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuSeparator, DropdownMenuTrigger } from 'reka-ui';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import SendDraftDialog from '@/components/SendDraftDialog.vue';
+import Badge from '@/components/ui/Badge.vue';
 import { magazines } from '@/lib/magazines';
 import { profile } from '@/lib/profile';
 import { recordUsage } from '@/lib/usage';
@@ -33,7 +35,8 @@ const options = computed(() => ({
 
 const anyShareOption = computed(() => Object.values(options.value).some(Boolean));
 // Added ones only; one that needs a new sign-in stays: the Send dialog asks for it.
-const addedMagazines = computed(() => magazines.value.filter((magazine) => magazine.connectedAs));
+const addedMagazines = computed(() => magazines.value.filter((magazine) => magazine.connectedAs && !magazine.comingSoon));
+const comingSoonMagazines = computed(() => magazines.value.filter((magazine) => magazine.comingSoon));
 const anyOption = computed(() => anyShareOption.value || magazines.value.length > 0);
 
 const router = useRouter();
@@ -83,7 +86,16 @@ const itemClass =
                         <DropdownMenuItem v-for="magazine in addedMagazines" :key="magazine.id" :class="itemClass" @select="startSending(magazine.id)">
                             Send to {{ magazine.name }}
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator v-if="addedMagazines.length" class="my-2 h-px bg-base-300" />
+                        <DropdownMenuItem
+                            v-for="magazine in comingSoonMagazines"
+                            :key="magazine.id"
+                            disabled
+                            :class="[itemClass, 'cursor-default flex-col !items-start gap-1 py-2 text-base-content/50']"
+                        >
+                            Send to {{ magazine.name }}
+                            <Badge variant="outline" size="sm">Coming soon...</Badge>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator v-if="addedMagazines.length || comingSoonMagazines.length" class="my-2 h-px bg-base-300" />
                         <DropdownMenuItem :class="itemClass" @select="router.push({ name: 'channels-settings' })">Add a magazine</DropdownMenuItem>
                         <DropdownMenuSeparator v-if="anyShareOption" class="my-2 h-px bg-base-300" />
                     </template>

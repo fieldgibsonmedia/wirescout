@@ -12,13 +12,15 @@ export type Magazine = {
     connectedAs: string | null;
     // The stored sign-in stopped working (expired, password changed): the user signs in again.
     needsSignIn: boolean;
+    // Shown greyed out with "Coming soon...": Wirescout can't reach this magazine yet.
+    comingSoon: boolean;
 };
 
 export const magazines = ref<Magazine[]>([]);
 
 export async function loadMagazines() {
     const [publications, connections] = await Promise.all([
-        supabase.from('publications').select('id, name').not('cms', 'is', null).order('name'),
+        supabase.from('publications').select('id, name, coming_soon').not('cms', 'is', null).order('name'),
         supabase.from('magazine_connections').select('publication_id, cms_username, status'),
     ]);
     if (publications.error || connections.error) {
@@ -32,6 +34,7 @@ export async function loadMagazines() {
             name: publication.name,
             connectedAs: connection?.cms_username ?? null,
             needsSignIn: connection?.status === 'needs_sign_in',
+            comingSoon: publication.coming_soon,
         };
     });
     return true;
