@@ -44,5 +44,5 @@ jobs:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
           # The live web app, for the links in the email.
-          APP_URL: https://fieldgibsonmedia.github.io/wirescout
+          APP_URL: https://wirescout.app
         run: npm run digest

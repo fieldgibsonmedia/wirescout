@@ -2,12 +2,24 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: Own domain planned (wirescout.app)
+
+- A Corporate Disclosures colleague signed up on live and got no confirm email. Checked with Ken: right address, the sign-up check let it through, the Gmail sender's Sent folder has it, no bounce; not in his Junk, Other or Microsoft 365 quarantine. IT can't help yet.
+- Brevo can't send as a Gmail address, so Ken registered `wirescout.app` at Namecheap (2026-11-03).
+- Plan written: `docs/mvp-plan.md`, "Own domain". Part 1 (account emails through Brevo) is Ken's steps only, no code.
+- Next: part 1, guiding Ken one step at a time; then the colleague signs up again. Parts 2 and 3 are one job each.
+- Part 1 done by Ken, same day: Brevo account (his work address), `wirescout.app` authenticated (Brevo added its records through its Namecheap connection), Namecheap forwarder `no-reply@wirescout.app` → Ken, sender `Wirescout <no-reply@wirescout.app>` (the only one), SMTP key `supabase`, Supabase SMTP set to Brevo.
+- Checked: a password-reset email from the live app reached Ken's inbox, and its link opened the Confirm page. Not checked: the colleague's sign-up (Ken dropped it).
+- Brevo rewrites every link into a tracking link (`sendibt3.com`), with no switch on the free plan. Works, but filters may distrust it. If emails go missing again, the fallback is a provider that lets tracking be turned off (e.g. Resend); the DNS work carries over.
+- Part 3, before the release, done by Ken the same day: `wirescout.app` verified for GitHub Pages (account settings, TXT record), Namecheap parking records removed, GitHub Pages A, AAAA and `www` CNAME records added (checked from here on Namecheap's servers), `https://wirescout.app/**` added to Supabase's Redirect URLs. Site URL and the Pages custom domain not changed yet.
+
 ## 2026-11-03: Fallback boxes as warnings
 
 - Released before this: PR #18, merged by Ken at 13:11 UTC; Ken had redeployed the 3 posting functions before it. On live, the French story's dialog showed the hourly-limit box: the cause was the 10 AI drafts an hour, used up by the day's testing.
 - Both fallback boxes (hourly limit, AI couldn't write) are amber warnings now, like "already sent": the light blue was easy to miss (Ken).
 - Checked: type-check, build. Not looked at in the browser: the same warning style the dialog already uses.
-- Release: web app only.
+- Released: PR #19, merged by Ken at 13:39 UTC (web app only, nothing to redeploy).
+- Next: all 12 items before the first journalist are live, at v0.1.0. Ken invites the first journalist when he's ready.
 
 ## 2026-11-03: Drafts still in French after the release (fix)
 

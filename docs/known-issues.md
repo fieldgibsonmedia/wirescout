@@ -2,6 +2,12 @@
 
 Bugs found while working on something else. One entry each: date, what, where, how to see it.
 
+## 2026-11-03: Microsoft 365 drops the confirm email from the Gmail sender
+
+- A colleague at `insuranceassetrisk.com` signed up on live: the email is in the Gmail sender's Sent folder, with no bounce, but nowhere in his mailbox (not Junk, Other or his quarantine). Likely an admin-only quarantine; IT can't check yet.
+- Fix planned: send from `wirescout.app` through Brevo (`docs/mvp-plan.md`, "Own domain").
+- See it: sign up on live with an address at a company domain on Microsoft 365.
+
 ## 2026-11-03: The seed sources can't be added from the app
 
 - `docs/project.md` ("Run the web app", step 4) says to add `https://news.example.com/press` to a watch list. The Add sources dialog refuses it ("the site can't be reached"): the link check (`check-links`) tries to open it, and `example.com` addresses don't exist.
