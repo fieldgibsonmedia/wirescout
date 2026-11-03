@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: Own domain planned (wirescout.app)
+
+- A Corporate Disclosures colleague signed up on live and got no confirm email. Checked with Ken: right address, the sign-up check let it through, the Gmail sender's Sent folder has it, no bounce; not in his Junk, Other or Microsoft 365 quarantine. IT can't help yet.
+- Brevo can't send as a Gmail address, so Ken registered `wirescout.app` at Namecheap (2026-11-03).
+- Plan written: `docs/mvp-plan.md`, "Own domain". Part 1 (account emails through Brevo) is Ken's steps only, no code.
+- Next: part 1, guiding Ken one step at a time; then the colleague signs up again. Parts 2 and 3 are one job each.
+
 ## 2026-11-03: Fallback boxes as warnings
 
 - Released before this: PR #18, merged by Ken at 13:11 UTC; Ken had redeployed the 3 posting functions before it. On live, the French story's dialog showed the hourly-limit box: the cause was the 10 AI drafts an hour, used up by the day's testing.
