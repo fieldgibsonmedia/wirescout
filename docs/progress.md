@@ -8,6 +8,9 @@ Newest first. One entry per job: date, what was done, what's next.
 - Checked: 63 unit tests, type check, build; `npm run scan`, `npm run digest` and `npm run admin` against the local Supabase into Mailpit: all 4 emails (scanner break, digest, access request, usage report) came from `Wirescout <no-reply@wirescout.app>`. The made-up test data was removed afterwards.
 - Not checked: a real send through Brevo (needs the release and the new secrets).
 - Release (Ken, guided one at a time): merge the release PR (Gmail keeps sending until the secrets change); Brevo SMTP key `github`; set `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS` between runs; check the next digest comes from `no-reply@wirescout.app`.
+- Released (PR #21, merged by Ken at 18:37 UTC; deploy passed). Then, done by Ken: Brevo SMTP key `github`, and the 4 `EMAIL_*` GitHub secrets set to Brevo (around 18:45 UTC).
+- Not checked yet: a real email through Brevo. Ken's digest for today had already gone out, so the first one is tomorrow's (Wed 4 Nov). Check: it arrives from `no-reply@wirescout.app`, not in junk, and the digest run log says "sent".
+- Next: that check; then close the junk-folder entry in `docs/known-issues.md` if it lands in the inbox.
 
 ## 2026-11-03: Own domain planned (wirescout.app)
 
