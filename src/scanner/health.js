@@ -30,7 +30,7 @@ export async function sendHealthEmail({ stopped, workedBefore }, config) {
   });
 
   await transporter.sendMail({
-    from: `Wirescout <${config.emailUser || "scanner@wirescout.local"}>`,
+    from: `Wirescout <${config.emailFrom || "scanner@wirescout.local"}>`,
     to: config.adminEmail,
     subject: "Wirescout: the scanner may be broken",
     text:
