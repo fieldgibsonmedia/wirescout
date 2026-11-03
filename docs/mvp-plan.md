@@ -18,7 +18,8 @@ Agreed with Ken on 2026-10-27. Turns the prototype into an internal MVP for more
 | Backend | Supabase free tier: login, Postgres, row-level security, Edge Functions | Free; no server of our own to run |
 | Architecture | Decoupled but small: static app + Supabase + scanner | Each part is free to host; no API layer to maintain |
 | Scanner | GitHub Actions on a schedule, state in Supabase | Free (public repo); stops committing `state.json` to `main` |
-| Email | A Gmail account over SMTP, with an app password | Microsoft 365 ends password SMTP in December 2026, and a company-domain sender (e.g. Brevo) needs DNS records IT won't add |
+| Email | Brevo (free, 300 a day) over SMTP, sending from our own domain `wirescout.app` (decided 2026-11-03, "Own domain" below). Before: a Gmail account with an app password | Microsoft 365 quietly dropped a colleague's confirm email from the Gmail sender. We own `wirescout.app`, so we add the DNS records ourselves, without IT |
+| Address | `wirescout.app` as the web app's address (GitHub Pages custom domain, decided 2026-11-03). Before: `fieldgibsonmedia.github.io/wirescout/` | Same domain as the emails' sender; a short, real address for journalists |
 | Posting | A Supabase Edge Function posts straight to the magazine's MODX connector, signed in as the journalist's own MODX account (decided 2026-11-02, `docs/post-to-modx-plan.md`) | No endpoint to write on 4 sites; MODX enforces who may post where; the session stays server-side, encrypted |
 | Sharing | LinkedIn and email through share links: LinkedIn's share window and the user's own email app | No setup, no logins to expire, free; the journalist posts or sends as themselves |
 | Look | Apple's web blue (`#0071E3`) as the primary colour until Wirescout has a brand | Apple's system blue `#007AFF` is too light for white button text (4.0:1) |
@@ -255,6 +256,53 @@ Ken's 12 changes after testing step 6 live, in 6 jobs, in this order: one Claude
 
 **Release:** after job 6, merge `origin/main` into `mvp`, redeploy the 3 posting functions, then the release PR. Still v0.1.0. Done 2026-11-03: PR #17 (the 6 jobs), the 3 posting functions redeployed by Ken, then 2 fixes from live testing: PR #18 (British English when the page can't be read, fallback reasons) and PR #19 (fallback boxes as warnings). Details in `docs/progress.md`.
 
+### Own domain: wirescout.app (agreed 2026-11-03)
+
+Why: a Corporate Disclosures colleague signed up on live (`@insuranceassetrisk.com`) and never got the confirm email. The Gmail account's Sent folder has it, no bounce; it isn't in his Junk, Other or quarantine. Microsoft 365 dropped it, and IT can't help yet. Ken's digests land in junk for the same reason (`docs/known-issues.md`). Ken registered `wirescout.app` at Namecheap on 2026-11-03; he controls its DNS.
+
+Brevo can't send as a `@gmail.com` address: it swaps the sender for a shared `@brevosend.com` one. So the sender must be our own domain.
+
+**Done when:** every email (account emails from Supabase, digest, admin, scanner health) comes from `Wirescout <no-reply@wirescout.app>` through Brevo, passes DKIM and DMARC, and the app opens at `https://wirescout.app`.
+
+Three parts, in this order. Part 1 has no code and fixes the colleague's sign-up, so it goes first.
+
+**Part 1, account emails through Brevo (Ken's steps, no code, guided one at a time):**
+
+1. Brevo: create a free account. Senders, Domains & Dedicated IPs → Domains → Add `wirescout.app`. Brevo lists its records (a `brevo-code` TXT, DKIM, DMARC).
+2. Namecheap → Domain List → `wirescout.app` → Advanced DNS: delete the parking records (`www` CNAME to `parkingpage.namecheap.com`, the `@` URL redirect), add Brevo's records exactly as shown, then Authenticate in Brevo.
+3. Namecheap → Mail Settings → Email Forwarding: forward `no-reply@` (or a catch-all) to Ken. It gives the domain MX records (filters distrust a sender domain that can't receive mail) and replies reach Ken.
+4. Brevo: add the sender `Wirescout <no-reply@wirescout.app>`. SMTP & API → SMTP: note the login and create an SMTP key (Ken keeps it; never in chat or the repo).
+5. Supabase dashboard → Authentication → Emails → SMTP settings: host `smtp-relay.brevo.com`, port 587, the Brevo login and SMTP key, sender `no-reply@wirescout.app`, name `Wirescout`.
+6. Test: Ken creates an account or resets his password with his own address; the email arrives, and "Show original" says DKIM and DMARC pass for `wirescout.app`. Then the colleague signs up again with the same address (Supabase resends the confirm email to an unconfirmed account).
+7. Record each step in `docs/progress.md`.
+
+**Part 2, digest, admin and scanner emails through Brevo (one job, code):**
+
+- Today the sender is `EMAIL_USER` (`src/scanner/health.js`, `src/digest/index.js`, `src/admin/index.js`). Brevo's SMTP login isn't the sender address, so add `EMAIL_FROM` (the sender address), falling back to `EMAIL_USER` when empty: merging changes nothing until Ken sets the secret.
+- Pass `EMAIL_FROM: ${{ secrets.EMAIL_FROM }}` in `scanner.yml`, `digest.yml`, `admin.yml`. Add it to `.env.example`. Tests for the sender line.
+- It touches env variables, CI and crons that email people: plan first, then Ken's "approve" (`workflow.md`). Live impact: the digest (journalists), admin and scanner emails (`ADMIN_EMAIL`).
+- After the release (Ken): set the GitHub secrets `EMAIL_HOST` (`smtp-relay.brevo.com`), `EMAIL_PORT` (587), `EMAIL_USER`, `EMAIL_PASS` (Brevo login and SMTP key) and `EMAIL_FROM` (`no-reply@wirescout.app`) together, between two runs (not around :05, :17, :20, :35, :40, :50). Check the next digest run's log says "sent" and the email arrives.
+
+**Part 3, the app at wirescout.app (one job, code plus Ken's steps):**
+
+- Before the release (Ken, guided):
+    1. GitHub → fieldgibsonmedia org → Settings → Pages → Add a domain: `wirescout.app`. Add the TXT record it shows in Namecheap, then Verify (stops anyone else claiming the domain on Pages).
+    2. Namecheap: `@` A records `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`; `@` AAAA records `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153`; `www` CNAME `fieldgibsonmedia.github.io.`
+    3. Supabase dashboard → Authentication → URL Configuration: add `https://wirescout.app/**` to Redirect URLs (keep the old one until the switch is done).
+- Code, on the job branch:
+    - `vite.config.ts`: build `base` becomes `/` (the app now sits at the domain's root). Router, session cookie and the forgot-password link read `BASE_URL`, so they follow.
+    - `digest.yml`: `APP_URL: https://wirescout.app`.
+    - Comments naming `fieldgibsonmedia.github.io/wirescout/` (`vite.config.ts`, `deploy-app.yml`).
+    - Docs: `CLAUDE.md` ("What is live"), `docs/project.md` (Stack), the app's address wherever it's written.
+    - No `CNAME` file: deploys use GitHub Actions, so the custom domain is set in the repo settings.
+- At the release (Ken, a quiet time, in this order; the app is down for a few minutes):
+    1. Repo → Settings → Pages → Custom domain `wirescout.app` → Save. Wait for the certificate, then tick Enforce HTTPS (`.app` works only over HTTPS).
+    2. Merge the release PR; the deploy publishes the app at `/`.
+    3. Supabase → URL Configuration: Site URL `https://wirescout.app` (account emails link to it).
+    4. Check: `https://wirescout.app` opens, a deep link (`/lists/…`) opens, sign in, a password-reset email's link opens the Confirm page. The old `github.io/wirescout/` address should redirect; check it.
+- Everyone signs in again once (the app's storage belongs to the old address). Today that's Ken and the colleague.
+- Live impact: the web app (Ken, the colleague), the digest's links, the account emails' links.
+
 ## Branches
 
 - Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.
@@ -280,6 +328,7 @@ Jobs added on 2026-10-27 sit between the steps, so the step numbers stay the sam
     - Polish before step 6 (Ken's 18 changes, agreed 2026-10-30), released together as v0.1.0: quick fixes, look and feel, motion, watch list settings (Edit and Delete from the side nav, keywords in the Edit dialog), save stories, dashboard insights and release notes, global search
 6. Post from Wirescout (last: it touches the live magazine sites)
     - Before the first journalist (Ken's 12 changes, agreed 2026-11-03), still v0.1.0: version, missing digest, drafts to magazines, Remember me, polish, admin source alerts
+    - Own domain `wirescout.app` (agreed 2026-11-03): account emails through Brevo (Ken, no code), then app emails through Brevo, then the app at `wirescout.app`
 
 ## Known risks
 
