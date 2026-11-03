@@ -209,11 +209,11 @@ async function send() {
                 </a>
             </Alert>
             <template v-else>
-                <Alert v-if="fallbackReason === 'limit'" type="info" class="text-sm text-base-content">
+                <Alert v-if="fallbackReason === 'limit'" type="warning" class="text-base-content">
                     You've used your 10 AI drafts for this hour, so this draft is the story's own text. Please check its language and
                     wording before sending.
                 </Alert>
-                <Alert v-else-if="fallbackReason === 'unavailable'" type="info" class="text-sm text-base-content">
+                <Alert v-else-if="fallbackReason === 'unavailable'" type="warning" class="text-base-content">
                     Wirescout couldn't write a suggested draft this time, so this is the story's own text. Please check its language
                     and wording before sending.
                 </Alert>
