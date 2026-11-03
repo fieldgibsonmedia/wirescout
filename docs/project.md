@@ -36,7 +36,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `src/admin/index.js`: the admin emails (below). `emails.js` writes them, `months.js` picks the months. Tests next to them.
 - `src/app/lib/usage.ts`: records usage for the report (days, shares, digest clicks).
 - `src/app/lib/magazines.ts`: the magazines, the user's connections and who already sent which story (`story_sends`), for Settings → Channels, the Share menu and the Send dialog (`components/SendDraftDialog.vue`).
-- `src/app/lib/releaseNotes.ts`: the dashboard's "What's new". Add an entry with each release.
+- `src/app/lib/releaseNotes.ts`: the dashboard's "What's new". Add notes with each release. Its newest entry and the side nav take the version from `package.json`, which stays 0.1.0 until Ken says otherwise.
 - `src/digest/index.js`: the digest (below). `due.js` decides who gets one, `email.js` writes it. Tests next to them.
 - `src/scanner/index.js`: the scan (below). `read-source.js` picks feed or page, `feed.js` and `page.js` read them, `health.js` writes the health email. Tests next to them (`*.test.js`).
 - `supabase/config.toml`: local Supabase settings (sign-ups on for allowed emails, the sign-up check, email templates).
