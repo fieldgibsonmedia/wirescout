@@ -1,6 +1,6 @@
 name: Deploy web app
 
-# Publishes the web app to GitHub Pages (fieldgibsonmedia.github.io/wirescout/) on every push to main.
+# Publishes the web app to GitHub Pages (wirescout.app, the repo's custom domain) on every push to main.
 # The scanner's "Update state [skip ci]" commits don't trigger it.
 on:
   push:
@@ -40,7 +40,7 @@ jobs:
         run: npm run build
 
       # Pages has no app routing: it serves 404.html for any unknown path, so email links like
-      # /wirescout/confirm?… still open the app.
+      # /confirm?… still open the app.
       - name: Serve the app for every path
         run: cp dist/index.html dist/404.html
 

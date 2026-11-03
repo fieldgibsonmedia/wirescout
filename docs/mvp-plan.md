@@ -286,7 +286,7 @@ Three parts, in this order. Part 1 has no code and fixes the colleague's sign-up
 **Part 3, the app at wirescout.app (one job, code plus Ken's steps):**
 
 - Before the release (Ken, guided):
-    1. GitHub → fieldgibsonmedia org → Settings → Pages → Add a domain: `wirescout.app`. Add the TXT record it shows in Namecheap, then Verify (stops anyone else claiming the domain on Pages).
+    1. GitHub, signed in as `fieldgibsonmedia` (a user account, not an org) → Settings → Pages (github.com/settings/pages) → Add a domain: `wirescout.app`. Add the TXT record it shows in Namecheap, then Verify (stops anyone else claiming the domain on Pages).
     2. Namecheap: `@` A records `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`; `@` AAAA records `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153`; `www` CNAME `fieldgibsonmedia.github.io.`
     3. Supabase dashboard → Authentication → URL Configuration: add `https://wirescout.app/**` to Redirect URLs (keep the old one until the switch is done).
 - Code, on the job branch:
