@@ -68,14 +68,32 @@ test("a single sentence over 250 characters is cut after a whole word", () => {
   assert.ok(brief.endsWith("word…"));
 });
 
-test("without the page, the model, or a usable answer, the story's own title and summary are used", async () => {
-  const fallback = { title: STORY.title, content: "Premiums rose 12%.\n\nSource: https://news.example.com/press/1", suggested: false };
+test("without the model or a usable answer, the story's own title and summary are used, with the reason", async () => {
+  const fallback = (failure) => ({
+    title: STORY.title,
+    content: "Premiums rose 12%.\n\nSource: https://news.example.com/press/1",
+    suggested: false,
+    failure,
+  });
 
-  assert.deepEqual(await suggestDraft(fakeClient(reply({ title: "x", brief: "y" })), STORY, null), fallback);
-  assert.deepEqual(await suggestDraft(null, STORY, "The page text"), fallback);
-  assert.deepEqual(await suggestDraft(fakeClient(new Error("overloaded")), STORY, "The page text"), fallback);
-  assert.deepEqual(await suggestDraft(fakeClient(reply({ title: "x", brief: "y" }, "refusal")), STORY, "The page text"), fallback);
-  assert.deepEqual(await suggestDraft(fakeClient(reply({ title: "", brief: "" })), STORY, "The page text"), fallback);
+  assert.deepEqual(await suggestDraft(null, STORY, "The page text"), fallback("no model"));
+  assert.deepEqual(await suggestDraft(fakeClient(new Error("overloaded")), STORY, "The page text"), fallback("model error Error"));
+  assert.deepEqual(
+    await suggestDraft(fakeClient(reply({ title: "x", brief: "y" }, "refusal")), STORY, "The page text"),
+    fallback("stop reason refusal"),
+  );
+  assert.deepEqual(await suggestDraft(fakeClient(reply({ title: "", brief: "" })), STORY, "The page text"), fallback("empty answer"));
+});
+
+test("when the page can't be read, the model writes from the story's own title and summary, in British English", async () => {
+  const story = { ...STORY, title: "Un semestre record pour l'assureur", summary: "Les primes ont augmenté de 12 %." };
+  const client = fakeClient(reply({ title: "Record half for insurer", brief: "Premiums rose 12%." }));
+  const draft = await suggestDraft(client, story, null);
+
+  assert.equal(draft.suggested, true);
+  assert.equal(draft.title, "Record half for insurer");
+  assert.ok(client.request.messages[0].content.includes("Les primes ont augmenté de 12 %."));
+  assert.ok(client.request.system.includes("British English"));
 });
 
 test("a long story summary used as the fallback is cut to 250 characters too", async () => {

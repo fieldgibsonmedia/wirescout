@@ -77,11 +77,21 @@ export function readableText(html) {
 }
 
 // Returns { title, content, suggested }. suggested is false when the fallback was used: the story's own
-// title and summary (cut to the brief's length). The model or the page failing never stops the journalist from sending.
-// client: an Anthropic client, or null (no API key).
+// title and summary (cut to the brief's length), with failure saying why, for the function's log.
+// The model failing never stops the journalist from sending.
+// client: an Anthropic client, or null (no API key, or the hourly limit reached).
+// pageText: the story page's text, or null when it can't be read (blocked, paywalled, built with JavaScript):
+// then the model writes from the story's own title and summary, still facts from the source, so the draft is
+// in British English all the same (Ken, 2026-11-03).
 export async function suggestDraft(client, story, pageText) {
-  const fallback = { title: story.title, content: withSource(shortenBrief(story.summary ?? ""), story.url), suggested: false };
-  if (!client || !pageText) return fallback;
+  const fallback = (failure) => ({
+    title: story.title,
+    content: withSource(shortenBrief(story.summary ?? ""), story.url),
+    suggested: false,
+    failure,
+  });
+  if (!client) return fallback("no model");
+  const articleText = pageText ?? [story.title, story.summary].filter(Boolean).join("\n");
 
   try {
     const response = await client.messages.create({
@@ -94,20 +104,20 @@ export async function suggestDraft(client, story, pageText) {
       messages: [
         {
           role: "user",
-          content: `Write the title and brief in British English from this article.\n\n<article_title>${story.title}</article_title>\n<article_text>\n${pageText}\n</article_text>`,
+          content: `Write the title and brief in British English from this article.\n\n<article_title>${story.title}</article_title>\n<article_text>\n${articleText}\n</article_text>`,
         },
       ],
     });
-    if (response.stop_reason !== "end_turn") return fallback;
+    if (response.stop_reason !== "end_turn") return fallback(`stop reason ${response.stop_reason}`);
 
     const text = response.content.find((block) => block.type === "text")?.text;
     const draft = JSON.parse(text);
     const title = draft.title?.trim();
     const brief = shortenBrief(draft.brief?.trim() ?? "");
-    if (!title || !brief) return fallback;
+    if (!title || !brief) return fallback("empty answer");
     return { title, content: withSource(brief, story.url), suggested: true };
-  } catch {
-    return fallback;
+  } catch (error) {
+    return fallback(`model error ${error.status ?? error.name}`);
   }
 }
 
