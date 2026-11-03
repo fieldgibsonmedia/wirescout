@@ -63,6 +63,8 @@ Core rule, adapted for Wirescout. Last edited: 2026-10-27.
 
 When a fix needs a change to a file on a live server (for example the nginx site config), Ken applies it himself. Prepare the change and the exact steps.
 
+When Ken runs a production step (migration push, function deploy, dashboard setting), record it in `docs/progress.md` in the same session, with the date. Never leave a production step unrecorded (Ken, 2026-11-03).
+
 ## The pull request
 
 - **When to open one:** once per job, when the job is done and Ken says "approve". Changes agreed along the way collect on the job's branch; don't push or open a PR for each one.
