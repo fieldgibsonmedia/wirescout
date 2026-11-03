@@ -226,8 +226,7 @@ Ken's 12 changes after testing step 6 live, in 6 jobs, in this order: one Claude
 
 **Job 2, missing digest (item 7):**
 
-- Ken hasn't received his daily digest since the last release. The digest workflow runs and passes every 15 minutes (checked 2026-11-03), so the cause is in who is due or what is found.
-- Find the root cause, add a test that fails before the fix, then fix it.
+- Ken hadn't seen his daily digest since the last release. Done 2026-11-03, no code change: the digests were sent (run logs: Fri 30 Oct and Mon 2 Nov, 1 sent each; none at weekends, by design) and landed in Ken's junk folder (`docs/known-issues.md`).
 
 **Job 3, drafts to magazines (items 3, 4, 5):**
 

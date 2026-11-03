@@ -2,6 +2,12 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: Missing digest (before the first journalist, job 2)
+
+- Not a bug: the digests were sent and landed in Ken's junk folder. Run logs (totals only): Fri 30 Oct and Mon 2 Nov, 1 sent each; none at the weekend, by design; on Tue 3 Nov none due before 10:41 UTC.
+- Noted in `docs/known-issues.md`: digests can land in junk (Gmail sender), and GitHub ran the digest about hourly, not every 15 minutes.
+- No code change. Next: job 3, drafts to magazines.
+
 ## 2026-11-03: Version back to 0.1.0 (before the first journalist, job 1)
 
 - `package.json` (and the lock file's own version) back to 0.1.0. "What's new" has one 0.1.0 entry: the drafts-to-magazines notes joined it.
