@@ -32,6 +32,8 @@ const password = ref('');
 const title = ref('');
 const content = ref('');
 const aiAssisted = ref(false);
+// Set when the draft is the story's own text, not a suggestion: said above the fields, so the journalist checks it.
+const fallbackReason = ref<'limit' | 'unavailable' | null>(null);
 const editUrl = ref('');
 const errors = ref<Record<string, string>>({});
 const notice = ref('');
@@ -60,6 +62,7 @@ watch(
     (isOpen) => {
         title.value = '';
         content.value = '';
+        fallbackReason.value = null;
         if (!isOpen || !magazine.value) {
             return;
         }
@@ -91,6 +94,7 @@ async function loadSuggestion() {
     title.value = result.title;
     content.value = result.content;
     aiAssisted.value = result.suggested;
+    fallbackReason.value = result.suggested ? null : (result.reason ?? null);
     step.value = 'edit';
 }
 
@@ -205,6 +209,14 @@ async function send() {
                 </a>
             </Alert>
             <template v-else>
+                <Alert v-if="fallbackReason === 'limit'" type="info" class="text-sm text-base-content">
+                    You've used your 10 AI drafts for this hour, so this draft is the story's own text. Please check its language and
+                    wording before sending.
+                </Alert>
+                <Alert v-else-if="fallbackReason === 'unavailable'" type="info" class="text-sm text-base-content">
+                    Wirescout couldn't write a suggested draft this time, so this is the story's own text. Please check its language
+                    and wording before sending.
+                </Alert>
                 <Alert v-if="earlierSend" type="warning" class="text-base-content">
                     <p>{{ earlierSendText }}</p>
                     <a :href="earlierSend.editUrl" target="_blank" rel="noopener" class="btn btn-sm btn-outline mt-3">

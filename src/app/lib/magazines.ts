@@ -88,7 +88,8 @@ export async function disconnectMagazine(publicationId: number) {
 
 // The suggested title and text for the Send dialog. suggested is false when it's the story's own text.
 export async function suggestDraft(articleId: number, publicationId: number) {
-    return call<{ title: string; content: string; suggested: boolean }>('draft-text', {
+    // reason: why the draft is the story's own text (suggested false): the hourly limit, or the AI failed.
+    return call<{ title: string; content: string; suggested: boolean; reason?: 'limit' | 'unavailable' }>('draft-text', {
         article_id: articleId,
         publication_id: publicationId,
     });

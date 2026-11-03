@@ -2,6 +2,15 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: Drafts still in French after the release (fix)
+
+- Released before this: PR #17 (the 6 jobs), merged by Ken at 12:23 UTC; the web app deploy passed. Ken then redeployed the 3 posting functions (`npx supabase functions deploy draft-text magazine-connect post-draft`).
+- Ken's French story still came back in French. Cause: when the story page can't be read (blocked, paywalled, JavaScript), the AI was skipped and the story's own text used, silently. Also the same after 10 AI drafts in an hour, or when the AI call fails.
+- Fix: a page that can't be read no longer skips the AI: it writes from the story's own title and summary, in British English. The 2 remaining fallbacks show an info box in the Send dialog (Ken's idea): the hourly limit, or "couldn't write a suggested draft". Every fallback's cause is in the `draft-text` log (Supabase → Edge Functions → draft-text → Logs).
+- Checked: 63 unit tests (a new one fails on the old code), type-check, build; in the browser with a made-up local account: the "couldn't write" box (no AI key locally), and the hourly-limit box after 10 drafts logged.
+- Not checked: the real French story through the AI (no key locally).
+- Release: the 3 posting functions need redeploying, and the web app needs a release PR.
+
 ## 2026-11-03: Admin source alerts (before the first journalist, job 6)
 
 - The scanner's email to `ADMIN_EMAIL` now goes only when the scanner itself looks broken: in one scan, at least half of the sources that found stories last time find none, and at least 3 (`findScannerBreak` in `src/scanner/health.js`). Subject "Wirescout: the scanner may be broken", listing those sources. Once per break. One failing source emails nobody.
