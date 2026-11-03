@@ -2,6 +2,11 @@
 
 Bugs found while working on something else. One entry each: date, what, where, how to see it.
 
+## 2026-11-03: The seed sources can't be added from the app
+
+- `docs/project.md` ("Run the web app", step 4) says to add `https://news.example.com/press` to a watch list. The Add sources dialog refuses it ("the site can't be reached"): the link check (`check-links`) tries to open it, and `example.com` addresses don't exist.
+- See it: Sources → Add sources → paste the link → Add. Today the only way is a row in `watch_list_sources` (Studio).
+
 ## 2026-11-03: Digests can land in the junk folder
 
 - Ken's digest of Mon 2 Nov was sent (the run log says "1 sent") but went to his junk folder. The digest comes from a Gmail account over SMTP, not a company domain (`docs/mvp-plan.md`, Decisions, Email), so mail filters trust it less.

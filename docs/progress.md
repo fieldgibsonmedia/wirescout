@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: Drafts to magazines (before the first journalist, job 3)
+
+- Drafts are always in British English: the model is told so in its instructions, the title and brief fields and the request, whatever the story's language. The fallback keeps the story's own text (Ken's call). New unit test.
+- Send dialog: the AI note sits right above Cancel and Send; after sending, "Open in <magazine>" is inside the "Draft sent" message. "What's new" and `docs/post-to-modx-plan.md` say both.
+- Checked: 60 unit tests, type-check, build; in the browser, a draft sent to the local Corporate Disclosures copy (Ken signed in): the note above the buttons and the button inside the message. Not checked: a real French story through the model (no `ANTHROPIC_API_KEY` locally).
+- Local setup on the way: a new local account for Ken (confirmed from Mailpit), the old local account's Corporate Disclosures connection deleted (Ken's ok). Start a magazine copy with `docker compose up -d` in its folder: without its database, MODX says every password is wrong.
+- Release: redeploy all 3 posting functions. Next: job 4, Remember me (plan first).
+
 ## 2026-11-03: Missing digest (before the first journalist, job 2)
 
 - Not a bug: the digests were sent and landed in Ken's junk folder. Run logs (totals only): Fri 30 Oct and Mon 2 Nov, 1 sent each; none at the weekend, by design; on Tue 3 Nov none due before 10:41 UTC.

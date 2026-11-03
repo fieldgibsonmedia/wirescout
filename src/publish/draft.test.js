@@ -46,6 +46,14 @@ test("the model is asked for 100 to 250 characters, and a longer brief is cut to
   assert.equal(brief.split("\n\n").length, 2);
 });
 
+test("the model is asked for British English, whatever the story's language", async () => {
+  const client = fakeClient(reply({ title: "Record half for insurer", brief: "Premiums rose." }));
+  await suggestDraft(client, { ...STORY, title: "Un semestre record pour l'assureur" }, "Les primes ont augmenté.");
+
+  assert.ok(client.request.system.includes("British English (en-GB), whatever the language of the article"));
+  assert.ok(client.request.messages[0].content.includes("in British English"));
+});
+
 test("a brief over 250 characters keeps the whole sentences that fit", () => {
   const first = "Premiums rose 12% in the first half, the insurer said on Tuesday, as new business in Asia grew faster than expected.";
   const second = "Profit doubled to a record, helped by fewer large claims.";
