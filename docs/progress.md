@@ -2,6 +2,15 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: Polish (before the first journalist, job 5)
+
+- Brand: a robot head (option A of 3, Ken's pick), drawn in the brand blue before "Wirescout" in the side nav and the phone top bar (`components/BrandIcon.vue`).
+- Side nav: watch lists A–Z, ignoring capitals ("New watch list" stays last); Settings: Channels, then Daily digest. The dashboard cards keep their order (creation).
+- Settings → Channels: Share options Copy link, Email, LinkedIn. The magazines and the Share menu were already A–Z (by name), no change.
+- Add sources dialog: the paste box's focus ring is no longer cut at the sides (room inside the scrolling box); the file drop box is square, and the dialog's fixed height grew to fit it without scrolling.
+- Checked: type-check, build, 60 unit tests; in the browser with a made-up local account and 3 lists named out of order: the side nav, Settings, Channels, the paste box focused, the drop box measured 1:1 with no scroll. Not checked: the phone top bar (same component as the side nav).
+- Release: web app only. Next: job 6, admin source alerts.
+
 ## 2026-11-03: Remember me (before the first journalist, job 4)
 
 - Sign-in page: a "Remember me" checkbox, unticked by default. Ticked: signed in until sign-out, as before. Unticked: a flag in localStorage and a cookie with no expiry date (shared by every tab); the browser drops the cookie when it closes, and the next visit drops the stored session (`src/app/lib/supabase.ts`).

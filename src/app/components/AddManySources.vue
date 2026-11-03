@@ -234,8 +234,10 @@ async function add(urls: string[]) {
 </script>
 
 <template>
-    <!-- One fixed height for both tabs and their results, so the dialog never resizes; the content scrolls inside. -->
-    <div class="flex h-[28rem] max-h-[calc(100dvh-12rem)] flex-col gap-3 overflow-y-auto">
+    <!-- One fixed height for both tabs and their results, so the dialog never resizes; the content scrolls inside.
+         Tall enough for the tabs and the square drop box. -->
+    <!-- -mx-1 px-1: room for the fields' focus rings, which the scrolling box would otherwise cut at the sides. -->
+    <div class="-mx-1 flex h-[32.5rem] max-h-[calc(100dvh-12rem)] flex-col gap-3 overflow-y-auto px-1">
         <TabsRoot v-model="tab" class="flex flex-col gap-3">
             <TabsList aria-label="How to add sources" class="tabs tabs-border relative">
                 <TabsTrigger value="paste" class="tab data-[state=active]:tab-active">Paste links</TabsTrigger>
@@ -274,7 +276,7 @@ async function add(urls: string[]) {
             <TabsContent value="file" class="flex flex-col gap-3">
                 <div
                     :class="[
-                        'flex flex-col items-start gap-3 rounded-box border-2 border-dashed p-4 transition-colors motion-reduce:transition-none',
+                        'flex aspect-square flex-col items-center justify-center gap-4 rounded-box border-2 border-dashed p-6 text-center transition-colors motion-reduce:transition-none',
                         dragging ? 'border-primary bg-base-200' : 'border-base-content/30',
                     ]"
                     @dragover.prevent="dragging = true"
