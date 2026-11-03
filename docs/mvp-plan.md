@@ -235,7 +235,7 @@ Ken's 12 changes after testing step 6 live, in 6 jobs, in this order: one Claude
     - The fallback (no AI available) keeps the story's own text, whatever its language: nothing can translate it then (Ken, 2026-11-03).
 - Send dialog: the note "Wirescout uses AI to write drafts…" moves above the buttons, not under them.
 - After sending: "Open in <Magazine>" sits inside the "Draft sent to <Magazine>." message.
-- Release: redeploy `draft-text`, and any other function whose code changes.
+- Release: redeploy all 3 posting functions (`draft-text`, `magazine-connect`, `post-draft`). This also replaces whatever is live now: whether they were redeployed after PR #16 wasn't recorded.
 
 **Job 4, Remember me (item 1):**
 
@@ -254,7 +254,7 @@ Ken's 12 changes after testing step 6 live, in 6 jobs, in this order: one Claude
 - Ken stops receiving "Wirescout: N sources need a look": each user already sees their failing sources (digest and Sources tab), and keeping their sources right is their job.
 - Keep one alert, only when the scanner itself breaks (Ken, 2026-11-03). The job defines "breaks" (e.g. most sources fail in one run) and says it in one line before coding. Live impact: the scanner (`scanner.yml`), which emails `ADMIN_EMAIL` only.
 
-**Release:** after job 6, merge `origin/main` into `mvp`, redeploy the changed functions, then the release PR. Still v0.1.0.
+**Release:** after job 6, merge `origin/main` into `mvp`, redeploy the 3 posting functions, then the release PR. Still v0.1.0.
 
 ## Branches
 
