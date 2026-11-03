@@ -11,6 +11,7 @@ export const releaseNotes: { version: string; notes: string[] }[] = [
             "You'll see when a story was already sent to a magazine, so it isn't posted twice.",
             'Environmental Finance, InsuranceERM and Insurance Asset Risk are coming soon.',
             'Remember me when you sign in: leave it unticked to be signed out when you close your browser.',
+            'Your watch lists and settings are listed A–Z in the side bar.',
             'The dashboard shows each watch list at a glance: new stories, the last 7 days, its sources and any that fail, and its saved stories.',
             'Search all your watch lists at once from the box at the top: matching stories and sources.',
             'Save stories for later: click Save on a story, then find it under Saved on the Stories tab.',

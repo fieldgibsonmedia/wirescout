@@ -8,6 +8,7 @@ import { Bars3Icon, BellAlertIcon, ListBulletIcon, MagnifyingGlassIcon, ShareIco
 import { PlusIcon } from '@heroicons/vue/20/solid';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
+import BrandIcon from '@/components/BrandIcon.vue';
 import NewWatchListDialog from '@/components/NewWatchListDialog.vue';
 import WatchListMenu from '@/components/WatchListMenu.vue';
 import NavItem from '@/components/ui/NavItem.vue';
@@ -31,6 +32,11 @@ const userName = computed(() => profile.value?.full_name || profile.value?.email
 const userInitial = computed(() => profile.value?.full_name?.trim().charAt(0).toUpperCase() ?? '');
 
 const version = __APP_VERSION__;
+
+// The side nav lists the watch lists A–Z (Ken, 2026-11-03); "New watch list" stays last.
+const sortedWatchLists = computed(() =>
+    [...watchLists.value].sort((first, second) => first.name.localeCompare(second.name, 'en-GB', { sensitivity: 'base' })),
+);
 
 const search = ref('');
 // Phones only: the search field is open over the top bar.
@@ -142,14 +148,17 @@ onUnmounted(() => {
                 aria-label="Main"
             >
                 <!-- aria-current off: it's the brand, not a menu item, and DaisyUI would show it as pressed on the dashboard. -->
-                <RouterLink to="/" class="btn btn-ghost justify-start text-xl font-bold" aria-current="false">Wirescout</RouterLink>
+                <RouterLink to="/" class="btn btn-ghost justify-start text-xl font-bold" aria-current="false">
+                    <BrandIcon class="size-7 text-primary" />
+                    Wirescout
+                </RouterLink>
 
                 <ul class="menu w-full gap-1 p-0 text-base [--menu-active-bg:var(--color-primary)] [--menu-active-fg:var(--color-primary-content)]">
                     <NavItem to="/" label="Dashboard" :icon="Squares2X2Icon" />
 
                     <li class="menu-title mt-4 text-base-content/70">Watch lists</li>
                     <NavItem
-                        v-for="list in watchLists"
+                        v-for="list in sortedWatchLists"
                         :key="list.id"
                         :to="{ name: 'watch-list', params: { id: list.id } }"
                         :label="list.name"
@@ -179,8 +188,9 @@ onUnmounted(() => {
 
                 <ul class="menu mt-auto w-full gap-1 p-0 text-base [--menu-active-bg:var(--color-primary)] [--menu-active-fg:var(--color-primary-content)]">
                     <li class="menu-title text-base-content/70">Settings</li>
-                    <NavItem :to="{ name: 'digest-settings' }" label="Daily digest" :icon="BellAlertIcon" />
+                    <!-- A–Z (Ken, 2026-11-03). -->
                     <NavItem :to="{ name: 'channels-settings' }" label="Channels" :icon="ShareIcon" />
+                    <NavItem :to="{ name: 'digest-settings' }" label="Daily digest" :icon="BellAlertIcon" />
                 </ul>
 
                 <p class="px-3 text-xs text-base-content/70">v{{ version }}</p>
@@ -202,7 +212,10 @@ onUnmounted(() => {
                         <Bars3Icon class="size-6" aria-hidden="true" />
                     </button>
                     <!-- On phones the side nav is hidden, so the brand shows here. -->
-                    <RouterLink to="/" class="btn btn-ghost px-2 text-xl font-bold" aria-current="false">Wirescout</RouterLink>
+                    <RouterLink to="/" class="btn btn-ghost px-2 text-xl font-bold" aria-current="false">
+                        <BrandIcon class="size-7 text-primary" />
+                        Wirescout
+                    </RouterLink>
                 </div>
 
                 <form
