@@ -37,7 +37,7 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
 
 - The scanner: `.github/workflows/scanner.yml` runs on `main` every hour at :17 (live since 2026-10-29).
     - It writes stories and source status to the cloud Supabase project with the secret key (`SUPABASE_SECRET_KEY`, Supabase key `wirescout_scanner`).
-    - It emails only `ADMIN_EMAIL` (a developer), when a source breaks. It never emails journalists.
+    - It emails only `ADMIN_EMAIL` (a developer), when the scanner itself looks broken (many sources fail at once). It never emails journalists.
     - Never trigger the workflow (`workflow_dispatch`), and never run `npm run scan` against the cloud project. Locally, point `EMAIL_*` at Mailpit.
 - The daily digest: `.github/workflows/digest.yml` runs on `main` every 15 minutes (from the release of step 5).
     - It emails journalists (real people) their digest, with the same `EMAIL_*` and `SUPABASE_SECRET_KEY` secrets as the scanner.

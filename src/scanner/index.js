@@ -4,7 +4,7 @@
 import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
 import { readProblem, readSource } from "./read-source.js";
-import { findProblem, sendHealthEmail } from "./health.js";
+import { findScannerBreak, sendHealthEmail } from "./health.js";
 
 // Sources read at the same time: enough to finish in a few minutes, few enough to be polite.
 const PARALLEL = 4;
@@ -24,7 +24,7 @@ const supabase = createClient(CONFIG.supabaseUrl, CONFIG.supabaseSecretKey, {
   auth: { persistSession: false },
 });
 
-// Checks one source and saves the result. Returns its problem for the health email, or null.
+// Checks one source and saves the result. Returns its counts, for the totals and the health check.
 async function checkSource(source) {
   let result;
   let error = null;
@@ -65,17 +65,13 @@ async function checkSource(source) {
     .eq("id", source.id);
   if (updated.error) throw updated.error;
 
-  const problem = findProblem(source.stories_found, result.stories.length);
   return {
     found: result.stories.length,
     saved,
-    problem: problem && {
-      url: source.url,
-      problem,
-      storiesBefore: source.stories_found,
-      storiesNow: result.stories.length,
-      error,
-    },
+    url: source.url,
+    storiesBefore: source.stories_found,
+    storiesNow: result.stories.length,
+    error,
   };
 }
 
@@ -108,12 +104,12 @@ console.log(
     `${failed} not saved. ${newStories} new stories.`,
 );
 
-const problems = results.map((result) => result.problem).filter(Boolean);
-if (problems.length && CONFIG.adminEmail) {
-  await sendHealthEmail(problems, CONFIG);
-  console.log("Health email sent.");
-} else if (problems.length) {
-  console.log("Some sources need a look, but no ADMIN_EMAIL is set, so no health email was sent.");
+const scannerBreak = findScannerBreak(results);
+if (scannerBreak && CONFIG.adminEmail) {
+  await sendHealthEmail(scannerBreak, CONFIG);
+  console.log("The scanner may be broken: health email sent.");
+} else if (scannerBreak) {
+  console.log("The scanner may be broken, but no ADMIN_EMAIL is set, so no health email was sent.");
 }
 
 // A failed save fails the run, so GitHub shows it in red and emails the repo owner.

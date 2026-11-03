@@ -38,7 +38,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `src/app/lib/magazines.ts`: the magazines, the user's connections and who already sent which story (`story_sends`), for Settings → Channels, the Share menu and the Send dialog (`components/SendDraftDialog.vue`).
 - `src/app/lib/releaseNotes.ts`: the dashboard's "What's new". Add notes with each release. Its newest entry and the side nav take the version from `package.json`, which stays 0.1.0 until Ken says otherwise.
 - `src/digest/index.js`: the digest (below). `due.js` decides who gets one, `email.js` writes it. Tests next to them.
-- `src/scanner/index.js`: the scan (below). `read-source.js` picks feed or page, `feed.js` and `page.js` read them, `health.js` writes the health email. Tests next to them (`*.test.js`).
+- `src/scanner/index.js`: the scan (below). `read-source.js` picks feed or page, `feed.js` and `page.js` read them, `health.js` decides whether the scanner looks broken and writes the health email. Tests next to them (`*.test.js`).
 - `supabase/config.toml`: local Supabase settings (sign-ups on for allowed emails, the sign-up check, email templates).
 - `supabase/templates/`: the account emails (confirm account, new password, email change). The cloud project needs the same templates pasted into its dashboard.
 - `supabase/migrations/`: the database schema and access rules, one SQL file per change.
@@ -58,7 +58,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
     5. A guessed feed (`feed`, `rss` next to the page, then `/feed`, `/rss`).
 3. Save the stories whose link is new for that source. Stories are never deleted.
 4. Record the source's status: last checked, stories found, feed or page.
-5. If a source just broke (0 stories, under half of last time, or unreadable on its first check), email `ADMIN_EMAIL`. Once per break, not every hour.
+5. If the scanner itself looks broken (at least half of the sources that found stories last time find none, and at least 3), email `ADMIN_EMAIL`. Once per break, not every hour. One failing source emails nobody: the journalist sees it in the digest and the Sources tab.
 
 The logs show only totals: the repo is public, and which sources people follow is theirs.
 
