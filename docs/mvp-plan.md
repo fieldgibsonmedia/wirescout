@@ -253,7 +253,7 @@ Ken's 12 changes after testing step 6 live, in 6 jobs, in this order: one Claude
 - Ken stops receiving "Wirescout: N sources need a look": each user already sees their failing sources (digest and Sources tab), and keeping their sources right is their job.
 - Keep one alert, only when the scanner itself breaks (Ken, 2026-11-03). The job defines "breaks" (e.g. most sources fail in one run) and says it in one line before coding. Live impact: the scanner (`scanner.yml`), which emails `ADMIN_EMAIL` only.
 
-**Release:** after job 6, merge `origin/main` into `mvp`, redeploy the 3 posting functions, then the release PR. Still v0.1.0.
+**Release:** after job 6, merge `origin/main` into `mvp`, redeploy the 3 posting functions, then the release PR. Still v0.1.0. Done 2026-11-03: PR #17 (the 6 jobs), the 3 posting functions redeployed by Ken, then 2 fixes from live testing: PR #18 (British English when the page can't be read, fallback reasons) and PR #19 (fallback boxes as warnings). Details in `docs/progress.md`.
 
 ## Branches
 
