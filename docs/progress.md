@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: Remember me (before the first journalist, job 4)
+
+- Sign-in page: a "Remember me" checkbox, unticked by default. Ticked: signed in until sign-out, as before. Unticked: a flag in localStorage and a cookie with no expiry date (shared by every tab); the browser drops the cookie when it closes, and the next visit drops the stored session (`src/app/lib/supabase.ts`).
+- Email-link sign-ins and sessions from before the release count as remembered, so nobody is signed out by the release. Signing out clears the choice. The browser's password manager keeps the email and password; Wirescout stores neither.
+- Checked: type-check, build, 60 unit tests; in the browser with a made-up local account: unticked (a new tab stays signed in; with the cookie gone, the next load goes to sign-in), ticked (stays signed in), sign-out clears the choice, a password-reset link stays signed in. Not checked: quitting the whole browser (the cookie was deleted by hand instead); browsers that reopen the last tabs may keep the cookie.
+- Release: web app only. Next: job 5, polish.
+
 ## 2026-11-03: Drafts to magazines (before the first journalist, job 3)
 
 - Drafts are always in British English: the model is told so in its instructions, the title and brief fields and the request, whatever the story's language. The fallback keeps the story's own text (Ken's call). New unit test.
