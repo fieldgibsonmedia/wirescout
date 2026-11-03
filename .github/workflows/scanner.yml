@@ -43,5 +43,7 @@ jobs:
           EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          # The sender on every email (Brevo, domain wirescout.app). Not a secret: every email shows it.
+          EMAIL_FROM: no-reply@wirescout.app
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
         run: npm run scan

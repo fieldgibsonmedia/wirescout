@@ -16,6 +16,7 @@ const CONFIG = {
   emailPort: process.env.EMAIL_PORT,
   emailUser: process.env.EMAIL_USER,
   emailPass: process.env.EMAIL_PASS,
+  emailFrom: process.env.EMAIL_FROM,
   adminEmail: process.env.ADMIN_EMAIL,
 };
 

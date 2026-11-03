@@ -43,6 +43,8 @@ jobs:
           EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          # The sender on every email (Brevo, domain wirescout.app). Not a secret: every email shows it.
+          EMAIL_FROM: no-reply@wirescout.app
           # The live web app, for the links in the email.
           APP_URL: https://wirescout.app
         run: npm run digest

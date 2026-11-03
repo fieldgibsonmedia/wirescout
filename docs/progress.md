@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: App emails through Brevo (own domain, part 2)
+
+- The scanner health, digest and admin emails take their sender from a new `EMAIL_FROM` instead of `EMAIL_USER` (Brevo's SMTP login isn't an address). The 3 workflows set `EMAIL_FROM: no-reply@wirescout.app` as a plain value. `.env.example` and `docs/project.md` updated.
+- Checked: 63 unit tests, type check, build; `npm run scan`, `npm run digest` and `npm run admin` against the local Supabase into Mailpit: all 4 emails (scanner break, digest, access request, usage report) came from `Wirescout <no-reply@wirescout.app>`. The made-up test data was removed afterwards.
+- Not checked: a real send through Brevo (needs the release and the new secrets).
+- Release (Ken, guided one at a time): merge the release PR (Gmail keeps sending until the secrets change); Brevo SMTP key `github`; set `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS` between runs; check the next digest comes from `no-reply@wirescout.app`.
+
 ## 2026-11-03: Own domain planned (wirescout.app)
 
 - A Corporate Disclosures colleague signed up on live and got no confirm email. Checked with Ken: right address, the sign-up check let it through, the Gmail sender's Sent folder has it, no bounce; not in his Junk, Other or Microsoft 365 quarantine. IT can't help yet.
@@ -12,6 +19,9 @@ Newest first. One entry per job: date, what was done, what's next.
 - Checked: a password-reset email from the live app reached Ken's inbox, and its link opened the Confirm page. Not checked: the colleague's sign-up (Ken dropped it).
 - Brevo rewrites every link into a tracking link (`sendibt3.com`), with no switch on the free plan. Works, but filters may distrust it. If emails go missing again, the fallback is a provider that lets tracking be turned off (e.g. Resend); the DNS work carries over.
 - Part 3, before the release, done by Ken the same day: `wirescout.app` verified for GitHub Pages (account settings, TXT record), Namecheap parking records removed, GitHub Pages A, AAAA and `www` CNAME records added (checked from here on Namecheap's servers), `https://wirescout.app/**` added to Supabase's Redirect URLs. Site URL and the Pages custom domain not changed yet.
+- Part 3 released (PR #20, merged by Ken at 18:13 UTC; deploy passed). Ken set the Pages custom domain `wirescout.app` before the merge (certificate issued, Enforce HTTPS on) and the Supabase Site URL to `https://wirescout.app` after it. Checked from here: the new build at the root, deep links, the old `github.io/wirescout/…` addresses redirect with their path. Ken signed in at `https://wirescout.app`.
+- Not checked: a password-reset email's link going to the new address. The old `github.io` entry stays in Supabase's Redirect URLs for now.
+- Next: part 2 (digest, admin and scanner emails through Brevo), one job.
 
 ## 2026-11-03: Fallback boxes as warnings
 
