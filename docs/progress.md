@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: Fallback boxes as warnings
+
+- Released before this: PR #18, merged by Ken at 13:11 UTC; Ken had redeployed the 3 posting functions before it. On live, the French story's dialog showed the hourly-limit box: the cause was the 10 AI drafts an hour, used up by the day's testing.
+- Both fallback boxes (hourly limit, AI couldn't write) are amber warnings now, like "already sent": the light blue was easy to miss (Ken).
+- Checked: type-check, build. Not looked at in the browser: the same warning style the dialog already uses.
+- Release: web app only.
+
 ## 2026-11-03: Drafts still in French after the release (fix)
 
 - Released before this: PR #17 (the 6 jobs), merged by Ken at 12:23 UTC; the web app deploy passed. Ken then redeployed the 3 posting functions (`npx supabase functions deploy draft-text magazine-connect post-draft`).
