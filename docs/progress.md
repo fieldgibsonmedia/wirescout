@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: App emails through Brevo (own domain, part 2)
+
+- The scanner health, digest and admin emails take their sender from a new `EMAIL_FROM` instead of `EMAIL_USER` (Brevo's SMTP login isn't an address). The 3 workflows set `EMAIL_FROM: no-reply@wirescout.app` as a plain value. `.env.example` and `docs/project.md` updated.
+- Checked: 63 unit tests, type check, build; `npm run scan`, `npm run digest` and `npm run admin` against the local Supabase into Mailpit: all 4 emails (scanner break, digest, access request, usage report) came from `Wirescout <no-reply@wirescout.app>`. The made-up test data was removed afterwards.
+- Not checked: a real send through Brevo (needs the release and the new secrets).
+- Release (Ken, guided one at a time): merge the release PR (Gmail keeps sending until the secrets change); Brevo SMTP key `github`; set `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS` between runs; check the next digest comes from `no-reply@wirescout.app`.
+
 ## 2026-11-03: Own domain planned (wirescout.app)
 
 - A Corporate Disclosures colleague signed up on live and got no confirm email. Checked with Ken: right address, the sign-up check let it through, the Gmail sender's Sent folder has it, no bounce; not in his Junk, Other or Microsoft 365 quarantine. IT can't help yet.

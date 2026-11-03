@@ -14,6 +14,7 @@ const CONFIG = {
   emailPort: process.env.EMAIL_PORT,
   emailUser: process.env.EMAIL_USER,
   emailPass: process.env.EMAIL_PASS,
+  emailFrom: process.env.EMAIL_FROM,
   appUrl: process.env.APP_URL,
 };
 
@@ -82,7 +83,7 @@ async function sendDigest(profile, now) {
   if (sent) {
     const email = buildDigest({ lists, profile, appUrl: CONFIG.appUrl });
     await transporter.sendMail({
-      from: `Wirescout <${CONFIG.emailUser || "digest@wirescout.local"}>`,
+      from: `Wirescout <${CONFIG.emailFrom || "digest@wirescout.local"}>`,
       to: profile.email,
       ...email,
     });

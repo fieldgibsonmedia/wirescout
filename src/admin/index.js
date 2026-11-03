@@ -14,6 +14,7 @@ const CONFIG = {
   emailPort: process.env.EMAIL_PORT,
   emailUser: process.env.EMAIL_USER,
   emailPass: process.env.EMAIL_PASS,
+  emailFrom: process.env.EMAIL_FROM,
   adminEmail: process.env.ADMIN_EMAIL,
 };
 
@@ -36,7 +37,7 @@ const transporter = nodemailer.createTransport({
 
 function send(email) {
   return transporter.sendMail({
-    from: `Wirescout <${CONFIG.emailUser || "admin@wirescout.local"}>`,
+    from: `Wirescout <${CONFIG.emailFrom || "admin@wirescout.local"}>`,
     to: CONFIG.adminEmail,
     ...email,
   });

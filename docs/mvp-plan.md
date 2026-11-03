@@ -276,7 +276,7 @@ Three parts, in this order. Part 1 has no code and fixes the colleague's sign-up
 6. Test: Ken creates an account or resets his password with his own address; the email arrives, and "Show original" says DKIM and DMARC pass for `wirescout.app`. Then the colleague signs up again with the same address (Supabase resends the confirm email to an unconfirmed account).
 7. Record each step in `docs/progress.md`.
 
-**Part 2, digest, admin and scanner emails through Brevo (one job, code; plan revised and shown to Ken 2026-11-03, waiting for his "approve" in a new session):**
+**Part 2, digest, admin and scanner emails through Brevo (one job, code; approved by Ken and built 2026-11-03):**
 
 - Today the sender is `EMAIL_USER` (`src/scanner/health.js`, `src/digest/index.js`, `src/admin/index.js`): the login doubles as the From address. Brevo's SMTP login isn't a real address, so the 3 senders use a new `EMAIL_FROM` instead (keeping each one's `…@wirescout.local` fallback for local runs).
 - The 3 workflows (`scanner.yml`, `digest.yml`, `admin.yml`) set `EMAIL_FROM: no-reply@wirescout.app` as a plain value, not a secret: it's on every email anyway, and Ken has one secret fewer. Add it to `.env.example`; update `docs/project.md` and `CLAUDE.md` (no Gmail left).
