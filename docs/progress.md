@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: Version back to 0.1.0 (before the first journalist, job 1)
+
+- `package.json` (and the lock file's own version) back to 0.1.0. "What's new" has one 0.1.0 entry: the drafts-to-magazines notes joined it.
+- One source: the newest "What's new" entry takes `__APP_VERSION__` (from `package.json`), like the side nav. The rule is written in `releaseNotes.ts`, `docs/project.md` and the plan's Decisions.
+- Checked: type-check, build (only `0.1.0` in the bundle), 59 unit tests; in the browser, the side nav and the "What's new" badge both show v0.1.0, with no "Earlier versions".
+- Release: web app only. Next: job 2, the missing digest.
+
 ## 2026-11-03: Before the first journalist (plan only, no code)
 
 - Released before this: PR #16 (fixes after the first look), merged by Ken on 2026-11-02; the web app deploy passed. Whether the 3 posting functions were redeployed after it wasn't recorded; the next release redeploys all 3. New rule: production steps are recorded here in the same session (`workflow.md`).
