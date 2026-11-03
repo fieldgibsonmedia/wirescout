@@ -2,6 +2,12 @@
 
 Bugs found while working on something else. One entry each: date, what, where, how to see it.
 
+## 2026-11-03: Digests can land in the junk folder
+
+- Ken's digest of Mon 2 Nov was sent (the run log says "1 sent") but went to his junk folder. The digest comes from a Gmail account over SMTP, not a company domain (`docs/mvp-plan.md`, Decisions, Email), so mail filters trust it less.
+- Before the first journalist: tell them to mark it "Not junk" and add the sender to their contacts. A company-domain sender would fix it for good, but needs DNS records IT won't add.
+- See it: the digest in the recipient's junk folder; GitHub → Actions → Daily digest → a run's "Digests: … sent" line.
+
 ## 2026-11-02: The sign-in screen has no "Stay signed in" option
 
 - Ken noticed it while planning step 6. Supabase keeps the session in the browser until sign-out, so today everyone stays signed in; the choice should be the user's.
@@ -10,7 +16,8 @@ Bugs found while working on something else. One entry each: date, what, where, h
 ## 2026-10-30: GitHub starts scheduled runs late
 
 - The scanner, set for :17, ran at 09:58 and 10:54 UTC on 2026-10-30: about 40 minutes late. The digest's first scheduled run (11:19) didn't happen at all after the merge; Ken started it by hand.
-- So a digest can arrive 30–60 minutes after the chosen time. If that's too late, a more punctual trigger (an outside scheduler starting the workflow) is an option.
+- So a digest can arrive 30–60 minutes after the chosen time.
+- 2026-11-03: the digest, set for every 15 minutes, ran only about once an hour on 2–3 November (35 runs in 35 hours). If that's too late, a more punctual trigger (an outside scheduler starting the workflow) is an option.
 - See it: GitHub → Actions → a workflow's runs, against its cron times.
 
 ## 2026-10-29: 10 of the 23 old sources can't be read without a browser
