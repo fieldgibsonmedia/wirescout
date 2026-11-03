@@ -8,6 +8,10 @@ Newest first. One entry per job: date, what was done, what's next.
 - Brevo can't send as a Gmail address, so Ken registered `wirescout.app` at Namecheap (2026-11-03).
 - Plan written: `docs/mvp-plan.md`, "Own domain". Part 1 (account emails through Brevo) is Ken's steps only, no code.
 - Next: part 1, guiding Ken one step at a time; then the colleague signs up again. Parts 2 and 3 are one job each.
+- Part 1 done by Ken, same day: Brevo account (his work address), `wirescout.app` authenticated (Brevo added its records through its Namecheap connection), Namecheap forwarder `no-reply@wirescout.app` → Ken, sender `Wirescout <no-reply@wirescout.app>` (the only one), SMTP key `supabase`, Supabase SMTP set to Brevo.
+- Checked: a password-reset email from the live app reached Ken's inbox, and its link opened the Confirm page. Not checked: the colleague's sign-up (Ken dropped it).
+- Brevo rewrites every link into a tracking link (`sendibt3.com`), with no switch on the free plan. Works, but filters may distrust it. If emails go missing again, the fallback is a provider that lets tracking be turned off (e.g. Resend); the DNS work carries over.
+- Part 3, before the release, done by Ken the same day: `wirescout.app` verified for GitHub Pages (account settings, TXT record), Namecheap parking records removed, GitHub Pages A, AAAA and `www` CNAME records added (checked from here on Namecheap's servers), `https://wirescout.app/**` added to Supabase's Redirect URLs. Site URL and the Pages custom domain not changed yet.
 
 ## 2026-11-03: Fallback boxes as warnings
 
