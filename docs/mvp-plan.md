@@ -276,12 +276,17 @@ Three parts, in this order. Part 1 has no code and fixes the colleague's sign-up
 6. Test: Ken creates an account or resets his password with his own address; the email arrives, and "Show original" says DKIM and DMARC pass for `wirescout.app`. Then the colleague signs up again with the same address (Supabase resends the confirm email to an unconfirmed account).
 7. Record each step in `docs/progress.md`.
 
-**Part 2, digest, admin and scanner emails through Brevo (one job, code):**
+**Part 2, digest, admin and scanner emails through Brevo (one job, code; plan revised and shown to Ken 2026-11-03, waiting for his "approve" in a new session):**
 
-- Today the sender is `EMAIL_USER` (`src/scanner/health.js`, `src/digest/index.js`, `src/admin/index.js`). Brevo's SMTP login isn't the sender address, so add `EMAIL_FROM` (the sender address), falling back to `EMAIL_USER` when empty: merging changes nothing until Ken sets the secret.
-- Pass `EMAIL_FROM: ${{ secrets.EMAIL_FROM }}` in `scanner.yml`, `digest.yml`, `admin.yml`. Add it to `.env.example`. Tests for the sender line.
-- It touches env variables, CI and crons that email people: plan first, then Ken's "approve" (`workflow.md`). Live impact: the digest (journalists), admin and scanner emails (`ADMIN_EMAIL`).
-- After the release (Ken): set the GitHub secrets `EMAIL_HOST` (`smtp-relay.brevo.com`), `EMAIL_PORT` (587), `EMAIL_USER`, `EMAIL_PASS` (Brevo login and SMTP key) and `EMAIL_FROM` (`no-reply@wirescout.app`) together, between two runs (not around :05, :17, :20, :35, :40, :50). Check the next digest run's log says "sent" and the email arrives.
+- Today the sender is `EMAIL_USER` (`src/scanner/health.js`, `src/digest/index.js`, `src/admin/index.js`): the login doubles as the From address. Brevo's SMTP login isn't a real address, so the 3 senders use a new `EMAIL_FROM` instead (keeping each one's `…@wirescout.local` fallback for local runs).
+- The 3 workflows (`scanner.yml`, `digest.yml`, `admin.yml`) set `EMAIL_FROM: no-reply@wirescout.app` as a plain value, not a secret: it's on every email anyway, and Ken has one secret fewer. Add it to `.env.example`; update `docs/project.md` and `CLAUDE.md` (no Gmail left).
+- Checks: unit tests, type-check, build; locally `npm run scan`, `npm run digest` and `npm run admin` into Mailpit, each showing `no-reply@wirescout.app` as sender. That needs a made-up user and data in the local database: ask Ken first (`communication.md`).
+- It touches env variables, CI and crons that email people: Ken's "approve" before coding (`workflow.md`). Live impact: the digest (journalists; today only Ken), admin and scanner emails (`ADMIN_EMAIL`). A wrong setting makes sending fail and the run red; the digest isn't marked done, so the next run retries it.
+- Release, in this order:
+    1. Ken merges the release PR. Until the secrets change, Gmail still sends (it shows its own address as sender): nothing breaks.
+    2. Brevo → SMTP & API → a second SMTP key named `github` (each key can be revoked on its own).
+    3. Ken sets 4 GitHub secrets, guided one at a time, between runs (not around :05, :17, :20, :35, :40, :50): `EMAIL_HOST` `smtp-relay.brevo.com`, `EMAIL_PORT` `587`, `EMAIL_USER` the Brevo login, `EMAIL_PASS` the `github` key.
+    4. Check: Ken's next digest arrives from `no-reply@wirescout.app`, and the run log says "sent".
 
 **Part 3, the app at wirescout.app (one job, code plus Ken's steps):**
 
