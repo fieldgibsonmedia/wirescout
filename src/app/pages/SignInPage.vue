@@ -4,7 +4,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router';
 import Alert from '@/components/ui/Alert.vue';
 import TextField from '@/components/ui/TextField.vue';
 import FormLayout from '@/layouts/FormLayout.vue';
-import { emailLink, supabase } from '@/lib/supabase';
+import { emailLink, rememberSignIn, supabase } from '@/lib/supabase';
 
 const router = useRouter();
 // The page to open after signing in. Only a path in this app: "//site" would leave it.
@@ -13,6 +13,8 @@ const next = typeof redirect === 'string' && redirect.startsWith('/') && !redire
 
 const email = ref('');
 const password = ref('');
+// Unticked by default, as on most sites: a shared computer doesn't stay signed in by mistake.
+const remember = ref(false);
 const errors = ref<Record<string, string>>({});
 const failed = ref('');
 const busy = ref(false);
@@ -44,6 +46,7 @@ async function signIn() {
         return;
     }
 
+    rememberSignIn(remember.value);
     router.push(next ?? { name: 'dashboard' });
 }
 </script>
@@ -75,6 +78,10 @@ async function signIn() {
             :error="errors.password"
             required
         />
+        <label class="flex w-fit cursor-pointer items-center gap-2">
+            <input v-model="remember" type="checkbox" name="remember" class="checkbox checkbox-sm" />
+            Remember me
+        </label>
 
         <template #links>
             <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">

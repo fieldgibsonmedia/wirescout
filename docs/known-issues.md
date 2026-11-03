@@ -13,11 +13,6 @@ Bugs found while working on something else. One entry each: date, what, where, h
 - Before the first journalist: tell them to mark it "Not junk" and add the sender to their contacts. A company-domain sender would fix it for good, but needs DNS records IT won't add.
 - See it: the digest in the recipient's junk folder; GitHub → Actions → Daily digest → a run's "Digests: … sent" line.
 
-## 2026-11-02: The sign-in screen has no "Stay signed in" option
-
-- Ken noticed it while planning step 6. Supabase keeps the session in the browser until sign-out, so today everyone stays signed in; the choice should be the user's.
-- See it: `src/app/pages/SignInPage.vue`, no checkbox under the password field. The Supabase client uses its default (session kept in the browser), so no setting backs the choice yet.
-
 ## 2026-10-30: GitHub starts scheduled runs late
 
 - The scanner, set for :17, ran at 09:58 and 10:54 UTC on 2026-10-30: about 40 minutes late. The digest's first scheduled run (11:19) didn't happen at all after the merge; Ken started it by hand.
