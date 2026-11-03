@@ -2,6 +2,12 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: Before the first journalist (plan only, no code)
+
+- Released before this: PR #16 (fixes after the first look), merged by Ken on 2026-11-02; the web app deploy passed. Not confirmed yet: that the 3 posting functions were redeployed after it (Supabase dashboard → Edge Functions, updated after 2026-11-02 20:23 UTC).
+- Ken's 12 changes after testing live, grouped into 6 jobs in `docs/mvp-plan.md` ("Before the first journalist"). New decision: the version stays 0.1.0 until Ken says otherwise.
+- Next: job 1, the version.
+
 ## 2026-11-02: Fixes after the first look at the release (step 6)
 
 - Share menu: no more "Coming soon..." magazines. It lists only the magazines the user added, then Add a magazine. Channels still shows the 3 greyed out.
