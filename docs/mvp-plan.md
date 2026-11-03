@@ -24,6 +24,7 @@ Agreed with Ken on 2026-10-27. Turns the prototype into an internal MVP for more
 | Look | Apple's web blue (`#0071E3`) as the primary colour until Wirescout has a brand | Apple's system blue `#007AFF` is too light for white button text (4.0:1) |
 | Bulk sources | File upload (`.xlsx`, `.csv`, `.txt`) with `read-excel-file`, loaded only for `.xlsx` | People expect to upload a file; paste-only was rejected. Keeps the app small for everyone else |
 | Analytics | Our own usage report job, no PostHog | PostHog is too much for now |
+| Version | Stays 0.1.0 until Ken says otherwise, when real users are invited (Ken, 2026-11-03). Every place that shows it reads `package.json` | Ken's call; one source keeps it consistent |
 
 ## Scanning without selectors
 
@@ -213,6 +214,47 @@ Jobs 1–7 are done (`docs/progress.md`): quick fixes, look and feel, motion, wa
 
 **Release v0.1.0:** after job 7, merge `origin/main` into `mvp`, push the 2 migrations (jobs 5 and 6) to the cloud, then the release PR. Live impact: the web app only.
 
+### Before the first journalist (agreed 2026-11-03)
+
+Ken's 12 changes after testing step 6 live, in 6 jobs, in this order: one Claude session and one branch each, from `origin/mvp`. Ken invites the first journalist once all 6 are done. The version stays 0.1.0 (Decisions).
+
+**Job 1, version (Ken's item 2):**
+
+- Back to 0.1.0: `package.json` and the "What's new" card. A session set 0.2.0 on 2026-11-02 because the decision wasn't written down.
+- The drafts-to-magazines notes, now under 0.2.0, join the 0.1.0 entry.
+- One source: every place that shows the version (the side nav, the "What's new" badge) reads `package.json` (`__APP_VERSION__`). No version typed by hand in `releaseNotes.ts`.
+
+**Job 2, missing digest (item 7):**
+
+- Ken hadn't seen his daily digest since the last release. Done 2026-11-03, no code change: the digests were sent (run logs: Fri 30 Oct and Mon 2 Nov, 1 sent each; none at weekends, by design) and landed in Ken's junk folder (`docs/known-issues.md`).
+
+**Job 3, drafts to magazines (items 3, 4, 5):**
+
+- Everything sent to a magazine is in en-GB, whatever the story's language. Ken sent a French story to Corporate Disclosures and got a French title and text.
+    - The fallback (no AI available) keeps the story's own text, whatever its language: nothing can translate it then (Ken, 2026-11-03).
+- Send dialog: the note "Wirescout uses AI to write drafts…" moves above the buttons, not under them.
+- After sending: "Open in <Magazine>" sits inside the "Draft sent to <Magazine>." message.
+- Release: redeploy all 3 posting functions (`draft-text`, `magazine-connect`, `post-draft`). This also replaces whatever is live now: whether they were redeployed after PR #16 wasn't recorded.
+
+**Job 4, Remember me (item 1):**
+
+- A "Remember me" checkbox on the sign-in form. It touches sign-in: plan first, then Ken's "approve".
+- The plan settles what it keeps: staying signed in after the browser closes (`docs/known-issues.md`, "Stay signed in"), and whether the email address is pre-filled. The password stays with the browser's password manager.
+
+**Job 5, polish (items 8–12):**
+
+- Side nav: Dashboard first, then Watch lists (A–Z, "+ New watch list" last), then Settings (its items A–Z).
+- Settings → Channels: the magazines A–Z. Share menu: its options A–Z.
+- Add sources dialog: the paste box's focus border shows in full on the left and right; the file drop box is square (1:1).
+- Brand icon right before the name "Wirescout": 2–3 options (Ken thought of a robot head), Ken picks one at the start of the job.
+
+**Job 6, admin source alerts (item 6):**
+
+- Ken stops receiving "Wirescout: N sources need a look": each user already sees their failing sources (digest and Sources tab), and keeping their sources right is their job.
+- Keep one alert, only when the scanner itself breaks (Ken, 2026-11-03). The job defines "breaks" (e.g. most sources fail in one run) and says it in one line before coding. Live impact: the scanner (`scanner.yml`), which emails `ADMIN_EMAIL` only.
+
+**Release:** after job 6, merge `origin/main` into `mvp`, redeploy the 3 posting functions, then the release PR. Still v0.1.0.
+
 ## Branches
 
 - Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.
@@ -237,6 +279,7 @@ Jobs added on 2026-10-27 sit between the steps, so the step numbers stay the sam
     - Usage report job
     - Polish before step 6 (Ken's 18 changes, agreed 2026-10-30), released together as v0.1.0: quick fixes, look and feel, motion, watch list settings (Edit and Delete from the side nav, keywords in the Edit dialog), save stories, dashboard insights and release notes, global search
 6. Post from Wirescout (last: it touches the live magazine sites)
+    - Before the first journalist (Ken's 12 changes, agreed 2026-11-03), still v0.1.0: version, missing digest, drafts to magazines, Remember me, polish, admin source alerts
 
 ## Known risks
 

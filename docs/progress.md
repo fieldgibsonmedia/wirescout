@@ -2,6 +2,56 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: Admin source alerts (before the first journalist, job 6)
+
+- The scanner's email to `ADMIN_EMAIL` now goes only when the scanner itself looks broken: in one scan, at least half of the sources that found stories last time find none, and at least 3 (`findScannerBreak` in `src/scanner/health.js`). Subject "Wirescout: the scanner may be broken", listing those sources. Once per break. One failing source emails nobody.
+- A crash or a failed save still turns the run red, and GitHub emails the repo owner.
+- Checked: 62 unit tests (4 new, the old per-source ones replaced); `npm run scan` against the local Supabase with email to Mailpit and 3 made-up working sources: one alert, and none on the next scan. Test data removed afterwards.
+- Release: the scanner (`scanner.yml`) picks it up from `main` at its next hourly run; nothing to deploy. All 6 jobs are done: next, the release (merge `origin/main` into `mvp`, release PR, then Ken redeploys the 3 posting functions).
+
+## 2026-11-03: Polish (before the first journalist, job 5)
+
+- Brand: a robot head (option A of 3, Ken's pick), drawn in the brand blue before "Wirescout" in the side nav and the phone top bar (`components/BrandIcon.vue`).
+- Side nav: watch lists A–Z, ignoring capitals ("New watch list" stays last); Settings: Channels, then Daily digest. The dashboard cards keep their order (creation).
+- Settings → Channels: Share options Copy link, Email, LinkedIn. The magazines and the Share menu were already A–Z (by name), no change.
+- Add sources dialog: the paste box's focus ring is no longer cut at the sides (room inside the scrolling box); the file drop box is square, and the dialog's fixed height grew to fit it without scrolling.
+- Checked: type-check, build, 60 unit tests; in the browser with a made-up local account and 3 lists named out of order: the side nav, Settings, Channels, the paste box focused, the drop box measured 1:1 with no scroll. Not checked: the phone top bar (same component as the side nav).
+- Release: web app only. Next: job 6, admin source alerts.
+
+## 2026-11-03: Remember me (before the first journalist, job 4)
+
+- Sign-in page: a "Remember me" checkbox, unticked by default. Ticked: signed in until sign-out, as before. Unticked: a flag in localStorage and a cookie with no expiry date (shared by every tab); the browser drops the cookie when it closes, and the next visit drops the stored session (`src/app/lib/supabase.ts`).
+- Email-link sign-ins and sessions from before the release count as remembered, so nobody is signed out by the release. Signing out clears the choice. The browser's password manager keeps the email and password; Wirescout stores neither.
+- Checked: type-check, build, 60 unit tests; in the browser with a made-up local account: unticked (a new tab stays signed in; with the cookie gone, the next load goes to sign-in), ticked (stays signed in), sign-out clears the choice, a password-reset link stays signed in. Not checked: quitting the whole browser (the cookie was deleted by hand instead); browsers that reopen the last tabs may keep the cookie.
+- Release: web app only. Next: job 5, polish.
+
+## 2026-11-03: Drafts to magazines (before the first journalist, job 3)
+
+- Drafts are always in British English: the model is told so in its instructions, the title and brief fields and the request, whatever the story's language. The fallback keeps the story's own text (Ken's call). New unit test.
+- Send dialog: the AI note sits right above Cancel and Send; after sending, "Open in <magazine>" is inside the "Draft sent" message. "What's new" and `docs/post-to-modx-plan.md` say both.
+- Checked: 60 unit tests, type-check, build; in the browser, a draft sent to the local Corporate Disclosures copy (Ken signed in): the note above the buttons and the button inside the message. Not checked: a real French story through the model (no `ANTHROPIC_API_KEY` locally).
+- Local setup on the way: a new local account for Ken (confirmed from Mailpit), the old local account's Corporate Disclosures connection deleted (Ken's ok). Start a magazine copy with `docker compose up -d` in its folder: without its database, MODX says every password is wrong.
+- Release: redeploy all 3 posting functions. Next: job 4, Remember me (plan first).
+
+## 2026-11-03: Missing digest (before the first journalist, job 2)
+
+- Not a bug: the digests were sent and landed in Ken's junk folder. Run logs (totals only): Fri 30 Oct and Mon 2 Nov, 1 sent each; none at the weekend, by design; on Tue 3 Nov none due before 10:41 UTC.
+- Noted in `docs/known-issues.md`: digests can land in junk (Gmail sender), and GitHub ran the digest about hourly, not every 15 minutes.
+- No code change. Next: job 3, drafts to magazines.
+
+## 2026-11-03: Version back to 0.1.0 (before the first journalist, job 1)
+
+- `package.json` (and the lock file's own version) back to 0.1.0. "What's new" has one 0.1.0 entry: the drafts-to-magazines notes joined it.
+- One source: the newest "What's new" entry takes `__APP_VERSION__` (from `package.json`), like the side nav. The rule is written in `releaseNotes.ts`, `docs/project.md` and the plan's Decisions.
+- Checked: type-check, build (only `0.1.0` in the bundle), 59 unit tests; in the browser, the side nav and the "What's new" badge both show v0.1.0, with no "Earlier versions".
+- Release: web app only. Next: job 2, the missing digest.
+
+## 2026-11-03: Before the first journalist (plan only, no code)
+
+- Released before this: PR #16 (fixes after the first look), merged by Ken on 2026-11-02; the web app deploy passed. Whether the 3 posting functions were redeployed after it wasn't recorded; the next release redeploys all 3. New rule: production steps are recorded here in the same session (`workflow.md`).
+- Ken's 12 changes after testing live, grouped into 6 jobs in `docs/mvp-plan.md` ("Before the first journalist"). New decision: the version stays 0.1.0 until Ken says otherwise.
+- Next: job 1, the version.
+
 ## 2026-11-02: Fixes after the first look at the release (step 6)
 
 - Share menu: no more "Coming soon..." magazines. It lists only the magazines the user added, then Add a magazine. Channels still shows the 3 greyed out.

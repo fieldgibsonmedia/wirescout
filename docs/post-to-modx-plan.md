@@ -39,6 +39,7 @@ Everything else in the plan stays: drafts only, "Post draft to <magazine>" in th
 Heading **Send draft to {Magazine}**, then the line **You're sending this as {MODX username}**, then two editable fields and a **Send** button:
 
 - **Title:** suggested by Claude Haiku 5.5; falls back to the story's original title.
+- **Language:** the title and brief are always in British English, as the magazines are, whatever the story's language. The fallback keeps the story's own text (Ken, 2026-11-03).
 - **Content:** a news brief of 100–250 characters (1 or 2 paragraphs, cut to fit if the model writes more) suggested by Claude Haiku 5.5 from the story's page; falls back to the story's original summary when the page can't be fetched. The last line is always `Source: <full story link>` (the link as text and as a link). No summary field.
 - The journalist edits both fields freely. What is sent is what they see.
 - The draft never mentions Wirescout or AI. The publish log records `ai_assisted` for us only.
@@ -75,7 +76,7 @@ The same Add magazine form is used from Settings → Channels. No browser cookie
 As built (job 4, with Ken's changes of 2026-11-02):
 
 - Share menu: one "Send to <magazine>" per magazine the user added, then "Add a magazine" (opens Channels), then Copy link, Email, LinkedIn.
-- Send dialog: the info note ("You're sending this as …"), the editable title and text, Cancel and Send. After sending, the confirmation and "Open in <magazine>" replace the fields; Send stays greyed out.
+- Send dialog: the info note ("You're sending this as …"), the editable title and text, the AI note right above Cancel and Send. After sending, the confirmation, with "Open in <magazine>" inside it, replaces the fields; Send stays greyed out.
 - Duplicates: the dialog warns when anyone already sent the story to that magazine (`story_sends`, by story, not title), with "Open existing story" and "Send anyway". If MODX refuses a same-title article, the error says it may have been sent before, with "Open existing story", and Send waits for a new title. The story card shows "Sent to <magazine>".
 
 As planned:

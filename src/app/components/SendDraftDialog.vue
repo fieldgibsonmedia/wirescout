@@ -4,8 +4,8 @@
 //   sign-in: not connected yet, or the stored sign-in stopped working: the MODX username and password first.
 //   loading: the suggested title and text are being written (a few seconds).
 //   edit:    the title and text, both editable. What is sent is what the user sees.
-//   sent:    done: the same form, with the fields swapped for the confirmation and a link to the draft in the
-//            magazine's MODX manager, and Send greyed out, so it reads as the same dialog.
+//   sent:    done: the same form, with the fields swapped for the confirmation, which holds the link to the draft
+//            in the magazine's MODX manager, and Send greyed out, so it reads as the same dialog.
 import { ArrowTopRightOnSquareIcon, CheckIcon } from '@heroicons/vue/20/solid';
 import { DialogClose } from 'reka-ui';
 import { computed, nextTick, ref, watch } from 'vue';
@@ -196,14 +196,14 @@ async function send() {
                 You're sending this as <strong>{{ magazine.connectedAs }}</strong>.<br />
                 It goes in as a draft; you or an editor still reviews it.
             </Alert>
-            <div v-if="step === 'sent'" class="flex flex-col items-center gap-4">
-                <Alert type="success" class="w-full">Draft sent to {{ magazine.name }}.</Alert>
-                <a ref="openLink" :href="editUrl" target="_blank" rel="noopener" class="btn btn-outline">
+            <Alert v-if="step === 'sent'" type="success">
+                <p>Draft sent to {{ magazine.name }}.</p>
+                <a ref="openLink" :href="editUrl" target="_blank" rel="noopener" class="btn btn-sm btn-outline mt-3">
                     Open in {{ magazine.name }}
-                    <ArrowTopRightOnSquareIcon class="size-5" aria-hidden="true" />
+                    <ArrowTopRightOnSquareIcon class="size-4" aria-hidden="true" />
                     <span class="sr-only">(opens in a new tab)</span>
                 </a>
-            </div>
+            </Alert>
             <template v-else>
                 <Alert v-if="earlierSend" type="warning" class="text-base-content">
                     <p>{{ earlierSendText }}</p>
@@ -223,6 +223,9 @@ async function send() {
                         <span class="sr-only">(opens in a new tab)</span>
                     </a>
                 </Alert>
+                <p class="text-sm text-base-content/70">
+                    Wirescout uses AI to write drafts, and AI can make mistakes. Please check your draft before sending.
+                </p>
             </template>
             <div class="flex justify-end gap-3 border-t border-base-300 pt-6">
                 <!-- Once sent there's nothing left to cancel. -->
@@ -234,9 +237,6 @@ async function send() {
                     {{ earlierSend && step !== 'sent' ? 'Send anyway' : 'Send' }}
                 </Button>
             </div>
-            <p v-if="step === 'edit'" class="text-sm text-base-content/70">
-                Wirescout uses AI to write drafts, and AI can make mistakes. Please check your draft before sending.
-            </p>
         </form>
     </Dialog>
 </template>

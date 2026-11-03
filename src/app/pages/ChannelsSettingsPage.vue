@@ -39,9 +39,9 @@ const saved = ref(false);
 const failed = ref(false);
 
 const switches = [
-    { key: 'linkedIn', label: 'LinkedIn', description: "Opens LinkedIn's share window with the story." },
-    { key: 'email', label: 'Email', description: 'Opens your email app with the story.' },
     { key: 'copyLink', label: 'Copy link', description: "Copies the story's web address." },
+    { key: 'email', label: 'Email', description: 'Opens your email app with the story.' },
+    { key: 'linkedIn', label: 'LinkedIn', description: "Opens LinkedIn's share window with the story." },
 ] as const;
 
 // The profile may still be loading when the page opens.
