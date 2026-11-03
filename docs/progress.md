@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-03: Admin source alerts (before the first journalist, job 6)
+
+- The scanner's email to `ADMIN_EMAIL` now goes only when the scanner itself looks broken: in one scan, at least half of the sources that found stories last time find none, and at least 3 (`findScannerBreak` in `src/scanner/health.js`). Subject "Wirescout: the scanner may be broken", listing those sources. Once per break. One failing source emails nobody.
+- A crash or a failed save still turns the run red, and GitHub emails the repo owner.
+- Checked: 62 unit tests (4 new, the old per-source ones replaced); `npm run scan` against the local Supabase with email to Mailpit and 3 made-up working sources: one alert, and none on the next scan. Test data removed afterwards.
+- Release: the scanner (`scanner.yml`) picks it up from `main` at its next hourly run; nothing to deploy. All 6 jobs are done: next, the release (merge `origin/main` into `mvp`, release PR, then Ken redeploys the 3 posting functions).
+
 ## 2026-11-03: Polish (before the first journalist, job 5)
 
 - Brand: a robot head (option A of 3, Ken's pick), drawn in the brand blue before "Wirescout" in the side nav and the phone top bar (`components/BrandIcon.vue`).
