@@ -22,6 +22,8 @@ const open = ref(false);
                 <p>
                     Wirescout uses PostHog, hosted in the EU, to understand how the product is used and to diagnose errors. This covers pages viewed,
                     features used, error reports and session recordings. Recordings never include what you type or your name and email address.
+                    Recordings show only Wirescout's own pages, as they appear in its tab. They never capture your computer or phone, its screen,
+                    other apps, other tabs or websites, or anything else in your browser.
                 </p>
                 <p>
                     Data is pseudonymised: PostHog receives an account identifier, never your name or email address. It is collected only while you

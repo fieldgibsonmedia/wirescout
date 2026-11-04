@@ -5,6 +5,14 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ["The Privacy policy now says that session recordings show only Wirescout's own pages, never your computer, screen or other tabs."],
+    },
+    {
+        version: '0.5.3',
+        notes: ['For super admins: Analytics always shows the latest figures. Before, it could be up to 6 hours behind.'],
+    },
+    {
+        version: '0.5.2',
         notes: ['Fixed: session replays in usage statistics were missing for some browsers.'],
     },
     {
