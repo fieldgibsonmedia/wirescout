@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: Access request email points to Platform access (fix)
+
+- From `docs/known-issues.md`: the email still said to let people in through the Table Editor. It now says Settings → Manager → System settings → Platform access → Add; `handled_at` stays in the Table Editor (the app has no screen for requests). `docs/project.md`'s Admin tasks say the same.
+- No version change: only `ADMIN_EMAIL` gets this email, not journalists.
+- Checked: the admin test's new check fails on the old text and passes now; 66 unit tests.
+- Not checked: a local `npm run admin` into Mailpit (needs a made-up access request in the local database; the test covers the text).
+- Release: `admin.yml` picks it up from `main` at its next run; nothing to deploy.
+
 ## 2026-11-04: A source added shows "failing" after its check passed (fix), v0.5.6
 
 - From `docs/known-issues.md`. Cause: the app and `scan-new-sources` read only sources never checked, so a shared source that failed its last hourly check kept its old status until the next scan.
