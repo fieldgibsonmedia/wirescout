@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: Privacy policy on what recordings show, v0.5.4
+
+- Ken's point, from watching replays: people may fear the recording sees more than Wirescout. The policy now adds: "Recordings show only Wirescout's own pages, as they appear in its tab. They never capture your computer or phone, its screen, other apps, other tabs or websites, or anything else in your browser." (Ken's wording change: the computer named, not only the browser.) True of PostHog's recorder: it records the page's own content in its tab only.
+- Version 0.5.4 with its "What's new".
+- Checked: 66 unit tests, type-check, build; in the browser, the policy from the sign-up page (the new sentence, the dialog still fits without scrolling).
+- Release: web app only, together with v0.5.3 in one release PR.
+
 ## 2026-11-04: Analytics always fresh (fix), v0.5.3
 
 - Found on live by Ken: his replay showed under 1 Day and 1 Week, not 1 Month. Cause, from PostHog's source code (`hogql_query_runner.py`, `caching/utils.py`): a HogQL query sent with the default `refresh` gets PostHog's cached answer for up to 6 hours. The 1 Month query had first run before the replay existed. This hit every section and period.
@@ -9,6 +16,8 @@ Newest first. One entry per job: date, what was done, what's next.
 - Checked: the unit test's new check fails on the old code and passes now; 66 unit tests, type-check, build.
 - Not checked: the real PostHog with the new setting (only on live, after Ken redeploys `analytics`). `delete-account` uses the same file but not the changed function: no redeploy needed.
 - Release, in this order (Ken): redeploy `analytics` (`npx supabase functions deploy analytics`), then merge the release PR.
+- Done by Ken on 2026-11-04: `analytics` redeployed from `mvp` (with the fix).
+- Checked on live by Ken, right after the redeploy: his replay now shows under 1 Month too.
 
 ## 2026-11-04: Replay script bundled (fix), v0.5.2
 
