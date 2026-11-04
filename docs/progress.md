@@ -8,6 +8,8 @@ Newest first. One entry per job: date, what was done, what's next.
 - Version 0.5.4 with its "What's new".
 - Checked: 66 unit tests, type-check, build; in the browser, the policy from the sign-up page (the new sentence, the dialog still fits without scrolling).
 - Release: web app only, together with v0.5.3 in one release PR.
+- Released with v0.5.3: PR #28, merged by Ken at 15:32 UTC; the web app deploy passed, and `wirescout.app` serves v0.5.4 with the new policy sentence (checked in its code). `analytics` was redeployed before the merge.
+- Next: Ken's pick. Open in `docs/known-issues.md`: the access request email still points to the Table Editor, and a source can show "failing" right after its check passed.
 
 ## 2026-11-04: Analytics always fresh (fix), v0.5.3
 
