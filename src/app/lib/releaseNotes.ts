@@ -5,6 +5,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['The All stories · Saved switch in a watch list is easier to see: the option not chosen has a white background.'],
+    },
+    {
+        version: '0.5.6',
         notes: ['Fixed: a source you add could show as failing, although its link check had just passed.'],
     },
     {

@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: All stories · Saved switch easier to see, v0.5.7
+
+- Ken's point: the option not chosen had no background and got lost on the grey page. It's white now (`bg-base-100`, the cards' colour: dark grey in dark mode). Version 0.5.7 with its "What's new".
+- Checked: type-check, build; in the browser with a made-up local account (Ken's ok), both options chosen in turn. Test data deleted afterwards.
+- Not checked: dark mode and phone width.
+- Release: web app only.
+
 ## 2026-11-04: Access request email points to Platform access (fix)
 
 - From `docs/known-issues.md`: the email still said to let people in through the Table Editor. It now says Settings → Manager → System settings → Platform access → Add; `handled_at` stays in the Table Editor (the app has no screen for requests). `docs/project.md`'s Admin tasks say the same.
