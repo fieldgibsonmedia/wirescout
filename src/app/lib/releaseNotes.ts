@@ -5,6 +5,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['For super admins: Analytics always shows the latest figures. Before, it could be up to 6 hours behind.'],
+    },
+    {
+        version: '0.5.2',
         notes: ['Fixed: session replays in usage statistics were missing for some browsers.'],
     },
     {

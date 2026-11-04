@@ -72,7 +72,8 @@ export async function runQueries(posthog, named) {
     while (next < entries.length) {
       const [name, query] = entries[next++];
       try {
-        const response = await request(posthog, "query/", { query: { kind: "HogQLQuery", query } });
+        // force_blocking: always run the query. Otherwise PostHog answers from its cache, up to 6 hours old.
+        const response = await request(posthog, "query/", { query: { kind: "HogQLQuery", query }, refresh: "force_blocking" });
         answers[name] = response.ok ? (await response.json()).results : null;
       } catch {
         answers[name] = null;
