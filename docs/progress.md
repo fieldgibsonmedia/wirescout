@@ -18,7 +18,7 @@ Newest first. One entry per job: date, what was done, what's next.
 
 ## 2026-11-04: Access request email points to Platform access (fix)
 
-- From `docs/known-issues.md`: the email still said to let people in through the Table Editor. It now says Settings → Manager → System settings → Platform access → Add; `handled_at` stays in the Table Editor (the app has no screen for requests). `docs/project.md`'s Admin tasks say the same.
+- From `docs/known-issues.md`: the email still said to let people in through the Table Editor. It now says Manager → System settings → Platform access → Add (Manager is its own section of the side nav, not under Settings: Ken, while testing); `handled_at` stays in the Table Editor (the app has no screen for requests). `docs/project.md`'s Admin tasks say the same.
 - No version change: only `ADMIN_EMAIL` gets this email, not journalists.
 - Checked: the admin test's new check fails on the old text and passes now; 66 unit tests.
 - Not checked: a local `npm run admin` into Mailpit (needs a made-up access request in the local database; the test covers the text).
