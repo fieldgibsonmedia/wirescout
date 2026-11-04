@@ -2,6 +2,17 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: Sources and wording (after the first journalist, job 1), v0.2.0
+
+- Paste error (point 1): the live `check-links` logs show "CPU Time exceeded" (2.2 s and 2.5 s, over the free plan's 2 s per call) on 3 Nov 19:11 and 4 Nov 09:16 UTC. Ten big news pages in one call need about 2.4 s. The empty line wasn't the cause. Fix: the app checks one link per call (5 at a time); a check that fails leaves out only that link ("couldn't be checked. Please try again"), and the rest are added.
+- First stories right away (point 9): new function `scan-new-sources` reads each source just added, once, with the scanner's own code (moved into `src/scanner/check-source.js`, used by the hourly scanner too). Only never-checked sources in the user's own lists; private addresses are never fetched. The empty-list note now says all is well and that sources are checked every hour.
+- Duplicates (point 3): the same address written differently (http/https, `www.`, a trailing `/`) counts once, in the paste, the file and against the list (also in Edit).
+- Drop box back to its natural height (point 2); new Channels intro (point 4). Version 0.2.0 with its "What's new".
+- Checked: 63 unit tests, type-check, build. Locally, as a made-up user: Ken's 20 links all checked in 3 s, none failed; 12 sources read for first stories in 2 s (394 stories); a checked source isn't read again; another user's source is refused (404); a private address isn't fetched; `npm run scan` still works (13 sources, 0 not saved). In the browser: 21 lines with 2 BBC repeats show "19 links ready", 12 added and 7 not added with reasons, stories on the Stories tab, a brand-new site (engadget.com) "Working" with stories straight after adding, the smaller upload box, the Channels text, the new note. Test account, lists, sources and stories deleted afterwards.
+- Not checked: the 2-second limit itself (the local functions don't enforce it; the cloud logs and the measurement show the cause). An upload of a real file (same code path as paste).
+- Noted in `docs/known-issues.md`: a shared source can show "failing" right after its check passed.
+- Release: Ken deploys the new function first (`npx supabase functions deploy scan-new-sources`), then merges the release PR (the web app). `check-links` is unchanged: nothing to redeploy. The scanner picks up the moved code from `main` at its next run.
+
 ## 2026-11-04: After the first journalist (plan only, no code)
 
 - Ken's 9 points from testing live, grouped into 3 jobs in `docs/mvp-plan.md` ("After the first journalist"): sources and wording (v0.2.0), accounts (v0.3.0), analytics and privacy (v0.4.0).

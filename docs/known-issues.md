@@ -2,6 +2,12 @@
 
 Bugs found while working on something else. One entry each: date, what, where, how to see it.
 
+## 2026-11-04: A source can show "failing" right after its link check passed
+
+- Sources are shared between watch lists. When someone adds a site that's already in Wirescout and failed its last hourly check, the link check can pass (the site answered this time), yet the list shows the old "failing" status and a Fix button until the next hourly scan. Seen with Bloomberg, which blocks Wirescout only some of the time.
+- `scan-new-sources` reads only sources never checked before, so it doesn't refresh this one.
+- See it: add a site that's already failing in another list, at a moment it answers.
+
 ## 2026-11-03: Microsoft 365 drops the confirm email from the Gmail sender
 
 - A colleague at `insuranceassetrisk.com` signed up on live: the email is in the Gmail sender's Sent folder, with no bounce, but nowhere in his mailbox (not Junk, Other or his quarantine). Likely an admin-only quarantine; IT can't check yet.

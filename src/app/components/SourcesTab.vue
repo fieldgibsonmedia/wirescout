@@ -41,6 +41,7 @@ import SearchField from '@/components/ui/SearchField.vue';
 import SelectField from '@/components/ui/SelectField.vue';
 import TextField from '@/components/ui/TextField.vue';
 import {
+    addressKey,
     checkLinks,
     checkMessages,
     isWebAddress,
@@ -195,7 +196,7 @@ async function saveEdit() {
         editErrors.value = { url: 'Enter the full web address of a news page, starting with https://' };
         return;
     }
-    if (sources.value.some((other) => other.url === url)) {
+    if (sources.value.some((other) => other.id !== source.id && addressKey(other.url) === addressKey(url))) {
         editErrors.value = { url: 'This source is already in the list.' };
         return;
     }
@@ -224,9 +225,6 @@ async function saveEdit() {
 // Checks one link with the scanner's code: why it can't be used, or null if it works.
 async function checkLink(url: string) {
     const checks = await checkLinks([url]);
-    if (!checks) {
-        return "The link couldn't be checked. Please try again.";
-    }
     return checks[0].problem ? checkMessages(checks, ['This link'])[0] : null;
 }
 

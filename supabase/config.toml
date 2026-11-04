@@ -439,6 +439,12 @@ verify_jwt = false
 import_map = "./functions/check-links/deno.json"
 entrypoint = "./functions/check-links/index.ts"
 
+[functions.scan-new-sources]
+enabled = true
+verify_jwt = false
+import_map = "./functions/scan-new-sources/deno.json"
+entrypoint = "./functions/scan-new-sources/index.ts"
+
 # Post to MODX (docs/post-to-modx-plan.md). Each checks the user's sign-in itself (withSupabase).
 # Secrets: MAGAZINE_SESSION_KEY (magazine-connect, post-draft) and ANTHROPIC_API_KEY (draft-text);
 # locally in supabase/functions/.env, in the cloud set by Ken.
