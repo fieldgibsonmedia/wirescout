@@ -1,6 +1,7 @@
 // What's new in each version, newest first, for the dashboard's "What's new" card, in words a journalist would use.
 // The newest entry takes package.json's version, so the app shows one version everywhere. When the version goes up,
-// type the old number into this entry and add a new one on top. The version stays 0.1.0 until Ken says otherwise.
+// type the old number into this entry and add a new one on top. Every job that changes what users get raises the version
+// (docs/mvp-plan.md, Decisions).
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,

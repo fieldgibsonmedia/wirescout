@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: In production, and a version for every job
+
+- Ken invited the first journalist on 2026-11-03: Wirescout is in production. `CLAUDE.md` ("What is live"), `docs/project.md` and the plan say so. The cloud project is now off limits to Claude: Ken runs every step on it (migration pushes, function deploys, dashboard settings).
+- Ken's call: every job that changes what users get (app, digest, emails) raises the version, with a "What's new" entry: fixes 0.1.x, new features 0.x.0. Docs-only jobs don't. Written in the plan's Decisions, `docs/project.md` and `releaseNotes.ts`.
+- First Brevo digest: the 07:11 UTC run says 1 sent, 0 failed. Not confirmed yet that it reached an inbox (it was probably the colleague's).
+- Checked: type-check. Docs only, no version change.
+
 ## 2026-11-03: App emails through Brevo (own domain, part 2)
 
 - The scanner health, digest and admin emails take their sender from a new `EMAIL_FROM` instead of `EMAIL_USER` (Brevo's SMTP login isn't an address). The 3 workflows set `EMAIL_FROM: no-reply@wirescout.app` as a plain value. `.env.example` and `docs/project.md` updated.
