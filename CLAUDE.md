@@ -35,6 +35,8 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
 
 ## What is live (check it before every change)
 
+Wirescout is in production since 2026-11-03, when Ken invited the first journalist. Real people use the app, the digest and the cloud database: treat every part below as live (`safety.md`).
+
 - The scanner: `.github/workflows/scanner.yml` runs on `main` every hour at :17 (live since 2026-10-29).
     - It writes stories and source status to the cloud Supabase project with the secret key (`SUPABASE_SECRET_KEY`, Supabase key `wirescout_scanner`).
     - It emails only `ADMIN_EMAIL` (a developer), when the scanner itself looks broken (many sources fail at once). It never emails journalists.
@@ -45,13 +47,12 @@ If the session did not start at the repository root, tell Ken: "⚠️ Start Cla
 - The admin emails: `.github/workflows/admin.yml` runs on `main` every hour at :40 (from the release of the usage report job).
     - It emails only `ADMIN_EMAIL`: new access requests, and the monthly usage report (real names and addresses).
     - Never trigger the workflow, and never run `npm run admin` against the cloud project. Locally, point `EMAIL_*` at Mailpit.
-- The web app: `.github/workflows/deploy-app.yml` publishes it to GitHub Pages (`wirescout.app`, DNS at Namecheap) on every push to `main`. It uses the cloud Supabase project.
+- The web app: `.github/workflows/deploy-app.yml` publishes it to GitHub Pages (`wirescout.app`, DNS at Namecheap) on every push to `main`. It uses the cloud Supabase project. Journalists use it.
 - The repo is public: everything committed is visible to anyone.
-- Supabase cloud project: Ken's account only, no journalists yet. Sign-ups are open to allowed email domains. You may push migrations to it after Ken's "approve".
+- Supabase cloud project: production, with journalists' accounts and data. Sign-ups are open to allowed email domains.
+    - Never connect to it, to read or to write. Ken runs every step on it himself: migration pushes, function deploys, dashboard settings. Prepare the exact steps.
     - Its settings live in the dashboard (Ken changes them): site URL, the sign-up hook, the 3 email templates, and SMTP (Brevo, sending as `no-reply@wirescout.app`).
-    - Once journalists sign up, it is production: from then on, treat it like any live database (`safety.md`).
 - Develop and test against the local Supabase (`docs/project.md`), never against the cloud project.
-- When journalists start using the web app, update this section.
 
 ## Git hosting
 

@@ -25,7 +25,7 @@ Agreed with Ken on 2026-10-27. Turns the prototype into an internal MVP for more
 | Look | Apple's web blue (`#0071E3`) as the primary colour until Wirescout has a brand | Apple's system blue `#007AFF` is too light for white button text (4.0:1) |
 | Bulk sources | File upload (`.xlsx`, `.csv`, `.txt`) with `read-excel-file`, loaded only for `.xlsx` | People expect to upload a file; paste-only was rejected. Keeps the app small for everyone else |
 | Analytics | Our own usage report job, no PostHog | PostHog is too much for now |
-| Version | Stays 0.1.0 until Ken says otherwise, when real users are invited (Ken, 2026-11-03). Every place that shows it reads `package.json` | Ken's call; one source keeps it consistent |
+| Version | Every job that changes what users get (app, digest, emails) raises it, with a "What's new" entry (Ken, 2026-11-04): a fix or small tweak the last number (0.1.0 → 0.1.1), a new feature the middle one (0.1.0 → 0.2.0). Docs-only jobs don't. Every place that shows it reads `package.json`. Before: 0.1.0 until real users were invited | Journalists use it now: the version tells them what changed |
 
 ## Scanning without selectors
 
@@ -334,6 +334,7 @@ Jobs added on 2026-10-27 sit between the steps, so the step numbers stay the sam
 6. Post from Wirescout (last: it touches the live magazine sites)
     - Before the first journalist (Ken's 12 changes, agreed 2026-11-03), still v0.1.0: version, missing digest, drafts to magazines, Remember me, polish, admin source alerts
     - Own domain `wirescout.app` (agreed 2026-11-03): account emails through Brevo (Ken, no code), then app emails through Brevo, then the app at `wirescout.app`
+    - In production since 2026-11-03: Ken invited the first journalist
 
 ## Known risks
 
