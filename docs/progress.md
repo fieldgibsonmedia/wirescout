@@ -2,10 +2,19 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: PostHog reverse proxy (fix), v0.5.1
+
+- Ad blockers stopped all PostHog analytics (`docs/known-issues.md`). Fix: PostHog's managed reverse proxy at `relay.wirescout.app` (plan in `docs/mvp-plan.md`, "PostHog reverse proxy", approved by Ken).
+- Done by Ken on 2026-11-04, before any code: the managed proxy `relay.wirescout.app` created in PostHog, and its CNAME record `relay` added at Namecheap. Checked from here: Namecheap's servers answer with PostHog's EU proxy (`*.cf-prod-eu-proxy.europehog.com`). That name isn't in EasyPrivacy, uBlock Origin's privacy list or Privacy Badger's seed list, so uBlock's CNAME uncloaking shouldn't catch it.
+- Code: `.env.production` sets `VITE_POSTHOG_HOST=https://relay.wirescout.app`; `analytics.ts` sets `ui_host` to `https://eu.posthog.com`. Version 0.5.1 with its "What's new".
+- Checked: 66 unit tests, type-check, build (the bundle has the new host, `ui_host` and 0.5.1).
+- The proxy went live a few minutes after the record: `https://relay.wirescout.app/static/array.js` answers 200 with a valid certificate (a public file, no data sent).
+- Not checked: sending events through the proxy before the release (that would send data to the real PostHog).
+
 ## 2026-11-04: Analytics and privacy (after the first journalist, job 3), v0.5.0
 
 - PostHog (EU, project 334525) replaces Wirescout's own usage counting. `src/app/lib/analytics.ts`: only while signed in, tied to the user id (never name or email); nothing kept in the browser; pages by screen name, the 7 main features, errors, and replays with typed text hidden. Names and emails the app shows (Account settings, the account menu, a colleague's name in the Send dialog) are masked in replays (`ph-mask`); Manager pages aren't recorded. The Privacy policy says "pseudonymised", never "anonymised" (Ken, 2026-11-04). Search terms are cut from addresses.
-- Settings → Manager → Analytics: active users (with names from our database), features used, most shared stories, top pages, errors, replays (open in PostHog), per day, week, month or year. New function `analytics` (code and tests in `src/analytics/posthog.js`). "Download report": a PDF without errors and replays (jsPDF, loaded on click).
+- Settings → Manager → Analytics: active users (with names from our database), features used, most shared stories, top pages, errors, replays (open in PostHog), over 1 Day, 1 Week, 1 Month, 6 Months, 1 Year or All. New function `analytics` (code and tests in `src/analytics/posthog.js`). "Download report": a PDF without errors and replays (jsPDF, loaded on click).
 - Deleting an account also asks PostHog to delete the person, with their events and replays.
 - Privacy policy link next to the version; the Usage section left Account settings. `usage.ts` removed; `admin.yml` sends only access requests (the monthly usage report and `months.js` removed). Old usage tables untouched.
 - New dependencies: `posthog-js` 1.438.13 and `jspdf` 4.2.1 (no new audit issues). posthog-js adds about 107 kB gzipped to the first load.
@@ -14,7 +23,11 @@ Newest first. One entry per job: date, what was done, what's next.
 - Version 0.5.0 with its "What's new". 1 migration (`20261104141440_privacy_accepted.sql`).
 - Checked: 66 unit tests (6 new, against made-up PostHog answers), 138 database tests, db lint, type-check, build. In the browser with 2 made-up local accounts (Ken's ok) and a local stand-in for PostHog (nothing sent to the real one): each event arrives with the user id only; no PostHog cookies or storage; search terms cut; an error captured; replays with typed text as `***`, own name and email masked, no replay on Manager pages; nothing sent after sign-out; Analytics for the super admin with names and every section; a journalist sent away (and the function refuses: 403, and 401 signed out); the PDF (1 page, no errors or replays); the Privacy policy; deleting an account asks PostHog to delete the person. Fixed along the way: saving a story wasn't recorded. Test accounts and data deleted afterwards.
 - Not checked: the real PostHog. Its answers to the HogQL queries (the error message field, the replays table) and the replay link format are checked only on live, by Ken, after release. Phone width and dark mode.
+- Released: PR #25. Done by Ken on 2026-11-04, before the merge: migration `20261104141440_privacy_accepted.sql` pushed, PostHog's "Record user sessions" and "Discard client IP data" turned on, the secrets `POSTHOG_PROJECT_ID` and `POSTHOG_PERSONAL_API_KEY` set, `analytics` deployed and `delete-account` redeployed. PR merged at 14:25 UTC; the web app deploy passed, and `wirescout.app` serves v0.5.0 with PostHog's EU key (checked in its code). Not checked yet: Analytics against the real PostHog.
 - Release, in this order (Ken): push the migration (`npx supabase db push`); in PostHog's project settings turn on "Record user sessions" and "Discard client IP data"; set the function secrets (`POSTHOG_PERSONAL_API_KEY`, `POSTHOG_PROJECT_ID`); deploy `analytics` and redeploy `delete-account`; then merge the release PR.
+- Checked on live by Ken (14:35 UTC): Analytics loads every section from the real PostHog without errors (key, access and all 6 queries work), but shows "Nothing in this period". PostHog's Activity page had no events. Cause: Ken's Firefox add-ons (Privacy Badger, uBlock Origin) block every request to `*.posthog.com`; the app sends them (seen in his network log, retried 3 times). `docs/known-issues.md` has it.
+- Should have been flagged in the plan (Ken, 2026-11-04): ad blockers stopping browser analytics is well known, and PostHog's docs recommend a reverse proxy.
+- Next (Ken's go, 2026-11-04, new session): plan PostHog's managed reverse proxy (free for PostHog Cloud): one DNS record at Namecheap for a neutrally named `wirescout.app` subdomain, and the app's `api_host` pointing at it (`ui_host` stays `https://eu.posthog.com`). Ken's "approve" before coding. Ken agreed the proxy is right for an internal tool that discloses PostHog in its privacy policy. To confirm the rest works meanwhile: turn both add-ons off for `wirescout.app`, then check Analytics → 1 Day and PostHog's Activity page.
 
 ## 2026-11-04: System admins (after job 2's release), v0.4.0
 

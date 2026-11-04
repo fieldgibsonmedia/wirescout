@@ -49,6 +49,7 @@ export function startAnalytics(id: string) {
     }
     posthog.init(key, {
         api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://eu.i.posthog.com',
+        ui_host: 'https://eu.posthog.com',
         persistence: 'memory',
         bootstrap: { distinctID: id, isIdentifiedID: true },
         person_profiles: 'identified_only',
