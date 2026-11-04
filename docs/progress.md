@@ -2,11 +2,22 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: Analytics always fresh (fix), v0.5.3
+
+- Found on live by Ken: his replay showed under 1 Day and 1 Week, not 1 Month. Cause, from PostHog's source code (`hogql_query_runner.py`, `caching/utils.py`): a HogQL query sent with the default `refresh` gets PostHog's cached answer for up to 6 hours. The 1 Month query had first run before the replay existed. This hit every section and period.
+- Fix: `runQueries` (`src/analytics/posthog.js`) sends `refresh: "force_blocking"`, so every load runs the queries. Version 0.5.3 with its "What's new".
+- Checked: the unit test's new check fails on the old code and passes now; 66 unit tests, type-check, build.
+- Not checked: the real PostHog with the new setting (only on live, after Ken redeploys `analytics`). `delete-account` uses the same file but not the changed function: no redeploy needed.
+- Release, in this order (Ken): redeploy `analytics` (`npx supabase functions deploy analytics`), then merge the release PR.
+
 ## 2026-11-04: Replay script bundled (fix), v0.5.2
 
 - uBlock Origin blocked the replay script even through the proxy (its file name, `posthog-recorder.js`, is blocked on every site). `analytics.ts` now bundles it (`posthog-js/dist/posthog-recorder`), and PostHog uses the bundled copy instead of loading it. Version 0.5.2 with its "What's new".
 - Checked: 66 unit tests, type-check, build; the bundle registers the recorder (`__PosthogExtensions__.rrweb` and `initSessionRecording`), which posthog-js checks before loading the script. First load: 292 → 357 kB gzipped.
 - Not checked: a replay in the browser (the block needs uBlock and the real PostHog). On live (Ken), with uBlock on: Network, filter `recorder`, nothing blocked; a new replay in Analytics.
+- Released: PR #27, merged by Ken at 15:12 UTC; the web app deploy passed, and `wirescout.app` serves v0.5.2 with the bundled recorder (checked in its code).
+- Checked on live by Ken, with Privacy Badger and uBlock Origin on: nothing blocked (Network, filter `recorder`), and his replay shows in Analytics → 1 Day. Events, Analytics and replays all work through the add-ons now; the ad blocker entry left `docs/known-issues.md`.
+- Next: Ken's pick. Open in `docs/known-issues.md`: the access request email still points to the Table Editor, and a source can show "failing" right after its check passed.
 
 ## 2026-11-04: PostHog reverse proxy (fix), v0.5.1
 

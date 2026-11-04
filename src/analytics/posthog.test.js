@@ -44,6 +44,7 @@ test("queries go to PostHog's EU API with the key, at most 3 at once", async () 
   assert.equal(fake.calls[0].url, "https://eu.posthog.com/api/projects/123/query/");
   assert.equal(fake.calls[0].options.headers.Authorization, "Bearer made-up-key");
   assert.equal(fake.calls[0].body.query.kind, "HogQLQuery");
+  for (const call of fake.calls) assert.equal(call.body.refresh, "force_blocking", "never PostHog's saved answer");
   assert.ok(fake.mostAtOnce() <= 3);
   assert.deepEqual(answers.errors, []);
 });
