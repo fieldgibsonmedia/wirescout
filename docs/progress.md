@@ -12,6 +12,8 @@ Newest first. One entry per job: date, what was done, what's next.
 - Not checked: the 2-second limit itself (the local functions don't enforce it; the cloud logs and the measurement show the cause). An upload of a real file (same code path as paste).
 - Noted in `docs/known-issues.md`: a shared source can show "failing" right after its check passed.
 - Release: Ken deploys the new function first (`npx supabase functions deploy scan-new-sources`), then merges the release PR (the web app). `check-links` is unchanged: nothing to redeploy. The scanner picks up the moved code from `main` at its next run.
+- Released (Ken): `scan-new-sources` deployed, then PR #22 merged at 10:55 UTC; the web app deploy passed, and `wirescout.app` serves v0.2.0. Not checked yet: a real add on live, and the scanner's next run (:17) with the moved code.
+- Next: job 2, accounts (plan in `docs/mvp-plan.md`; Ken's "approve" before coding).
 
 ## 2026-11-04: After the first journalist (plan only, no code)
 
