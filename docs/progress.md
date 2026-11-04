@@ -2,6 +2,18 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: Accounts (after the first journalist, job 2), v0.3.0
+
+- Super admin: `profiles.is_super_admin`, which users can't set. Ken sets it with one SQL line (`docs/project.md`, Admin tasks).
+- Settings → Manager (Ken's change: the super admin's own section in the side nav, under Settings) → System settings: who can sign up, domains and single addresses, with Add and Remove (asks first). The database allows it for the super admin only; the page sends anyone else to the dashboard. Analytics (job 3) goes in Manager too.
+- Delete account at the bottom of Account settings, with a confirmation. New function `delete-account`: ends the person's MODX sessions, then deletes the user; the database deletes their watch lists, saved stories, connections and usage.
+- Ken's call: a deleted account's sent drafts stay in the publish log without the person, so colleagues still see "A former colleague already sent this story" (`publish_log.user_id` now nullable, `story_sends` updated).
+- 1 migration (`20261104110801_accounts.sql`). Version 0.3.0 with its "What's new".
+- Checked: 125 database tests (15 new), db lint, 63 unit tests, type-check, build; the function refuses calls without sign-in. In the browser with 2 made-up local accounts (Ken's ok): the Manager section for the super admin only, a bad entry, a made-up domain added (lower-cased) and refused a second time, removed after the question; the journalist without Manager and sent from System settings to the dashboard; Delete account (the account, its list and a fake connection gone, back to sign-in). Both test accounts deleted afterwards; the allowed list as before.
+- Not checked: ending a real MODX session on delete (no magazine copy running; same `logout` call as Disconnect). Phone width and light mode.
+- Also checked: the scanner's first run with the moved code (11:24 UTC) passed.
+- Release, in this order (Ken): push the migration (`npx supabase db push`), deploy the function (`npx supabase functions deploy delete-account`), run the super admin SQL line, then merge the release PR.
+
 ## 2026-11-04: Sources and wording (after the first journalist, job 1), v0.2.0
 
 - Paste error (point 1): the live `check-links` logs show "CPU Time exceeded" (2.2 s and 2.5 s, over the free plan's 2 s per call) on 3 Nov 19:11 and 4 Nov 09:16 UTC. Ten big news pages in one call need about 2.4 s. The empty line wasn't the cause. Fix: the app checks one link per call (5 at a time); a check that fails leaves out only that link ("couldn't be checked. Please try again"), and the rest are added.

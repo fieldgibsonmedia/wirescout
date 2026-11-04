@@ -1,5 +1,6 @@
 // The app's pages. Every page needs a signed-in user except the ones marked public (signed-out visitors only)
-// or anyone (both).
+// or anyone (both). Pages marked superAdmin are for the super admin only (Settings → Manager); the database
+// refuses everyone else's reads and changes there too.
 // Signed-in pages are children of the layout, so the side nav stays in place between them.
 import { createRouter, createWebHistory } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -17,12 +18,14 @@ import SetPasswordPage from '@/pages/SetPasswordPage.vue';
 import SignInPage from '@/pages/SignInPage.vue';
 import SignUpPage from '@/pages/SignUpPage.vue';
 import StoryPage from '@/pages/StoryPage.vue';
+import SystemSettingsPage from '@/pages/SystemSettingsPage.vue';
 import WatchListPage from '@/pages/WatchListPage.vue';
 
 declare module 'vue-router' {
     interface RouteMeta {
         public?: boolean;
         anyone?: boolean;
+        superAdmin?: boolean;
     }
 }
 
@@ -44,6 +47,7 @@ export const router = createRouter({
                 },
                 { path: 'settings/digest', name: 'digest-settings', component: DigestSettingsPage },
                 { path: 'settings/channels', name: 'channels-settings', component: ChannelsSettingsPage },
+                { path: 'settings/system', name: 'system-settings', component: SystemSettingsPage, meta: { superAdmin: true } },
                 { path: 'account', name: 'account-settings', component: AccountSettingsPage },
             ],
         },
@@ -76,6 +80,13 @@ router.beforeEach(async (to) => {
 
     if (to.meta.public && data.session) {
         return { name: 'dashboard' };
+    }
+
+    if (to.meta.superAdmin) {
+        const { data: allowed } = await supabase.rpc('is_super_admin');
+        if (!allowed) {
+            return { name: 'dashboard' };
+        }
     }
 });
 
