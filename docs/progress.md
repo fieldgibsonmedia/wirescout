@@ -2,6 +2,15 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: PostHog reverse proxy (fix), v0.5.1
+
+- Ad blockers stopped all PostHog analytics (`docs/known-issues.md`). Fix: PostHog's managed reverse proxy at `relay.wirescout.app` (plan in `docs/mvp-plan.md`, "PostHog reverse proxy", approved by Ken).
+- Done by Ken on 2026-11-04, before any code: the managed proxy `relay.wirescout.app` created in PostHog, and its CNAME record `relay` added at Namecheap. Checked from here: Namecheap's servers answer with PostHog's EU proxy (`*.cf-prod-eu-proxy.europehog.com`). That name isn't in EasyPrivacy, uBlock Origin's privacy list or Privacy Badger's seed list, so uBlock's CNAME uncloaking shouldn't catch it.
+- Code: `.env.production` sets `VITE_POSTHOG_HOST=https://relay.wirescout.app`; `analytics.ts` sets `ui_host` to `https://eu.posthog.com`. Version 0.5.1 with its "What's new".
+- Checked: 66 unit tests, type-check, build (the bundle has the new host, `ui_host` and 0.5.1).
+- The proxy went live a few minutes after the record: `https://relay.wirescout.app/static/array.js` answers 200 with a valid certificate (a public file, no data sent).
+- Not checked: sending events through the proxy before the release (that would send data to the real PostHog).
+
 ## 2026-11-04: Analytics and privacy (after the first journalist, job 3), v0.5.0
 
 - PostHog (EU, project 334525) replaces Wirescout's own usage counting. `src/app/lib/analytics.ts`: only while signed in, tied to the user id (never name or email); nothing kept in the browser; pages by screen name, the 7 main features, errors, and replays with typed text hidden. Names and emails the app shows (Account settings, the account menu, a colleague's name in the Send dialog) are masked in replays (`ph-mask`); Manager pages aren't recorded. The Privacy policy says "pseudonymised", never "anonymised" (Ken, 2026-11-04). Search terms are cut from addresses.
