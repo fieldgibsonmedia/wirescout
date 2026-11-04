@@ -45,7 +45,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `supabase/migrations/`: the database schema and access rules, one SQL file per change.
 - `supabase/functions/check-links/`: an Edge Function that checks links before they're added, with the scanner's own code (`src/scanner/check-link.js`). The app sends one link per call (the free plan's 2 seconds of processing per call); signed-in users only.
 - `supabase/functions/delete-account/`: deletes the signed-in user's own account (Account settings), ending their MODX sessions first. The database deletes the rest with the profile, and PostHog what it recorded about them.
-- `supabase/functions/analytics/`: Settings → Manager → Analytics, for super admins. Reads PostHog with the personal API key, adds names and story titles from the database. Its code is in `src/analytics/posthog.js` (tests next to it).
+- `supabase/functions/analytics/`: Manager → Analytics, for super admins. Reads PostHog with the personal API key, adds names and story titles from the database. Its code is in `src/analytics/posthog.js` (tests next to it).
 - `supabase/functions/scan-new-sources/`: reads a source just added, once, and saves its stories and status with the scanner's own code (`src/scanner/check-source.js`), so a new list shows stories right away. One source per call, only the user's own sources that were never checked or failed their last check.
 - `supabase/functions/magazine-connect/`, `post-draft/`, `draft-text/`: posting drafts to the magazines' MODX (`docs/post-to-modx-plan.md`), with `_shared/magazines.ts`. Their code lives in `src/publish/`: `modx.js` (the MODX connector), `session-crypto.js` (locks the stored sessions), `draft.js` (the suggested draft text). Tests next to them. `modx-staging-test.js` is the proven reference for the connector calls.
 - `supabase/tests/database/`: access tests (pgTAP).
@@ -76,7 +76,7 @@ The logs show only totals: the repo is public, and which sources people follow i
 ## Usage analytics and admin emails
 
 - The app sends usage to PostHog (EU, project 334525), only while someone is signed in, tied to their user id: the screens they open, the main features (sources added, stories shared, drafts sent, searches, stories saved, digest links opened, settings changed), errors, and replays with typed text hidden. Nothing is kept in the browser (no cookies). Locally there's no key, so nothing is sent.
-- Super admins read it in Settings → Manager → Analytics, over 1 Day, 1 Week, 1 Month, 6 Months, 1 Year or All, and download the numbers as a PDF.
+- Super admins read it in Manager → Analytics, over 1 Day, 1 Week, 1 Month, 6 Months, 1 Year or All, and download the numbers as a PDF.
 - New accounts must agree to the privacy policy at sign-up; `profiles.privacy_accepted_at` records when (empty for accounts made before v0.5.0).
 - Ad blockers (e.g. Privacy Badger, uBlock Origin) block PostHog's own addresses, so their users aren't counted yet. Fix planned: PostHog's managed reverse proxy (`docs/mvp-plan.md`).
 - The old usage tables (`active_days`, `usage_events`, `usage_reports`) stay with their data, but nothing writes to them since v0.5.0.
@@ -119,9 +119,9 @@ npm ci
 
 ## Admin tasks (in Studio, or the cloud dashboard)
 
-- **Super admins:** see Settings → Manager in the app. Set the first one with `update public.profiles set is_super_admin = true where email = '<address>';` (SQL Editor). After that, super admins add and remove each other in Settings → Manager → System settings → System admins. Wirescout always keeps at least one: the database refuses to remove or delete the last one.
-- **Let someone sign up:** Settings → Manager → System settings → Platform access → Add, with a domain (`example.com`) or one full address. Or Table Editor → `allowed_email_domains` → Insert row, lower case.
-- **Access requests:** emailed to `ADMIN_EMAIL`, listed in Table Editor → `access_requests`. Add the address in Settings → Manager → System settings → Platform access, reply by email, then set `handled_at` to now.
+- **Super admins:** see Manager in the app's side nav. Set the first one with `update public.profiles set is_super_admin = true where email = '<address>';` (SQL Editor). After that, super admins add and remove each other in Manager → System settings → System admins. Wirescout always keeps at least one: the database refuses to remove or delete the last one.
+- **Let someone sign up:** Manager → System settings → Platform access → Add, with a domain (`example.com`) or one full address. Or Table Editor → `allowed_email_domains` → Insert row, lower case.
+- **Access requests:** emailed to `ADMIN_EMAIL`, listed in Table Editor → `access_requests`. Add the address in Manager → System settings → Platform access, reply by email, then set `handled_at` to now.
 - **A magazine for a user:** nothing to do. Every magazine is offered to everyone; the journalist adds it with their own MODX account (Settings → Channels).
 - **A leaver:** they can delete their own account (Account settings → Delete account). Otherwise it stays until you delete it: Authentication → Users → the user → Delete. Their watch lists go with it (their MODX sessions then simply expire).
 

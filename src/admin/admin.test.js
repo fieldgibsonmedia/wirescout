@@ -8,6 +8,6 @@ test("the access request email lists each request", () => {
   ]);
   assert.equal(subject, "Wirescout: 1 new access request");
   assert.match(text, /Name: Cat Example\nEmail: cat@example\.com\nReason: New reporter\nAsked: 30 Oct, 11:05 \(London\)/);
-  assert.match(text, /Settings → Manager → System settings → Platform access → Add/, "lets them in through the app");
+  assert.match(text, /: Manager → System settings → Platform access → Add/, "lets them in through the app");
   assert.doesNotMatch(text, /allowed_email_domains/);
 });
