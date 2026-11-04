@@ -38,6 +38,8 @@ export function buildDigest({ lists, profile, appUrl }) {
     sources: (list) => `${appUrl}/lists/${list.id}?tab=sources&from=digest`,
     story: (list, story) => `${appUrl}/lists/${list.id}/stories/${story.id}?from=digest`,
     settings: `${appUrl}/settings/digest`,
+    // A PNG, not the app's SVG: most email apps don't show SVG. Made from src/app/components/BrandIcon.vue.
+    icon: `${appUrl}/brand-icon.png`,
   };
   const subject = `Wirescout: ${plural(totalNew, "new story", "new stories")} in ${plural(listsWithNew, "watch list", "watch lists")}`;
   const footer = `Sent Monday to Friday at ${profile.digest_time.slice(0, 5)} (${profile.time_zone}).`;
@@ -124,7 +126,7 @@ function buildHtml({ sections, links, footer, dateFormat, subject }) {
     <tr><td align="center" style="padding: 24px 12px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; font-family: ${FONT}; color: ${TEXT};">
         <tr><td style="padding: 0 4px;">
-          <a href="${links.dashboard}" style="font-size: 22px; font-weight: 700; color: ${TEXT}; text-decoration: none;">Wirescout</a>
+          <a href="${links.dashboard}" style="font-size: 22px; font-weight: 700; color: ${TEXT}; text-decoration: none;"><img src="${links.icon}" width="28" height="28" alt="" style="display: inline-block; vertical-align: middle; margin-right: 8px; border: 0;"><span style="vertical-align: middle;">Wirescout</span></a>
         </td></tr>
         ${blocks.join("")}
         <tr><td style="padding: 20px 4px 0; font-size: 13px; color: ${MUTED};">

@@ -2,12 +2,54 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: Only super admin: a dialog instead of a message, v0.5.8
+
+- Ken's point: the "only super admin" message showed under Delete account, at the bottom of the page, easy to miss. Delete account now opens a dialog: "Assign another super admin first", the same text, Cancel and Go to System admins (System settings → System admins). Version 0.5.8 with its "What's new".
+- Checked: type-check, build; in the browser with a made-up local super admin (Ken's ok): the dialog, Cancel, the button opening the System admins tab; no console errors. Test account deleted afterwards (with `keep_a_super_admin` off for that one delete, then on again).
+- Not checked: dark mode and phone width.
+- Release: web app only. `delete-account` still refuses on its own (409).
+
+## 2026-11-04: All stories · Saved switch easier to see, v0.5.7
+
+- Ken's point: the option not chosen had no background and got lost on the grey page. It's white now (`bg-base-100`, the cards' colour: dark grey in dark mode). Version 0.5.7 with its "What's new".
+- Checked: type-check, build; in the browser with a made-up local account (Ken's ok), both options chosen in turn. Test data deleted afterwards.
+- Not checked: dark mode and phone width.
+- Release: web app only.
+
+## 2026-11-04: Access request email points to Platform access (fix)
+
+- From `docs/known-issues.md`: the email still said to let people in through the Table Editor. It now says Manager → System settings → Platform access → Add (Manager is its own section of the side nav, not under Settings: Ken, while testing); `handled_at` stays in the Table Editor (the app has no screen for requests). `docs/project.md`'s Admin tasks say the same.
+- No version change: only `ADMIN_EMAIL` gets this email, not journalists.
+- Checked: the admin test's new check fails on the old text and passes now; 66 unit tests.
+- Not checked: a local `npm run admin` into Mailpit (needs a made-up access request in the local database; the test covers the text).
+- Release: `admin.yml` picks it up from `main` at its next run; nothing to deploy.
+
+## 2026-11-04: A source added shows "failing" after its check passed (fix), v0.5.6
+
+- From `docs/known-issues.md`. Cause: the app and `scan-new-sources` read only sources never checked, so a shared source that failed its last hourly check kept its old status until the next scan.
+- Fix: both also read a source that failed its last check (`src/app/lib/sources.ts`, `supabase/functions/scan-new-sources/index.ts`). A working source is still never read from there. Version 0.5.6 with its "What's new".
+- Checked: reproduced locally before the fix (a real, working feed marked as failing; added it: "1 added", row still red with Fix); after it, the same steps show it working with 31 stories. A second call doesn't read it again; a source outside the user's lists is refused (404). 66 unit tests, type-check, build. Made-up account and test data deleted afterwards (Ken's ok).
+- Release: Ken redeploys the function first (`npx supabase functions deploy scan-new-sources`), then merges the release PR.
+
+## 2026-11-04: The robot with the name, v0.5.5
+
+- Ken's points: the name "Wirescout" goes with the robot icon wherever possible, and that's a rule (`docs/mvp-plan.md`, Decisions, "Brand").
+- Sign-in screens (one layout, `FormLayout.vue`): the robot and "Wirescout" at the top of the card, centred (Ken, while testing before the release), then the screen title. The card a little wider (384 → 416 px, Ken's ask). "Sign in to Wirescout" is now "Sign in", "Create your Wirescout account" now "Sign up".
+- Digest email and the 3 account emails: the robot before "Wirescout" at the top. A PNG made from the same drawing (`public/brand-icon.png`, served at `wirescout.app/brand-icon.png`): most email apps don't show SVG. Where images are blocked (Outlook, until allowed), the name still shows, with no broken-image box (`alt=""`).
+- Not done: the scanner and access request emails (plain text, developer only). The browser tab icon: offered, not agreed yet.
+- Version 0.5.5 with its "What's new".
+- Checked: 66 unit tests (the digest test now expects the robot), type-check, build (the PNG is in it). In the browser: Sign in, Sign up, Forgot password, Request access; the digest and the 3 account emails written with made-up data, the robot loading from the local app.
+- Not checked: Confirm and Set password (need an email link; same layout); dark mode and phone width; real email apps (Gmail, Outlook).
+- Release: the web app and digest go live with the merge. Then Ken pastes the 3 updated templates (`supabase/templates/`) into the cloud dashboard (Authentication → Emails), after the merge, so the image is live first.
+
 ## 2026-11-04: Privacy policy on what recordings show, v0.5.4
 
 - Ken's point, from watching replays: people may fear the recording sees more than Wirescout. The policy now adds: "Recordings show only Wirescout's own pages, as they appear in its tab. They never capture your computer or phone, its screen, other apps, other tabs or websites, or anything else in your browser." (Ken's wording change: the computer named, not only the browser.) True of PostHog's recorder: it records the page's own content in its tab only.
 - Version 0.5.4 with its "What's new".
 - Checked: 66 unit tests, type-check, build; in the browser, the policy from the sign-up page (the new sentence, the dialog still fits without scrolling).
 - Release: web app only, together with v0.5.3 in one release PR.
+- Released with v0.5.3: PR #28, merged by Ken at 15:32 UTC; the web app deploy passed, and `wirescout.app` serves v0.5.4 with the new policy sentence (checked in its code). `analytics` was redeployed before the merge.
+- Next: Ken's pick. Open in `docs/known-issues.md`: the access request email still points to the Table Editor, and a source can show "failing" right after its check passed.
 
 ## 2026-11-04: Analytics always fresh (fix), v0.5.3
 

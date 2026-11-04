@@ -5,6 +5,22 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['For super admins: if you are the only one, Delete account opens a message with a button to System admins, to assign another first.'],
+    },
+    {
+        version: '0.5.7',
+        notes: ['The All stories · Saved switch in a watch list is easier to see: the option not chosen has a white background.'],
+    },
+    {
+        version: '0.5.6',
+        notes: ['Fixed: a source you add could show as failing, although its link check had just passed.'],
+    },
+    {
+        version: '0.5.5',
+        notes: ['The Wirescout robot now sits next to the name on the sign-in screens, in the daily digest and in account emails.'],
+    },
+    {
+        version: '0.5.4',
         notes: ["The Privacy policy now says that session recordings show only Wirescout's own pages, never your computer, screen or other tabs."],
     },
     {

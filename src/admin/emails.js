@@ -20,8 +20,8 @@ export function buildAccessRequestsEmail(requests) {
     text:
       `${requests.length === 1 ? "Someone asked" : "These people asked"} for access to Wirescout:\n\n` +
       `${blocks.join("\n\n")}\n\n` +
-      "To let someone in: Table Editor → allowed_email_domains → Insert row, with their address or domain (lower case). " +
-      "Reply to them by email, then set handled_at on their request in access_requests.\n",
+      "To let someone in: Manager → System settings → Platform access → Add, with their address or domain. " +
+      "Reply to them by email, then set handled_at on their request (Table Editor → access_requests).\n",
   };
 }
 

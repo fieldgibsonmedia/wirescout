@@ -295,7 +295,7 @@ onMounted(load);
                             ] as const"
                             :key="option.value"
                             type="button"
-                            :class="['btn join-item', view === option.value ? 'btn-primary' : 'border-base-300']"
+                            :class="['btn join-item', view === option.value ? 'btn-primary' : 'border-base-300 bg-base-100']"
                             :aria-pressed="view === option.value"
                             @click="view = option.value"
                         >
