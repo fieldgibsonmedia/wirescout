@@ -2,6 +2,12 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: After the first journalist (plan only, no code)
+
+- Ken's 9 points from testing live, grouped into 3 jobs in `docs/mvp-plan.md` ("After the first journalist"): sources and wording (v0.2.0), accounts (v0.3.0), analytics and privacy (v0.4.0).
+- Ken's calls: new sources' stories are saved right away, plus a note; PostHog replaces our own usage counting.
+- Next: job 1, sources and wording.
+
 ## 2026-11-04: In production, and a version for every job
 
 - Ken invited the first journalist on 2026-11-03: Wirescout is in production. `CLAUDE.md` ("What is live"), `docs/project.md` and the plan say so. The cloud project is now off limits to Claude: Ken runs every step on it (migration pushes, function deploys, dashboard settings).
