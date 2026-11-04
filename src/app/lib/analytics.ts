@@ -5,6 +5,9 @@
 // Manager pages show everyone's names and emails, so they're never in a replay.
 // Without a key (locally, .env.development) nothing is sent: every function here does nothing.
 import posthog, { type CaptureResult } from 'posthog-js';
+// The replay script, bundled: PostHog would otherwise load it as posthog-recorder.js, a file name ad blockers block
+// on every site, even through our proxy.
+import 'posthog-js/dist/posthog-recorder';
 
 const key = import.meta.env.VITE_POSTHOG_KEY;
 
