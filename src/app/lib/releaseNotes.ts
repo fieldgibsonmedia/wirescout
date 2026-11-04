@@ -5,6 +5,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['Fixed: session replays in usage statistics were missing for some browsers.'],
+    },
+    {
+        version: '0.5.1',
         notes: ['Fixed: usage statistics were missing for some browsers.'],
     },
     {
