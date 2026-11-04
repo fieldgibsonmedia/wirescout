@@ -467,9 +467,17 @@ import_map = "./functions/draft-text/deno.json"
 entrypoint = "./functions/draft-text/index.ts"
 
 # Deletes the signed-in user's own account (Account settings), ending their MODX sessions first.
-# Needs MAGAZINE_SESSION_KEY to unlock those sessions.
+# Needs MAGAZINE_SESSION_KEY to unlock those sessions, and the PostHog secrets (below) to delete their usage there.
 [functions.delete-account]
 enabled = true
 verify_jwt = false
 import_map = "./functions/delete-account/deno.json"
 entrypoint = "./functions/delete-account/index.ts"
+
+# Settings → Manager → Analytics, for super admins (src/analytics/posthog.js).
+# Secrets: POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID; in the cloud set by Ken. Locally unset: "isn't set up yet".
+[functions.analytics]
+enabled = true
+verify_jwt = false
+import_map = "./functions/analytics/deno.json"
+entrypoint = "./functions/analytics/index.ts"

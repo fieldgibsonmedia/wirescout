@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import { disconnectMagazine, loadMagazines, magazines, type Magazine } from '@/lib/magazines';
+import { track } from '@/lib/analytics';
 import { profile, saveProfile } from '@/lib/profile';
 
 const magazinesFailed = ref(false);
@@ -72,6 +73,9 @@ async function save() {
         share_copy_link: shareOptions.value.copyLink,
     });
     busy.value = false;
+    if (ok) {
+        track('settings_changed', { setting: 'share_options' });
+    }
 
     saved.value = ok;
     failed.value = !ok;

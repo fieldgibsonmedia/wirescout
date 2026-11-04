@@ -3,9 +3,11 @@
 // behind on a magazine. Deleting the user removes their profile, and with it their watch lists (and the saved
 // stories in them), magazine connections and usage (the database's "on delete cascade"). Shared sources and
 // their stories stay: other lists may follow them. The publish log stays without the person, so colleagues still
-// see "A former colleague already sent this story". The only super admin can't delete theirs. Signed-in users only.
+// see "A former colleague already sent this story". What PostHog recorded about them is deleted too.
+// The only super admin can't delete theirs. Signed-in users only.
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
+import { deletePerson } from "../../../src/analytics/posthog.js";
 import { logout } from "../../../src/publish/modx.js";
 import { loadConnection, loadSite, reply } from "../_shared/magazines.ts";
 
@@ -30,6 +32,17 @@ export default {
 
     const { error } = await admin.auth.admin.deleteUser(userId);
     if (error) return reply(500, { error: "Your account couldn't be deleted. Please try again." });
+
+    // Then what PostHog recorded about them (Privacy policy). If PostHog doesn't answer, the account is gone
+    // anyway, and the function's log says so (without the person).
+    const posthog = {
+      projectId: Deno.env.get("POSTHOG_PROJECT_ID"),
+      apiKey: Deno.env.get("POSTHOG_PERSONAL_API_KEY"),
+      host: Deno.env.get("POSTHOG_HOST"),
+    };
+    if (posthog.projectId && posthog.apiKey && !(await deletePerson(posthog, userId))) {
+      console.error("A deleted account's usage couldn't be deleted in PostHog.");
+    }
     return reply(200, { status: "deleted" });
   }),
 };

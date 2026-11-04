@@ -119,14 +119,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "created_at": string,"digest_time": string | null,"email": string,"full_name": string | null,"id": string,"is_super_admin": boolean,"last_digest_at": string | null,"share_copy_link": boolean,"share_email": boolean,"share_linkedin": boolean,"time_zone": string
+                    "created_at": string,"digest_time": string | null,"email": string,"full_name": string | null,"id": string,"is_super_admin": boolean,"last_digest_at": string | null,"privacy_accepted_at": string | null,"share_copy_link": boolean,"share_email": boolean,"share_linkedin": boolean,"time_zone": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"digest_time"?: string | null,"email": string,"full_name"?: string | null,"id": string,"is_super_admin"?: boolean,"last_digest_at"?: string | null,"share_copy_link"?: boolean,"share_email"?: boolean,"share_linkedin"?: boolean,"time_zone"?: string
+                    "created_at"?: string,"digest_time"?: string | null,"email": string,"full_name"?: string | null,"id": string,"is_super_admin"?: boolean,"last_digest_at"?: string | null,"privacy_accepted_at"?: string | null,"share_copy_link"?: boolean,"share_email"?: boolean,"share_linkedin"?: boolean,"time_zone"?: string
                   }
                   Update: {
-                    "created_at"?: string,"digest_time"?: string | null,"email"?: string,"full_name"?: string | null,"id"?: string,"is_super_admin"?: boolean,"last_digest_at"?: string | null,"share_copy_link"?: boolean,"share_email"?: boolean,"share_linkedin"?: boolean,"time_zone"?: string
+                    "created_at"?: string,"digest_time"?: string | null,"email"?: string,"full_name"?: string | null,"id"?: string,"is_super_admin"?: boolean,"last_digest_at"?: string | null,"privacy_accepted_at"?: string | null,"share_copy_link"?: boolean,"share_email"?: boolean,"share_linkedin"?: boolean,"time_zone"?: string
                   }
                   Relationships: [
                     

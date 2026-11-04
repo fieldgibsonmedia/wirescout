@@ -4,12 +4,13 @@
 // The side nav comes first in the page so the Tab order matches what you see: brand and nav, then the top bar.
 // The top bar's search field opens the Search page. On phones it's an icon that opens the field over the bar.
 // Same layout as hub. It stays mounted between pages; only the page in the RouterView changes.
-import { AdjustmentsHorizontalIcon, Bars3Icon, BellAlertIcon, ListBulletIcon, MagnifyingGlassIcon, ShareIcon, Squares2X2Icon } from '@heroicons/vue/24/outline';
+import { AdjustmentsHorizontalIcon, Bars3Icon, ChartBarIcon, BellAlertIcon, ListBulletIcon, MagnifyingGlassIcon, ShareIcon, Squares2X2Icon } from '@heroicons/vue/24/outline';
 import { PlusIcon } from '@heroicons/vue/20/solid';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
 import BrandIcon from '@/components/BrandIcon.vue';
 import NewWatchListDialog from '@/components/NewWatchListDialog.vue';
+import PrivacyPolicy from '@/components/PrivacyPolicy.vue';
 import WatchListMenu from '@/components/WatchListMenu.vue';
 import NavItem from '@/components/ui/NavItem.vue';
 import SearchField from '@/components/ui/SearchField.vue';
@@ -195,11 +196,15 @@ onUnmounted(() => {
                     <!-- The super admin's own section (Ken, 2026-11-04). -->
                     <template v-if="profile?.is_super_admin">
                         <li class="menu-title mt-4 text-base-content/70">Manager</li>
+                        <NavItem :to="{ name: 'analytics' }" label="Analytics" :icon="ChartBarIcon" />
                         <NavItem :to="{ name: 'system-settings' }" label="System settings" :icon="AdjustmentsHorizontalIcon" />
                     </template>
                 </ul>
 
-                <p class="px-3 text-xs text-base-content/70">v{{ version }}</p>
+                <p class="flex flex-wrap gap-x-3 px-3 text-xs text-base-content/70">
+                    <span>v{{ version }}</span>
+                    <PrivacyPolicy class="link-hover" />
+                </p>
             </nav>
         </div>
 

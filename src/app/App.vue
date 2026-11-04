@@ -2,6 +2,7 @@
 // When the session ends (signed out here or in another tab, or expired), forget the user's data
 // and go back to the sign-in page.
 import { RouterView, useRouter } from 'vue-router';
+import { stopAnalytics } from '@/lib/analytics';
 import { profile } from '@/lib/profile';
 import { forgetSignInChoice, supabase } from '@/lib/supabase';
 import { watchLists } from '@/lib/watchLists';
@@ -11,6 +12,7 @@ const router = useRouter();
 supabase.auth.onAuthStateChange((event) => {
     if (event === 'SIGNED_OUT') {
         forgetSignInChoice();
+        stopAnalytics();
         profile.value = null;
         watchLists.value = [];
         router.push({ name: 'sign-in' });

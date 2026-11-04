@@ -2,6 +2,20 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: Analytics and privacy (after the first journalist, job 3), v0.5.0
+
+- PostHog (EU, project 334525) replaces Wirescout's own usage counting. `src/app/lib/analytics.ts`: only while signed in, tied to the user id (never name or email); nothing kept in the browser; pages by screen name, the 7 main features, errors, and replays with typed text hidden. Names and emails the app shows (Account settings, the account menu, a colleague's name in the Send dialog) are masked in replays (`ph-mask`); Manager pages aren't recorded. The Privacy policy says "pseudonymised", never "anonymised" (Ken, 2026-11-04). Search terms are cut from addresses.
+- Settings → Manager → Analytics: active users (with names from our database), features used, most shared stories, top pages, errors, replays (open in PostHog), per day, week, month or year. New function `analytics` (code and tests in `src/analytics/posthog.js`). "Download report": a PDF without errors and replays (jsPDF, loaded on click).
+- Deleting an account also asks PostHog to delete the person, with their events and replays.
+- Privacy policy link next to the version; the Usage section left Account settings. `usage.ts` removed; `admin.yml` sends only access requests (the monthly usage report and `months.js` removed). Old usage tables untouched.
+- New dependencies: `posthog-js` 1.438.13 and `jspdf` 4.2.1 (no new audit issues). posthog-js adds about 107 kB gzipped to the first load.
+- Privacy (Ken's changes while testing): professional wording; "pseudonymised", never "anonymised"; the MODX note in the magazine sign-in box matches the policy. Sign-up requires "I've read and agree to Wirescout's privacy policy" (the link opens the policy), and the database records when (`profiles.privacy_accepted_at`, set from the sign-up metadata with the database's clock; users can't change it). Accounts made before stay empty.
+- Analytics periods (Ken): 1 Day, 1 Week, 1 Month, 6 Months, 1 Year, All.
+- Version 0.5.0 with its "What's new". 1 migration (`20261104141440_privacy_accepted.sql`).
+- Checked: 66 unit tests (6 new, against made-up PostHog answers), 138 database tests, db lint, type-check, build. In the browser with 2 made-up local accounts (Ken's ok) and a local stand-in for PostHog (nothing sent to the real one): each event arrives with the user id only; no PostHog cookies or storage; search terms cut; an error captured; replays with typed text as `***`, own name and email masked, no replay on Manager pages; nothing sent after sign-out; Analytics for the super admin with names and every section; a journalist sent away (and the function refuses: 403, and 401 signed out); the PDF (1 page, no errors or replays); the Privacy policy; deleting an account asks PostHog to delete the person. Fixed along the way: saving a story wasn't recorded. Test accounts and data deleted afterwards.
+- Not checked: the real PostHog. Its answers to the HogQL queries (the error message field, the replays table) and the replay link format are checked only on live, by Ken, after release. Phone width and dark mode.
+- Release, in this order (Ken): push the migration (`npx supabase db push`); in PostHog's project settings turn on "Record user sessions" and "Discard client IP data"; set the function secrets (`POSTHOG_PERSONAL_API_KEY`, `POSTHOG_PROJECT_ID`); deploy `analytics` and redeploy `delete-account`; then merge the release PR.
+
 ## 2026-11-04: System admins (after job 2's release), v0.4.0
 
 - Ken's points after releasing v0.3.0: the only super admin could delete their account, and super admins could only be set with SQL.
@@ -12,6 +26,8 @@ Newest first. One entry per job: date, what was done, what's next.
 - Checked: 138 database tests (13 new), db lint, unit tests, type-check, build. In the browser with 2 made-up local accounts (Ken's ok): the message for the only super admin and its link; both tabs; adding an email without an account, an existing one and a duplicate; removing yourself (back to the dashboard, Manager gone); `delete-account` called as the only super admin (409, account kept); a normal Delete account. No console errors. Both test accounts deleted afterwards (the last one with the trigger off for that one delete).
 - Not checked: phone width and dark mode.
 - Release, in this order (Ken): push the migration (`npx supabase db push`), redeploy the function (`npx supabase functions deploy delete-account`), then merge the release PR.
+- Released: PR #24. Done by Ken on 2026-11-04: migration `20261104120618_system_admins.sql` pushed, `delete-account` redeployed, then the PR merged at 12:16 UTC. The web app deploy passed and `wirescout.app` serves v0.4.0 (checked in its code). Not checked yet: the System admins tab and the only super admin's message on live.
+- Next: job 3, analytics and privacy, v0.5.0 (plan in `docs/mvp-plan.md`; Ken's "approve" before coding).
 
 ## 2026-11-04: Accounts (after the first journalist, job 2), v0.3.0
 

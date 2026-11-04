@@ -218,7 +218,8 @@ async function send() {
                     and wording before sending.
                 </Alert>
                 <Alert v-if="earlierSend" type="warning" class="text-base-content">
-                    <p>{{ earlierSendText }}</p>
+                    <!-- ph-mask: it can name a colleague, and replays never show names (lib/analytics.ts). -->
+                    <p class="ph-mask">{{ earlierSendText }}</p>
                     <a :href="earlierSend.editUrl" target="_blank" rel="noopener" class="btn btn-sm btn-outline mt-3">
                         Open existing story
                         <ArrowTopRightOnSquareIcon class="size-4" aria-hidden="true" />

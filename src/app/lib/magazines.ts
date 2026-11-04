@@ -3,6 +3,7 @@
 // through the Edge Functions: the MODX session never reaches the browser.
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { ref } from 'vue';
+import { track } from '@/lib/analytics';
 import { supabase } from '@/lib/supabase';
 
 export type Magazine = {
@@ -109,6 +110,9 @@ export async function sendDraft(draft: {
         content: draft.content,
         ai_assisted: draft.aiAssisted,
     });
+    if (result.ok) {
+        track('draft_sent', { article_id: draft.articleId, publication_id: draft.publicationId, ai_assisted: draft.aiAssisted });
+    }
     if (!result.ok && result.needsSignIn) {
         await loadMagazines();
     }

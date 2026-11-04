@@ -4,6 +4,7 @@
 import { BookmarkIcon as SavedIcon } from '@heroicons/vue/20/solid';
 import { BookmarkIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
+import { track } from '@/lib/analytics';
 import { supabase } from '@/lib/supabase';
 
 const props = defineProps<{
@@ -29,7 +30,12 @@ async function toggle() {
         failed.value = true;
         return;
     }
-    saved.value = !saved.value;
+    // The model updates only once the parent has re-rendered, so the new state is kept here.
+    const nowSaved = !saved.value;
+    saved.value = nowSaved;
+    if (nowSaved) {
+        track('story_saved', { article_id: props.articleId });
+    }
 }
 </script>
 

@@ -1,7 +1,7 @@
 name: Admin emails
 
-# Every hour, emails the Wirescout team (ADMIN_EMAIL) new access requests, and the monthly usage report once
-# the month is over. It never emails journalists. Scheduled runs only run from main.
+# Every hour, emails the Wirescout team (ADMIN_EMAIL) new access requests. It never emails journalists.
+# Scheduled runs only run from main.
 on:
   workflow_dispatch:
   schedule:

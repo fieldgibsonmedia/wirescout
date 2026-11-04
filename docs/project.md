@@ -18,7 +18,7 @@ An internal Field Gibson Media tool for journalists, in production since 2026-11
 The MVP stack is decided in `docs/mvp-plan.md`. Built so far:
 
 - Supabase (Postgres 17 + Auth), developed locally with the Supabase CLI (`npx supabase`, a dev dependency) in Docker. The cloud project sends account emails through Brevo (SMTP, as `no-reply@wirescout.app`), set in its dashboard. The digest, admin and scanner emails go through Brevo too (the `EMAIL_*` secrets), sending as `no-reply@wirescout.app` (`EMAIL_FROM`, a plain value in their workflows).
-- Web app: Vue 3 + TypeScript, Vite, Tailwind + DaisyUI, Reka UI, Vue Router, `@supabase/supabase-js`, `read-excel-file` (bulk source upload). It talks to Supabase directly; access is protected by row-level security. Published on GitHub Pages at `wirescout.app` (custom domain, DNS at Namecheap).
+- Web app: Vue 3 + TypeScript, Vite, Tailwind + DaisyUI, Reka UI, Vue Router, `@supabase/supabase-js`, `read-excel-file` (bulk source upload), `posthog-js` (usage analytics), `jspdf` (the Analytics screen's report). It talks to Supabase directly; access is protected by row-level security. Published on GitHub Pages at `wirescout.app` (custom domain, DNS at Namecheap).
 
 ## Layout
 
@@ -32,9 +32,9 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `.github/workflows/deploy-app.yml`: builds the web app and publishes it to GitHub Pages on every push to `main`.
 - `.github/workflows/scanner.yml`: runs the scanner every hour, at :17.
 - `.github/workflows/digest.yml`: sends the due daily digests every 15 minutes (:05, :20, :35, :50).
-- `.github/workflows/admin.yml`: emails `ADMIN_EMAIL` new access requests and the monthly usage report, every hour at :40.
-- `src/admin/index.js`: the admin emails (below). `emails.js` writes them, `months.js` picks the months. Tests next to them.
-- `src/app/lib/usage.ts`: records usage for the report (days, shares, digest clicks).
+- `.github/workflows/admin.yml`: emails `ADMIN_EMAIL` new access requests, every hour at :40.
+- `src/admin/index.js`: the access request emails (below). `emails.js` writes them. Tests next to it.
+- `src/app/lib/analytics.ts`: sends usage to PostHog (pages, main features, errors, replays). `pages/AnalyticsPage.vue` shows it; `lib/usagePdf.ts` makes its PDF.
 - `src/app/lib/magazines.ts`: the magazines, the user's connections and who already sent which story (`story_sends`), for Settings → Channels, the Share menu and the Send dialog (`components/SendDraftDialog.vue`).
 - `src/app/lib/releaseNotes.ts`: the dashboard's "What's new". Add notes with each release. Its newest entry and the side nav take the version from `package.json`. Every job that changes what users get raises the version (`docs/mvp-plan.md`, Decisions).
 - `src/digest/index.js`: the digest (below). `due.js` decides who gets one, `email.js` writes it. Tests next to them.
@@ -43,7 +43,8 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `supabase/templates/`: the account emails (confirm account, new password, email change). The cloud project needs the same templates pasted into its dashboard.
 - `supabase/migrations/`: the database schema and access rules, one SQL file per change.
 - `supabase/functions/check-links/`: an Edge Function that checks links before they're added, with the scanner's own code (`src/scanner/check-link.js`). The app sends one link per call (the free plan's 2 seconds of processing per call); signed-in users only.
-- `supabase/functions/delete-account/`: deletes the signed-in user's own account (Account settings), ending their MODX sessions first. The database deletes the rest with the profile.
+- `supabase/functions/delete-account/`: deletes the signed-in user's own account (Account settings), ending their MODX sessions first. The database deletes the rest with the profile, and PostHog what it recorded about them.
+- `supabase/functions/analytics/`: Settings → Manager → Analytics, for super admins. Reads PostHog with the personal API key, adds names and story titles from the database. Its code is in `src/analytics/posthog.js` (tests next to it).
 - `supabase/functions/scan-new-sources/`: reads a source just added, once, and saves its stories and status with the scanner's own code (`src/scanner/check-source.js`), so a new list shows stories right away. One source per call, only the user's own sources that were never checked.
 - `supabase/functions/magazine-connect/`, `post-draft/`, `draft-text/`: posting drafts to the magazines' MODX (`docs/post-to-modx-plan.md`), with `_shared/magazines.ts`. Their code lives in `src/publish/`: `modx.js` (the MODX connector), `session-crypto.js` (locks the stored sessions), `draft.js` (the suggested draft text). Tests next to them. `modx-staging-test.js` is the proven reference for the connector calls.
 - `supabase/tests/database/`: access tests (pgTAP).
@@ -71,12 +72,12 @@ The logs show only totals: the repo is public, and which sources people follow i
 3. Email up to 5 stories per list, each linking to its page in the app (`/lists/<list>/stories/<story>`), never to the source site. Failing sources link to the list's Sources tab.
 4. No new stories in any list: no email. Either way, `profiles.last_digest_at` records that today's digest is done.
 
-## Usage and admin emails
+## Usage analytics and admin emails
 
-- The app records, per person: each day they open it (`active_days`), each Share click and each digest link they open (`usage_events`). Users can only add their own rows; only the secret key reads them.
-- Every hour, `admin.yml` emails `ADMIN_EMAIL`:
-    - new access requests, once each (`access_requests.notified_at`);
-    - once a month is over, the usage report: active days per person for the last 6 months, last month's shares and digest clicks, and the 5 most shared stories. Each month once (`usage_reports`).
+- The app sends usage to PostHog (EU, project 334525), only while someone is signed in, tied to their user id: the screens they open, the main features (sources added, stories shared, drafts sent, searches, stories saved, digest links opened, settings changed), errors, and replays with typed text hidden. Nothing is kept in the browser (no cookies). Locally there's no key, so nothing is sent.
+- Super admins read it in Settings → Manager → Analytics, per day, week, month or year, and download the numbers as a PDF.
+- The old usage tables (`active_days`, `usage_events`, `usage_reports`) stay with their data, but nothing writes to them since v0.5.0.
+- Every hour, `admin.yml` emails `ADMIN_EMAIL` new access requests, once each (`access_requests.notified_at`).
 
 ## Install
 
@@ -101,8 +102,7 @@ npm ci
 ## Run the admin emails (dev environment)
 
 - Same `.env` as the scanner, with `ADMIN_EMAIL` at a made-up address and `EMAIL_*` pointing at Mailpit.
-- `npm run admin`: sends new access requests, and last month's usage report if it hasn't gone yet. See them in Mailpit.
-- To send a report again, delete its month from `usage_reports` in Studio.
+- `npm run admin`: sends new access requests. See them in Mailpit.
 
 ## Run the web app (dev environment)
 
@@ -129,7 +129,7 @@ npm ci
 - Local URLs and demo keys: `npx supabase status`. Local emails (account and password emails) go to Mailpit at http://127.0.0.1:54324.
 - New schema change: `npx supabase migration new <name>`, then `npx supabase db reset` to rebuild the local database.
 - Edge Functions run with the local Supabase. If it was started before a function existed, run `npx supabase functions serve --env-file supabase/functions/.env`.
-    - The posting functions need `MAGAZINE_SESSION_KEY` in `supabase/functions/.env` (never committed; any `openssl rand -base64 32`). `ANTHROPIC_API_KEY` is optional: without it the Send dialog uses the story's own text.
+    - The posting functions need `MAGAZINE_SESSION_KEY` in `supabase/functions/.env` (never committed; any `openssl rand -base64 32`). `ANTHROPIC_API_KEY` is optional: without it the Send dialog uses the story's own text. `POSTHOG_PERSONAL_API_KEY` and `POSTHOG_PROJECT_ID` are optional: without them Analytics says it isn't set up (never point them at the real PostHog locally).
     - They reach the local magazine copies on their own ports (`http://host.docker.internal:8081` to `8084`, set in the seed): inside Docker the `.test` names point at the container itself. The magazine's web container must be running.
 
 ## Before a PR
