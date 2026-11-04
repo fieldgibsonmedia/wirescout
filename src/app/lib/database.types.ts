@@ -119,14 +119,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "created_at": string,"digest_time": string | null,"email": string,"full_name": string | null,"id": string,"last_digest_at": string | null,"share_copy_link": boolean,"share_email": boolean,"share_linkedin": boolean,"time_zone": string
+                    "created_at": string,"digest_time": string | null,"email": string,"full_name": string | null,"id": string,"is_super_admin": boolean,"last_digest_at": string | null,"share_copy_link": boolean,"share_email": boolean,"share_linkedin": boolean,"time_zone": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"digest_time"?: string | null,"email": string,"full_name"?: string | null,"id": string,"last_digest_at"?: string | null,"share_copy_link"?: boolean,"share_email"?: boolean,"share_linkedin"?: boolean,"time_zone"?: string
+                    "created_at"?: string,"digest_time"?: string | null,"email": string,"full_name"?: string | null,"id": string,"is_super_admin"?: boolean,"last_digest_at"?: string | null,"share_copy_link"?: boolean,"share_email"?: boolean,"share_linkedin"?: boolean,"time_zone"?: string
                   }
                   Update: {
-                    "created_at"?: string,"digest_time"?: string | null,"email"?: string,"full_name"?: string | null,"id"?: string,"last_digest_at"?: string | null,"share_copy_link"?: boolean,"share_email"?: boolean,"share_linkedin"?: boolean,"time_zone"?: string
+                    "created_at"?: string,"digest_time"?: string | null,"email"?: string,"full_name"?: string | null,"id"?: string,"is_super_admin"?: boolean,"last_digest_at"?: string | null,"share_copy_link"?: boolean,"share_email"?: boolean,"share_linkedin"?: boolean,"time_zone"?: string
                   }
                   Relationships: [
                     
@@ -147,14 +147,14 @@ isOneToOne: false
                   ]
                 },"publish_log": {
                   Row: {
-                    "action": string,"ai_assisted": boolean,"article_id": number | null,"cms_resource_id": number | null,"created_at": string,"id": number,"publication_id": number,"result": string,"user_id": string
+                    "action": string,"ai_assisted": boolean,"article_id": number | null,"cms_resource_id": number | null,"created_at": string,"id": number,"publication_id": number,"result": string,"user_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "action": string,"ai_assisted"?: boolean,"article_id"?: number | null,"cms_resource_id"?: number | null,"created_at"?: string,"id"?: never,"publication_id": number,"result": string,"user_id": string
+                    "action": string,"ai_assisted"?: boolean,"article_id"?: number | null,"cms_resource_id"?: number | null,"created_at"?: string,"id"?: never,"publication_id": number,"result": string,"user_id"?: string | null
                   }
                   Update: {
-                    "action"?: string,"ai_assisted"?: boolean,"article_id"?: number | null,"cms_resource_id"?: number | null,"created_at"?: string,"id"?: never,"publication_id"?: number,"result"?: string,"user_id"?: string
+                    "action"?: string,"ai_assisted"?: boolean,"article_id"?: number | null,"cms_resource_id"?: number | null,"created_at"?: string,"id"?: never,"publication_id"?: number,"result"?: string,"user_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -427,6 +427,9 @@ isOneToOne: false
           Functions: {
             "hook_before_user_created":
 { Args: { "event": Json }; Returns: Json
+                           },
+"is_super_admin":
+{ Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "mentions_any":
 { Args: { "content": string,"keywords": (string)[] }; Returns: boolean

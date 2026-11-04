@@ -1,9 +1,11 @@
 <script setup lang="ts">
-// The signed-in person's account: their name, email and password, and the theme on this device.
+// The signed-in person's account: their name, email and password, the theme on this device, and deleting it.
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { computed, nextTick, ref, watch } from 'vue';
 import Alert from '@/components/ui/Alert.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import TextField from '@/components/ui/TextField.vue';
 import { profile, saveProfile } from '@/lib/profile';
@@ -31,6 +33,10 @@ const passwordErrors = ref<Record<string, string>>({});
 const passwordBusy = ref(false);
 const passwordSaved = ref(false);
 const passwordFailed = ref(false);
+
+const deleteOpen = ref(false);
+const deleteBusy = ref(false);
+const deleteError = ref('');
 
 const themes = [
     { value: 'auto', label: 'Auto', description: "Follows your computer's setting." },
@@ -138,6 +144,21 @@ async function changePassword() {
     newPassword.value = '';
     confirmation.value = '';
     passwordSaved.value = true;
+}
+
+// Only the server may delete an account (the delete-account function). Once it's gone, the session here is
+// dropped too, and App.vue goes back to the sign-in page.
+async function deleteAccount() {
+    deleteError.value = '';
+    deleteBusy.value = true;
+    const { error } = await supabase.functions.invoke('delete-account');
+    if (error) {
+        deleteBusy.value = false;
+        const answer = error instanceof FunctionsHttpError ? await error.context.json().catch(() => ({})) : {};
+        deleteError.value = answer.error ?? "Wirescout couldn't be reached. Please try again.";
+        return;
+    }
+    await supabase.auth.signOut({ scope: 'local' });
 }
 
 // Moves the cursor to the first field that needs fixing (DESIGN.md). True if there was one.
@@ -258,4 +279,24 @@ async function showPasswordErrors() {
             Wirescout counts the days you use it, the stories you share and the digest links you open, to see what's useful. Only the Wirescout team sees it.
         </p>
     </Card>
+
+    <Card>
+        <h2 class="text-xl font-bold">Delete account</h2>
+        <p class="max-w-prose text-base-content/70">
+            Deletes your account and everything in it: your watch lists, saved stories, magazine connections and usage. It can't be undone.
+        </p>
+        <div>
+            <Button variant="error" @click="deleteOpen = true">Delete account</Button>
+        </div>
+    </Card>
+
+    <ConfirmDialog
+        v-model:open="deleteOpen"
+        title="Delete your account?"
+        description="Your watch lists, saved stories and magazine connections are deleted with it. It can't be undone."
+        confirm-label="Delete account"
+        :busy="deleteBusy"
+        :error="deleteError"
+        @confirm="deleteAccount"
+    />
 </template>

@@ -324,8 +324,8 @@ Ken's 9 points from testing live, grouped into 3 jobs (one branch each, from `or
 **Job 2, accounts (points 5, 6), v0.3.0:**
 
 - Super admin: a flag on the profile that users can't set themselves. Ken sets it on his own account with one SQL line in the dashboard (his address stays out of the public repo).
-- Settings → System Settings (super admin only): the allowed domains and single addresses (`allowed_email_domains`, already used by the sign-up check), with Add and Remove. The database allows it for the super admin only, not just the screen.
-- Delete account (point 6): at the bottom of Account settings, with a confirmation. Deletes the account and everything in it: watch lists, magazine connections (their MODX sessions are ended first), usage. Needs an Edge Function (only the server may delete an account). Shared records other people rely on (e.g. "already sent to <magazine>") are checked during the job.
+- Settings → Manager → System settings (super admin only; Manager is the super admin's own section in the side nav, under Settings, Ken 2026-11-04): the allowed domains and single addresses (`allowed_email_domains`, already used by the sign-up check), with Add and Remove. The database allows it for the super admin only, not just the screen.
+- Delete account (point 6): at the bottom of Account settings, with a confirmation. Deletes the account and everything in it: watch lists, magazine connections (their MODX sessions are ended first), usage. Needs an Edge Function (only the server may delete an account). Shared records other people rely on (e.g. "already sent to <magazine>") are checked during the job. Ken's call (2026-11-04): the drafts a deleted account sent stay in the publish log without the person, so colleagues still see "A former colleague already sent this story".
 - Live impact: a migration, a new Edge Function and the SQL line (Ken runs all 3), then the web app. Touches login and permissions: Ken's "approve" before coding.
 
 **Job 3, analytics and privacy (points 7, 8), v0.4.0:**
@@ -334,7 +334,7 @@ Ken's 9 points from testing live, grouped into 3 jobs (one branch each, from `or
     - Tracked: page views, active users, the main features (add sources, share, send a draft, search, save, digest links opened, settings changed), errors. Each tied to the signed-in user, so the numbers show who uses Wirescout.
     - No cookies: PostHog keeps nothing in the browser between visits; each visit is tied to the user at sign-in. No cookie banner needed.
     - Replays on, with everything people type hidden.
-- Settings → Analytics (super admin only): active users, top pages, top features, errors and replays, per day, week, month and year. An Edge Function reads PostHog with Ken's PostHog key, which never reaches the browser. Replays open in PostHog's player.
+- Settings → Manager → Analytics (super admin only): active users, top pages, top features, errors and replays, per day, week, month and year. An Edge Function reads PostHog with Ken's PostHog key, which never reaches the browser. Replays open in PostHog's player.
     - "Download report": a PDF of the usage numbers, without errors, for management. It replaces the monthly usage report email.
 - The app stops its own counting (`usage.ts`), and `admin.yml` stops the monthly usage report; access request emails stay. The old tables and their data stay untouched.
 - Privacy (point 7): the Usage section leaves Account settings. A "Privacy policy" link next to the version at the bottom of the side nav opens a dialog: what PostHog records (including replays, typed text hidden), who sees it, and that Wirescout never stores MODX passwords, only an encrypted sign-in session so drafts can be sent.

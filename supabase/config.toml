@@ -465,3 +465,11 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/draft-text/deno.json"
 entrypoint = "./functions/draft-text/index.ts"
+
+# Deletes the signed-in user's own account (Account settings), ending their MODX sessions first.
+# Needs MAGAZINE_SESSION_KEY to unlock those sessions.
+[functions.delete-account]
+enabled = true
+verify_jwt = false
+import_map = "./functions/delete-account/deno.json"
+entrypoint = "./functions/delete-account/index.ts"

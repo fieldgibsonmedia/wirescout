@@ -43,6 +43,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `supabase/templates/`: the account emails (confirm account, new password, email change). The cloud project needs the same templates pasted into its dashboard.
 - `supabase/migrations/`: the database schema and access rules, one SQL file per change.
 - `supabase/functions/check-links/`: an Edge Function that checks links before they're added, with the scanner's own code (`src/scanner/check-link.js`). The app sends one link per call (the free plan's 2 seconds of processing per call); signed-in users only.
+- `supabase/functions/delete-account/`: deletes the signed-in user's own account (Account settings), ending their MODX sessions first. The database deletes the rest with the profile.
 - `supabase/functions/scan-new-sources/`: reads a source just added, once, and saves its stories and status with the scanner's own code (`src/scanner/check-source.js`), so a new list shows stories right away. One source per call, only the user's own sources that were never checked.
 - `supabase/functions/magazine-connect/`, `post-draft/`, `draft-text/`: posting drafts to the magazines' MODX (`docs/post-to-modx-plan.md`), with `_shared/magazines.ts`. Their code lives in `src/publish/`: `modx.js` (the MODX connector), `session-crypto.js` (locks the stored sessions), `draft.js` (the suggested draft text). Tests next to them. `modx-staging-test.js` is the proven reference for the connector calls.
 - `supabase/tests/database/`: access tests (pgTAP).
@@ -115,10 +116,11 @@ npm ci
 
 ## Admin tasks (in Studio, or the cloud dashboard)
 
-- **Let someone sign up:** Table Editor → `allowed_email_domains` → Insert row, with a domain (`example.com`) or one full address. Lower case.
+- **The super admin:** sees Settings → Manager in the app. Set it once with `update public.profiles set is_super_admin = true where email = '<address>';` (SQL Editor). Never through the app.
+- **Let someone sign up:** Settings → Manager → System settings → Add, with a domain (`example.com`) or one full address. Or Table Editor → `allowed_email_domains` → Insert row, lower case.
 - **Access requests:** Table Editor → `access_requests`. Add the address to the allowed list, reply by email, then set `handled_at` to now.
 - **A magazine for a user:** nothing to do. Every magazine is offered to everyone; the journalist adds it with their own MODX account (Settings → Channels).
-- **A leaver:** their account stays until you delete it: Authentication → Users → the user → Delete. Their watch lists go with it.
+- **A leaver:** they can delete their own account (Account settings → Delete account). Otherwise it stays until you delete it: Authentication → Users → the user → Delete. Their watch lists go with it (their MODX sessions then simply expire).
 
 ## Local Supabase
 
