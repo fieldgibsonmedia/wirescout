@@ -28,7 +28,11 @@ test("the subject counts new stories and the lists that have them", () => {
 test("each list shows its new stories and failing sources, linking into the app", () => {
   const { html, text } = buildDigest({ lists, profile, appUrl });
 
-  assert.match(html, /href="https:\/\/app\.example\.com\/\?from=digest"[^>]*>Wirescout<\/a>/, "the brand opens the dashboard");
+  assert.match(
+    html,
+    /href="https:\/\/app\.example\.com\/\?from=digest"[^>]*><img src="https:\/\/app\.example\.com\/brand-icon\.png"[^>]*><span[^>]*>Wirescout<\/span><\/a>/,
+    "the robot and the name open the dashboard",
+  );
   assert.match(html, /Regulators<\/a>\s*<div[^>]*>7 new stories</);
   assert.match(html, /href="https:\/\/app\.example\.com\/lists\/list-1\?tab=sources&#38;from=digest"[^>]*>⚠︎ 3 problematic sources/);
   assert.match(html, /href="https:\/\/app\.example\.com\/lists\/list-1\/stories\/1\?from=digest"/);

@@ -70,7 +70,7 @@ async function signUp() {
 </script>
 
 <template>
-    <FormLayout title="Create your Wirescout account" submit-label="Create account" :busy="busy" :errors="errors" @submit="signUp">
+    <FormLayout title="Sign up" submit-label="Create account" :busy="busy" :errors="errors" @submit="signUp">
         <template #message>
             <Alert v-if="sentTo" type="success">
                 Check your inbox: we've sent a link to {{ sentTo }}. Open it and click Confirm to finish.
