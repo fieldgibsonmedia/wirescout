@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import TextField from '@/components/ui/TextField.vue';
+import { track } from '@/lib/analytics';
 import { profile, saveProfile } from '@/lib/profile';
 
 const enabled = ref(true);
@@ -43,6 +44,9 @@ async function save() {
     busy.value = true;
     const ok = await saveProfile({ digest_time: enabled.value ? time.value : null });
     busy.value = false;
+    if (ok) {
+        track('settings_changed', { setting: enabled.value ? 'digest_time' : 'digest_off' });
+    }
 
     saved.value = ok;
     failed.value = !ok;

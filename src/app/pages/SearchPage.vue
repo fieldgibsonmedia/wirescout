@@ -10,6 +10,7 @@ import { RouterLink } from 'vue-router';
 import Alert from '@/components/ui/Alert.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import { track } from '@/lib/analytics';
 import { SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
 import { watchLists } from '@/lib/watchLists';
@@ -92,6 +93,8 @@ async function load() {
         date: dateFormat.format(new Date(article.published_at ?? article.first_seen_at)),
     }));
     hasMore.value = articles.data.length > STORY_LIMIT;
+    // Only whether it found something: the search terms stay out of PostHog.
+    track('search', { found: stories.value.length > 0 || sources.value.length > 0 });
 }
 
 watch(term, load, { immediate: true });

@@ -24,7 +24,7 @@ const itemClass =
     <DropdownMenuRoot>
         <DropdownMenuTrigger class="btn btn-circle btn-ghost">
             <Avatar :initials="initial" />
-            <span class="sr-only">{{ name || 'Account' }}</span>
+            <span class="ph-mask sr-only">{{ name || 'Account' }}</span>
         </DropdownMenuTrigger>
         <DropdownMenuPortal>
             <DropdownMenuContent align="end" :side-offset="4" class="menu-pop z-30 w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-sm">

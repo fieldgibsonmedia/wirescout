@@ -347,6 +347,14 @@ Ken's 9 points from testing live, grouped into 3 jobs (one branch each, from `or
 - The app stops its own counting (`usage.ts`), and `admin.yml` stops the monthly usage report; access request emails stay. The old tables and their data stay untouched.
 - Privacy (point 7): the Usage section leaves Account settings. A "Privacy policy" link next to the version at the bottom of the side nav opens a dialog: what PostHog records (including replays, typed text hidden), who sees it, and that Wirescout never stores MODX passwords, only an encrypted sign-in session so drafts can be sent.
 - Live impact: the web app (every user is tracked from the release), an Edge Function and its PostHog secret (Ken sets and deploys them), and `admin.yml`. Ken's "approve" before coding.
+- Agreed with the plan (Ken's "approve", 2026-11-04):
+    - PostHog gets only the user id; the Analytics screen adds names from our database. Only signed-in use is recorded.
+    - The PDF is made in the browser with jsPDF, loaded on click.
+    - Locally nothing goes to PostHog (no key), and the PostHog code is tested against made-up answers.
+    - Deleting an account also deletes the person in PostHog, with their events and replays.
+    - The usage report for November (due 1 December) isn't sent; November's first days stay in the old tables.
+- Added while testing (Ken, 2026-11-04): Analytics periods 1 Day, 1 Week, 1 Month, 6 Months, 1 Year, All. Sign-up requires agreeing to the privacy policy, and `profiles.privacy_accepted_at` records when. The privacy policy says "pseudonymised", never "anonymised".
+- PostHog: EU project 334525. Its project key is public (`.env.production`). Ken keeps the personal API key (scopes Query: Read, Person: Write) and sets it as the function secret `POSTHOG_PERSONAL_API_KEY`, with `POSTHOG_PROJECT_ID`.
 
 ## Branches
 

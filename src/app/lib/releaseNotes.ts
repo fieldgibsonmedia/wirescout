@@ -6,6 +6,13 @@ export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
         notes: [
+            'A Privacy policy at the bottom of the side bar: what Wirescout records about how it is used, and who sees it.',
+            'For super admins: Analytics in Manager shows who uses Wirescout, what they use and the most shared stories, with a report to download.',
+        ],
+    },
+    {
+        version: '0.4.0',
+        notes: [
             'For super admins: System settings has two tabs, Platform access (who can sign up) and System admins (add or remove super admins).',
             'Wirescout always keeps at least one super admin: the only one is asked to assign another before deleting their account.',
         ],

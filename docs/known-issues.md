@@ -2,6 +2,11 @@
 
 Bugs found while working on something else. One entry each: date, what, where, how to see it.
 
+## 2026-11-04: The access request email still says to use the Table Editor
+
+- `src/admin/emails.js` tells the reader to let someone in through Table Editor → `allowed_email_domains`. Since v0.4.0, Settings → Manager → System settings → Platform access does it in the app.
+- See it: any "new access request" email.
+
 ## 2026-11-04: A source can show "failing" right after its link check passed
 
 - Sources are shared between watch lists. When someone adds a site that's already in Wirescout and failed its last hourly check, the link check can pass (the site answered this time), yet the list shows the old "failing" status and a Fix button until the next hourly scan. Seen with Bloomberg, which blocks Wirescout only some of the time.

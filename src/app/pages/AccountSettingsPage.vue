@@ -188,7 +188,8 @@ async function showPasswordErrors() {
 </script>
 
 <template>
-    <PageHeader title="Account settings" :description="profile?.email" />
+    <!-- ph-mask: replays never show the user's email (lib/analytics.ts). -->
+    <PageHeader class="ph-mask" title="Account settings" :description="profile?.email" />
 
     <Card>
         <form class="flex max-w-md flex-col gap-6" novalidate @submit.prevent="saveName" @input="nameSaved = false">
@@ -219,7 +220,7 @@ async function showPasswordErrors() {
 
             <div class="flex flex-wrap items-center gap-4">
                 <Button type="submit" :busy="emailBusy" :disabled="!emailChanged">Change email</Button>
-                <Alert v-if="emailSentTo" type="success">
+                <Alert v-if="emailSentTo" class="ph-mask" type="success">
                     Check both inboxes: we've sent a link to {{ profile?.email }} and to {{ emailSentTo }}. Your email changes once
                     both are confirmed.
                 </Alert>
@@ -286,13 +287,6 @@ async function showPasswordErrors() {
                 </span>
             </label>
         </fieldset>
-    </Card>
-
-    <Card>
-        <h2 class="text-xl font-bold">Usage</h2>
-        <p class="max-w-prose text-base-content/70">
-            Wirescout counts the days you use it, the stories you share and the digest links you open, to see what's useful. Only the Wirescout team sees it.
-        </p>
     </Card>
 
     <Card>
