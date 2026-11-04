@@ -356,6 +356,14 @@ Ken's 9 points from testing live, grouped into 3 jobs (one branch each, from `or
 - Added while testing (Ken, 2026-11-04): Analytics periods 1 Day, 1 Week, 1 Month, 6 Months, 1 Year, All. Sign-up requires agreeing to the privacy policy, and `profiles.privacy_accepted_at` records when. The privacy policy says "pseudonymised", never "anonymised".
 - PostHog: EU project 334525. Its project key is public (`.env.production`). Ken keeps the personal API key (scopes Query: Read, Person: Write) and sets it as the function secret `POSTHOG_PERSONAL_API_KEY`, with `POSTHOG_PROJECT_ID`.
 
+**PostHog reverse proxy (agreed 2026-11-04, after the v0.5.0 release):**
+
+- Why: ad blockers and privacy add-ons block `*.posthog.com`, so their users aren't counted (`docs/known-issues.md`). Should have been in job 3's plan.
+- Direction (Ken's go): PostHog's managed reverse proxy, free for PostHog Cloud. Ken adds one DNS record at Namecheap for a `wirescout.app` subdomain with a neutral name (PostHog advises against names like `analytics`, `tracking` or `posthog`). The app's `api_host` then points at it; `ui_host` stays `https://eu.posthog.com`, so replay links still open in PostHog.
+- Ken's call: getting around people's blockers is acceptable for an internal tool that discloses PostHog in its privacy policy.
+- To settle in the plan: the subdomain's name; whether the Privacy policy needs a word on it; that PostHog's add-on scripts (errors, replays) also come through the proxy; how to test it (a browser with uBlock Origin on). Version: a fix, v0.5.1.
+- Live impact: the web app (every user's analytics), and Ken's DNS record and PostHog setting. Ken's "approve" before coding.
+
 ## Branches
 
 - Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.

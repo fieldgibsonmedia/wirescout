@@ -75,7 +75,9 @@ The logs show only totals: the repo is public, and which sources people follow i
 ## Usage analytics and admin emails
 
 - The app sends usage to PostHog (EU, project 334525), only while someone is signed in, tied to their user id: the screens they open, the main features (sources added, stories shared, drafts sent, searches, stories saved, digest links opened, settings changed), errors, and replays with typed text hidden. Nothing is kept in the browser (no cookies). Locally there's no key, so nothing is sent.
-- Super admins read it in Settings → Manager → Analytics, per day, week, month or year, and download the numbers as a PDF.
+- Super admins read it in Settings → Manager → Analytics, over 1 Day, 1 Week, 1 Month, 6 Months, 1 Year or All, and download the numbers as a PDF.
+- New accounts must agree to the privacy policy at sign-up; `profiles.privacy_accepted_at` records when (empty for accounts made before v0.5.0).
+- Ad blockers (e.g. Privacy Badger, uBlock Origin) block PostHog's own addresses, so their users aren't counted yet. Fix planned: PostHog's managed reverse proxy (`docs/mvp-plan.md`).
 - The old usage tables (`active_days`, `usage_events`, `usage_reports`) stay with their data, but nothing writes to them since v0.5.0.
 - Every hour, `admin.yml` emails `ADMIN_EMAIL` new access requests, once each (`access_requests.notified_at`).
 

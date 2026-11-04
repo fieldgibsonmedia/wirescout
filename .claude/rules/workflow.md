@@ -16,6 +16,7 @@ Core rule, adapted for Wirescout. Last edited: 2026-10-27.
 **Projects, features and upgrades:**
 
 - Write a plan first and stop.
+- When the plan loads third-party code in the browser (analytics, chat widgets, fonts), list what can stop it working, such as ad blockers and privacy add-ons, and the fix (Ken, 2026-11-04).
 - Start coding only after Ken says "approve" in the chat.
 - Anything else, like "looks good", is not an approval.
 - Ken can forget the keyword: whenever you wait for an approval, end the message with what it unlocks, e.g. `Say "approve" to commit and push.`
