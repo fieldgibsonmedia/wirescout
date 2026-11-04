@@ -34,7 +34,7 @@ Newest first. One entry per job: date, what was done, what's next.
 ## 2026-11-04: The robot with the name, v0.5.5
 
 - Ken's points: the name "Wirescout" goes with the robot icon wherever possible, and that's a rule (`docs/mvp-plan.md`, Decisions, "Brand").
-- Sign-in screens (one layout, `FormLayout.vue`): the robot and "Wirescout" at the top of the card, then the screen title. "Sign in to Wirescout" is now "Sign in", "Create your Wirescout account" now "Sign up".
+- Sign-in screens (one layout, `FormLayout.vue`): the robot and "Wirescout" at the top of the card, centred (Ken, while testing before the release), then the screen title. The card a little wider (384 → 416 px, Ken's ask). "Sign in to Wirescout" is now "Sign in", "Create your Wirescout account" now "Sign up".
 - Digest email and the 3 account emails: the robot before "Wirescout" at the top. A PNG made from the same drawing (`public/brand-icon.png`, served at `wirescout.app/brand-icon.png`): most email apps don't show SVG. Where images are blocked (Outlook, until allowed), the name still shows, with no broken-image box (`alt=""`).
 - Not done: the scanner and access request emails (plain text, developer only). The browser tab icon: offered, not agreed yet.
 - Version 0.5.5 with its "What's new".

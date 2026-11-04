@@ -44,13 +44,13 @@ watch(
 
 <template>
     <main class="grid min-h-screen place-items-center p-4">
-        <div class="w-full max-w-sm">
+        <div class="w-full max-w-[26rem]">
             <Card>
                 <!-- novalidate: the page checks the form, so every error shows the same way, next to its field. -->
                 <form ref="form" class="flex flex-col gap-6" novalidate @submit.prevent="emit('submit')">
                     <header class="flex flex-col gap-2">
                         <!-- The robot always goes with the name (docs/mvp-plan.md, Decisions). -->
-                        <p class="mb-4 flex items-center gap-2 text-xl font-bold">
+                        <p class="mb-4 flex items-center justify-center gap-2 text-xl font-bold">
                             <BrandIcon class="size-7 text-primary" />
                             Wirescout
                         </p>
