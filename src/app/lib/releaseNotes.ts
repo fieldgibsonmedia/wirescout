@@ -5,6 +5,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['Fixed: usage statistics were missing for some browsers.'],
+    },
+    {
+        version: '0.5.0',
         notes: [
             'A Privacy policy at the bottom of the side bar: what Wirescout records about how it is used, and who sees it.',
             'For super admins: Analytics in Manager shows who uses Wirescout, what they use and the most shared stories, with a report to download.',

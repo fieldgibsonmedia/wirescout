@@ -361,7 +361,21 @@ Ken's 9 points from testing live, grouped into 3 jobs (one branch each, from `or
 - Why: ad blockers and privacy add-ons block `*.posthog.com`, so their users aren't counted (`docs/known-issues.md`). Should have been in job 3's plan.
 - Direction (Ken's go): PostHog's managed reverse proxy, free for PostHog Cloud. Ken adds one DNS record at Namecheap for a `wirescout.app` subdomain with a neutral name (PostHog advises against names like `analytics`, `tracking` or `posthog`). The app's `api_host` then points at it; `ui_host` stays `https://eu.posthog.com`, so replay links still open in PostHog.
 - Ken's call: getting around people's blockers is acceptable for an internal tool that discloses PostHog in its privacy policy.
-- To settle in the plan: the subdomain's name; whether the Privacy policy needs a word on it; that PostHog's add-on scripts (errors, replays) also come through the proxy; how to test it (a browser with uBlock Origin on). Version: a fix, v0.5.1.
+- Plan (waiting for Ken's "approve"):
+    - Subdomain: `relay.wirescout.app` (neutral; free, and `wirescout.app` has no CAA records that could stop the certificate).
+    - Code: `.env.production` gets `VITE_POSTHOG_HOST=https://relay.wirescout.app` (`analytics.ts` already reads it), and `analytics.ts` sets `ui_host: 'https://eu.posthog.com'`, as PostHog asks for a proxy. Locally nothing changes (no key).
+    - Errors and replays: posthog-js loads its add-on scripts (`lazy-recorder.js`, `exception-autocapture.js`) and feature settings from `api_host` when it isn't a posthog.com address, so they come through the proxy too (checked in posthog-js 1.438.13).
+    - Privacy policy: no change. It names PostHog, hosted in the EU; the data still goes to PostHog's EU project. The proxy runs on Cloudflare, already one of PostHog's listed subprocessors.
+    - Version 0.5.1, with a "What's new" line: "Fixed: usage statistics were missing for some browsers."
+- Release, in this order (Ken):
+    1. PostHog → Organization settings → Managed reverse proxy → New managed proxy: `relay.wirescout.app`. It shows a CNAME target.
+    2. Namecheap → `wirescout.app` → Advanced DNS → add a CNAME record, host `relay`, value the target from step 1.
+    3. Wait until PostHog shows the proxy "live" (usually 2–5 minutes, up to 30). Claude checks from here that `https://relay.wirescout.app/static/array.js` answers with a valid certificate (a public file, no data sent).
+    4. Merge the release PR. Before the proxy is live, merging would stop all analytics.
+- Check on live (Ken, after the deploy), with Privacy Badger and uBlock Origin on: DevTools → Network, filter `relay`: requests answer 200 and nothing goes to `posthog.com`; then Analytics → 1 Day shows his visit, and a replay plays.
+- Risk: uBlock Origin on Firefox can look up a subdomain's DNS alias (CNAME uncloaking) and apply its lists to the real address (`*.proxy-eu.posthog.com`). Today's EasyPrivacy rules for `posthog.com` match only retried sends (`retry_count`) and old addresses, so normal sends should pass. If the live check still shows blocks, the fallback is a proxy of our own, which hides the alias: a separate job.
+- Not possible to test before the release: the proxy itself (testing it from here would send data to the real PostHog). Locally: type-check, build, and the built app has the new host.
+- How to undo: revert the PR (back to `eu.i.posthog.com`). The DNS record and the proxy can stay.
 - Live impact: the web app (every user's analytics), and Ken's DNS record and PostHog setting. Ken's "approve" before coding.
 
 ## Branches
