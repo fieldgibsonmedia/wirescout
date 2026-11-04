@@ -116,8 +116,8 @@ npm ci
 
 ## Admin tasks (in Studio, or the cloud dashboard)
 
-- **The super admin:** sees Settings → Manager in the app. Set it once with `update public.profiles set is_super_admin = true where email = '<address>';` (SQL Editor). Never through the app.
-- **Let someone sign up:** Settings → Manager → System settings → Add, with a domain (`example.com`) or one full address. Or Table Editor → `allowed_email_domains` → Insert row, lower case.
+- **Super admins:** see Settings → Manager in the app. Set the first one with `update public.profiles set is_super_admin = true where email = '<address>';` (SQL Editor). After that, super admins add and remove each other in Settings → Manager → System settings → System admins. Wirescout always keeps at least one: the database refuses to remove or delete the last one.
+- **Let someone sign up:** Settings → Manager → System settings → Platform access → Add, with a domain (`example.com`) or one full address. Or Table Editor → `allowed_email_domains` → Insert row, lower case.
 - **Access requests:** Table Editor → `access_requests`. Add the address to the allowed list, reply by email, then set `handled_at` to now.
 - **A magazine for a user:** nothing to do. Every magazine is offered to everyone; the journalist adds it with their own MODX account (Settings → Channels).
 - **A leaver:** they can delete their own account (Account settings → Delete account). Otherwise it stays until you delete it: Authentication → Users → the user → Delete. Their watch lists go with it (their MODX sessions then simply expire).

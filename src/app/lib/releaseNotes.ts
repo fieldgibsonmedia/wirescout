@@ -5,6 +5,13 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: [
+            'For super admins: System settings has two tabs, Platform access (who can sign up) and System admins (add or remove super admins).',
+            'Wirescout always keeps at least one super admin: the only one is asked to assign another before deleting their account.',
+        ],
+    },
+    {
+        version: '0.3.0',
         notes: ['Delete your account yourself, at the bottom of Account settings. Everything in it goes with it.'],
     },
     {
