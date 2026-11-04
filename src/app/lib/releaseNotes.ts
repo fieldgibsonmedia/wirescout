@@ -5,6 +5,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['Delete your account yourself, at the bottom of Account settings. Everything in it goes with it.'],
+    },
+    {
+        version: '0.2.0',
         notes: [
             'New sources show their latest stories straight away, instead of after the next hourly check.',
             "Adding many sources at once works with big news sites too. If a link can't be checked, only that one is left out, and the rest are added.",
