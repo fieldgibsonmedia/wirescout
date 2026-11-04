@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: Only super admin: a dialog instead of a message, v0.5.8
+
+- Ken's point: the "only super admin" message showed under Delete account, at the bottom of the page, easy to miss. Delete account now opens a dialog: "Assign another super admin first", the same text, Cancel and Go to System admins (System settings → System admins). Version 0.5.8 with its "What's new".
+- Checked: type-check, build; in the browser with a made-up local super admin (Ken's ok): the dialog, Cancel, the button opening the System admins tab; no console errors. Test account deleted afterwards (with `keep_a_super_admin` off for that one delete, then on again).
+- Not checked: dark mode and phone width.
+- Release: web app only. `delete-account` still refuses on its own (409).
+
 ## 2026-11-04: All stories · Saved switch easier to see, v0.5.7
 
 - Ken's point: the option not chosen had no background and got lost on the grey page. It's white now (`bg-base-100`, the cards' colour: dark grey in dark mode). Version 0.5.7 with its "What's new".

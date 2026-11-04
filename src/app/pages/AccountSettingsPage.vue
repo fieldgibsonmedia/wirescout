@@ -2,11 +2,11 @@
 // The signed-in person's account: their name, email and password, the theme on this device, and deleting it.
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { computed, nextTick, ref, watch } from 'vue';
-import { RouterLink } from 'vue-router';
 import Alert from '@/components/ui/Alert.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
+import Dialog from '@/components/ui/Dialog.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import TextField from '@/components/ui/TextField.vue';
 import { profile, saveProfile } from '@/lib/profile';
@@ -297,11 +297,17 @@ async function showPasswordErrors() {
         <div>
             <Button variant="error" @click="askDelete">Delete account</Button>
         </div>
-        <Alert v-if="onlySuperAdmin" type="warning">
-            You are the only super admin at the moment. Assign another super admin before deleting your account.
-            <RouterLink :to="{ name: 'system-settings', query: { tab: 'admins' } }" class="link">Go to System admins</RouterLink>
-        </Alert>
     </Card>
+
+    <Dialog v-model:open="onlySuperAdmin" title="Assign another super admin first">
+        <p class="text-base-content/70">
+            You are the only super admin at the moment. Assign another super admin before deleting your account.
+        </p>
+        <div class="flex justify-end gap-3 border-t border-base-300 pt-6">
+            <Button variant="outline" @click="onlySuperAdmin = false">Cancel</Button>
+            <Button :to="{ name: 'system-settings', query: { tab: 'admins' } }">Go to System admins</Button>
+        </div>
+    </Dialog>
 
     <ConfirmDialog
         v-model:open="deleteOpen"

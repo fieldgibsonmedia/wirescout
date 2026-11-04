@@ -5,6 +5,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['For super admins: if you are the only one, Delete account opens a message with a button to System admins, to assign another first.'],
+    },
+    {
+        version: '0.5.7',
         notes: ['The All stories · Saved switch in a watch list is easier to see: the option not chosen has a white background.'],
     },
     {
