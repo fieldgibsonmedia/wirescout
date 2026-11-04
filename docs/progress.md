@@ -2,6 +2,12 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: Replay script bundled (fix), v0.5.2
+
+- uBlock Origin blocked the replay script even through the proxy (its file name, `posthog-recorder.js`, is blocked on every site). `analytics.ts` now bundles it (`posthog-js/dist/posthog-recorder`), and PostHog uses the bundled copy instead of loading it. Version 0.5.2 with its "What's new".
+- Checked: 66 unit tests, type-check, build; the bundle registers the recorder (`__PosthogExtensions__.rrweb` and `initSessionRecording`), which posthog-js checks before loading the script. First load: 292 → 357 kB gzipped.
+- Not checked: a replay in the browser (the block needs uBlock and the real PostHog). On live (Ken), with uBlock on: Network, filter `recorder`, nothing blocked; a new replay in Analytics.
+
 ## 2026-11-04: PostHog reverse proxy (fix), v0.5.1
 
 - Ad blockers stopped all PostHog analytics (`docs/known-issues.md`). Fix: PostHog's managed reverse proxy at `relay.wirescout.app` (plan in `docs/mvp-plan.md`, "PostHog reverse proxy", approved by Ken).
@@ -10,6 +16,8 @@ Newest first. One entry per job: date, what was done, what's next.
 - Checked: 66 unit tests, type-check, build (the bundle has the new host, `ui_host` and 0.5.1).
 - The proxy went live a few minutes after the record: `https://relay.wirescout.app/static/array.js` answers 200 with a valid certificate (a public file, no data sent).
 - Not checked: sending events through the proxy before the release (that would send data to the real PostHog).
+- Released: PR #26, merged by Ken at 14:56 UTC; the web app deploy passed, and `wirescout.app` serves v0.5.1 with `relay.wirescout.app` as the PostHog host (checked in its code). Nothing to run on live before the merge (the proxy was live).
+- Checked on live by Ken, with Privacy Badger and uBlock Origin on: events reach PostHog through `relay` (page views in Activity), and Analytics → 1 Day shows his activity. Still blocked: the replay script, `relay.wirescout.app/static/1.438.13/posthog-recorder.js`, because EasyPrivacy blocks that file name on any site (`/posthog-recorder.js`). So uBlock users send no replays. My plan was wrong to say the script loads as `lazy-recorder.js`. After it (Ken), with both add-ons on: DevTools → Network, filter `relay`, 200s and nothing to `posthog.com`; then Analytics → 1 Day.
 
 ## 2026-11-04: Analytics and privacy (after the first journalist, job 3), v0.5.0
 
