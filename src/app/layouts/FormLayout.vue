@@ -4,6 +4,7 @@
 // and links under it. Emits submit; pass busy while the form is sending, and the form's errors so the
 // cursor moves to the first field that needs fixing.
 import { nextTick, ref, watch } from 'vue';
+import BrandIcon from '@/components/BrandIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 
@@ -48,6 +49,11 @@ watch(
                 <!-- novalidate: the page checks the form, so every error shows the same way, next to its field. -->
                 <form ref="form" class="flex flex-col gap-6" novalidate @submit.prevent="emit('submit')">
                     <header class="flex flex-col gap-2">
+                        <!-- The robot always goes with the name (docs/mvp-plan.md, Decisions). -->
+                        <p class="mb-4 flex items-center gap-2 text-xl font-bold">
+                            <BrandIcon class="size-7 text-primary" />
+                            Wirescout
+                        </p>
                         <h1 class="text-2xl font-bold">{{ title }}</h1>
                         <p v-if="description" class="text-base-content/70">{{ description }}</p>
                     </header>

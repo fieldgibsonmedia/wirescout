@@ -52,7 +52,7 @@ async function signIn() {
 </script>
 
 <template>
-    <FormLayout title="Sign in to Wirescout" submit-label="Sign in" :busy="busy" :errors="errors" @submit="signIn">
+    <FormLayout title="Sign in" submit-label="Sign in" :busy="busy" :errors="errors" @submit="signIn">
         <template #message>
             <Alert v-if="failed" type="error">{{ failed }}</Alert>
             <Alert v-else-if="emailLink.failed" type="error">

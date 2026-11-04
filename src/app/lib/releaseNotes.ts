@@ -5,6 +5,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['The Wirescout robot now sits next to the name on the sign-in screens, in the daily digest and in account emails.'],
+    },
+    {
+        version: '0.5.4',
         notes: ["The Privacy policy now says that session recordings show only Wirescout's own pages, never your computer, screen or other tabs."],
     },
     {

@@ -2,6 +2,17 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: The robot with the name, v0.5.5
+
+- Ken's points: the name "Wirescout" goes with the robot icon wherever possible, and that's a rule (`docs/mvp-plan.md`, Decisions, "Brand").
+- Sign-in screens (one layout, `FormLayout.vue`): the robot and "Wirescout" at the top of the card, then the screen title. "Sign in to Wirescout" is now "Sign in", "Create your Wirescout account" now "Sign up".
+- Digest email and the 3 account emails: the robot before "Wirescout" at the top. A PNG made from the same drawing (`public/brand-icon.png`, served at `wirescout.app/brand-icon.png`): most email apps don't show SVG. Where images are blocked (Outlook, until allowed), the name still shows, with no broken-image box (`alt=""`).
+- Not done: the scanner and access request emails (plain text, developer only). The browser tab icon: offered, not agreed yet.
+- Version 0.5.5 with its "What's new".
+- Checked: 66 unit tests (the digest test now expects the robot), type-check, build (the PNG is in it). In the browser: Sign in, Sign up, Forgot password, Request access; the digest and the 3 account emails written with made-up data, the robot loading from the local app.
+- Not checked: Confirm and Set password (need an email link; same layout); dark mode and phone width; real email apps (Gmail, Outlook).
+- Release: the web app and digest go live with the merge. Then Ken pastes the 3 updated templates (`supabase/templates/`) into the cloud dashboard (Authentication → Emails), after the merge, so the image is live first.
+
 ## 2026-11-04: Privacy policy on what recordings show, v0.5.4
 
 - Ken's point, from watching replays: people may fear the recording sees more than Wirescout. The policy now adds: "Recordings show only Wirescout's own pages, as they appear in its tab. They never capture your computer or phone, its screen, other apps, other tabs or websites, or anything else in your browser." (Ken's wording change: the computer named, not only the browser.) True of PostHog's recorder: it records the page's own content in its tab only.
