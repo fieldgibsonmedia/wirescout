@@ -1,4 +1,5 @@
 // News sources, followed by URL. A source is shared by every watch list that follows its URL.
+import { track } from '@/lib/analytics';
 import { supabase } from '@/lib/supabase';
 
 // status: "Working", why it fails ("Page not found · check the address") or "Not checked yet".
@@ -223,6 +224,7 @@ export async function addSources(watchListId: string, urls: string[]): Promise<S
         return null;
     }
 
+    track('sources_added', { count: found.length });
     return found.map(toSource);
 }
 

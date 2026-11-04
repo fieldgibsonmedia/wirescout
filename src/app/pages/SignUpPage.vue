@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // Anyone with an allowed email (allowed_email_domains) can create an account. Supabase refuses the others,
-// and they can request access instead.
+// and they can request access instead. Agreeing to the privacy policy is required (Ken, 2026-11-04).
 import { ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import Alert from '@/components/ui/Alert.vue';
+import PrivacyPolicy from '@/components/PrivacyPolicy.vue';
 import TextField from '@/components/ui/TextField.vue';
 import FormLayout from '@/layouts/FormLayout.vue';
 import { supabase } from '@/lib/supabase';
@@ -11,6 +12,7 @@ import { supabase } from '@/lib/supabase';
 const email = ref('');
 const password = ref('');
 const confirmation = ref('');
+const agreed = ref(false);
 const errors = ref<Record<string, string>>({});
 const sentTo = ref('');
 const deniedEmail = ref('');
@@ -30,12 +32,20 @@ async function signUp() {
     } else if (confirmation.value !== password.value) {
         errors.value.confirmation = "The passwords don't match.";
     }
+    if (!agreed.value) {
+        errors.value.agreed = 'Read and agree to the privacy policy to create an account.';
+    }
     if (Object.keys(errors.value).length > 0) {
         return;
     }
 
     busy.value = true;
-    const { error } = await supabase.auth.signUp({ email: email.value.trim(), password: password.value });
+    // privacy_accepted: the database records when (profiles.privacy_accepted_at).
+    const { error } = await supabase.auth.signUp({
+        email: email.value.trim(),
+        password: password.value,
+        options: { data: { privacy_accepted: true } },
+    });
     busy.value = false;
 
     if (error?.code === 'weak_password' || error?.code === 'validation_failed') {
@@ -99,9 +109,21 @@ async function signUp() {
             :error="errors.confirmation"
             required
         />
-        <p class="max-w-prose text-sm text-base-content/70">
-            Wirescout counts the days you use it, the stories you share and the digest links you open, to see what's useful. Only the Wirescout team sees it.
-        </p>
+        <div class="flex flex-col gap-1">
+            <label class="flex w-fit cursor-pointer items-center gap-2">
+                <input
+                    v-model="agreed"
+                    type="checkbox"
+                    name="agreed"
+                    :class="['checkbox checkbox-sm', errors.agreed && 'checkbox-error']"
+                    :aria-invalid="errors.agreed ? 'true' : undefined"
+                    :aria-describedby="errors.agreed ? 'agreed-help' : undefined"
+                    required
+                />
+                <span>I've read and agree to Wirescout's <PrivacyPolicy>privacy policy</PrivacyPolicy></span>
+            </label>
+            <p v-if="errors.agreed" id="agreed-help" class="text-sm text-error">{{ errors.agreed }}</p>
+        </div>
 
         <template #links>
             <RouterLink :to="{ name: 'sign-in' }" class="link">I already have an account</RouterLink>

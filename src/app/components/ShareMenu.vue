@@ -13,7 +13,7 @@ import { useRouter } from 'vue-router';
 import SendDraftDialog from '@/components/SendDraftDialog.vue';
 import { magazines } from '@/lib/magazines';
 import { profile } from '@/lib/profile';
-import { recordUsage } from '@/lib/usage';
+import { track } from '@/lib/analytics';
 
 const props = defineProps<{
     title: string;
@@ -59,7 +59,7 @@ function returnFocus(event: Event) {
 const copied = ref(false);
 
 async function copyLink() {
-    recordUsage('share_copy_link', props.articleId);
+    track('story_shared', { channel: 'copy_link', article_id: props.articleId });
     await navigator.clipboard.writeText(props.url);
     copied.value = true;
     setTimeout(() => (copied.value = false), 3000);
@@ -89,10 +89,10 @@ const itemClass =
                         <DropdownMenuSeparator v-if="anyShareOption" class="my-2 h-px bg-base-300" />
                     </template>
                     <DropdownMenuItem v-if="options.copyLink" :class="itemClass" @select="copyLink">Copy link</DropdownMenuItem>
-                    <DropdownMenuItem v-if="options.email" as-child @select="recordUsage('share_email', articleId)">
+                    <DropdownMenuItem v-if="options.email" as-child @select="track('story_shared', { channel: 'email', article_id: articleId })">
                         <a :href="emailUrl" :class="itemClass">Email</a>
                     </DropdownMenuItem>
-                    <DropdownMenuItem v-if="options.linkedIn" as-child @select="recordUsage('share_linkedin', articleId)">
+                    <DropdownMenuItem v-if="options.linkedIn" as-child @select="track('story_shared', { channel: 'linkedin', article_id: articleId })">
                         <a :href="linkedInUrl" target="_blank" rel="noopener" :class="itemClass">
                             LinkedIn<span class="sr-only"> (opens in a new tab)</span>
                         </a>

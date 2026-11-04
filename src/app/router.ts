@@ -4,9 +4,10 @@
 // Signed-in pages are children of the layout, so the side nav stays in place between them.
 import { createRouter, createWebHistory } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { startAnalytics, track, trackPage } from '@/lib/analytics';
 import { emailLink, supabase } from '@/lib/supabase';
-import { recordActiveDay, recordUsage } from '@/lib/usage';
 import AccountSettingsPage from '@/pages/AccountSettingsPage.vue';
+import AnalyticsPage from '@/pages/AnalyticsPage.vue';
 import ChannelsSettingsPage from '@/pages/ChannelsSettingsPage.vue';
 import ConfirmPage from '@/pages/ConfirmPage.vue';
 import DashboardPage from '@/pages/DashboardPage.vue';
@@ -48,6 +49,7 @@ export const router = createRouter({
                 { path: 'settings/digest', name: 'digest-settings', component: DigestSettingsPage },
                 { path: 'settings/channels', name: 'channels-settings', component: ChannelsSettingsPage },
                 { path: 'settings/system', name: 'system-settings', component: SystemSettingsPage, meta: { superAdmin: true } },
+                { path: 'settings/analytics', name: 'analytics', component: AnalyticsPage, meta: { superAdmin: true } },
                 { path: 'account', name: 'account-settings', component: AccountSettingsPage },
             ],
         },
@@ -90,17 +92,18 @@ router.beforeEach(async (to) => {
     }
 });
 
-// Usage for the monthly report: the day, and a digest link (?from=digest) once, then the tag is dropped
-// so a reload doesn't count it again.
+// Usage analytics (lib/analytics.ts): each signed-in page, and a digest link (?from=digest) once, then the tag
+// is dropped so a reload doesn't count it again.
 router.afterEach(async (to) => {
     const { data } = await supabase.auth.getSession();
     if (!data.session || to.meta.public || to.meta.anyone) {
         return;
     }
 
-    recordActiveDay(data.session.user.id);
+    startAnalytics(data.session.user.id);
+    trackPage(String(to.name), Boolean(to.meta.superAdmin));
     if (to.query.from === 'digest') {
-        recordUsage('digest_click', to.name === 'story' ? Number(to.params.storyId) : undefined);
+        track('digest_link_opened', to.name === 'story' ? { article_id: Number(to.params.storyId) } : undefined);
         const { from: _from, ...query } = to.query;
         router.replace({ ...to, query });
     }
