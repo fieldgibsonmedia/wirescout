@@ -4,7 +4,9 @@
 //   Lines without a link are listed while typing, so they can be fixed before adding.
 // - Upload a file: drop or choose an .xlsx, .csv or .txt file, and every web address in it is found
 //   (no column to pick). The user sees the list, then adds it with one button.
-// Each link is checked first: the ones that fail aren't added, and the user sees why.
+// Each link is checked first: the ones that fail aren't added, and the user sees why. The same address
+// written differently (http or https, www., a trailing slash) counts once.
+// Sources the scanner hasn't checked yet are read once right away, so their first stories show now.
 // The Excel reader is only downloaded when an .xlsx file is used.
 import { ArrowUpTrayIcon, PlusIcon } from '@heroicons/vue/20/solid';
 import { TabsContent, TabsIndicator, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
@@ -12,7 +14,17 @@ import { computed, ref } from 'vue';
 import Alert from '@/components/ui/Alert.vue';
 import Button from '@/components/ui/Button.vue';
 import TextAreaField from '@/components/ui/TextAreaField.vue';
-import { addSources, checkLinks, checkMessages, isWebAddress, type LinkCheck, type Source } from '@/lib/sources';
+import {
+    addressKey,
+    addSources,
+    checkLinks,
+    checkMessages,
+    isWebAddress,
+    scanNewSources,
+    uniqueAddresses,
+    type LinkCheck,
+    type Source,
+} from '@/lib/sources';
 
 const props = defineProps<{
     watchListId: string;
@@ -43,6 +55,8 @@ const reading = ref(false);
 const fileError = ref('');
 const found = ref<string[]>([]);
 const adding = ref(false);
+// After adding: reading the new sources for their first stories.
+const scanning = ref(false);
 const addFailed = ref(false);
 const result = ref('');
 // The links that failed their check, one line per reason.
@@ -58,7 +72,7 @@ const pastedLines = computed(() =>
         .filter(Boolean)
         .map((line) => ({ line, addresses: lineAddresses(line) })),
 );
-const pastedLinks = computed(() => [...new Set(pastedLines.value.flatMap((line) => line.addresses))]);
+const pastedLinks = computed(() => uniqueAddresses(pastedLines.value.flatMap((line) => line.addresses)));
 const badLines = computed(() => pastedLines.value.filter((line) => line.addresses.length === 0).map((line) => line.line));
 
 // "12 links ready · 2 lines aren't links"
@@ -177,23 +191,23 @@ async function fileText(file: File, extension: string) {
     }
 }
 
-// Every web address in the text, once each, in the order they appear.
+// Every web address in the text, once each (however it's written), in the order they appear.
 function findAddresses(text: string) {
     const addresses = (text.match(ADDRESS_PATTERN) ?? [])
         // A sentence's full stop or comma isn't part of the address.
         .map((match) => match.replace(/[.,;:!?]+$/, ''))
         .map((match) => (/^www\./i.test(match) ? `https://${match}` : match));
-    return [...new Set(addresses)];
+    return uniqueAddresses(addresses);
 }
 
 // Checks the links and adds the ones that work. Returns false if they couldn't be added at all.
 async function add(urls: string[]) {
     result.value = '';
     notAdded.value = [];
-    const inList = new Set(props.sources.map((source) => source.url));
+    const inList = new Set(props.sources.map((source) => addressKey(source.url)));
     const invalid = urls.filter((url) => !isWebAddress(url));
-    const already = urls.filter((url) => isWebAddress(url) && inList.has(url));
-    const toCheck = urls.filter((url) => isWebAddress(url) && !inList.has(url));
+    const already = urls.filter((url) => isWebAddress(url) && inList.has(addressKey(url)));
+    const toCheck = urls.filter((url) => isWebAddress(url) && !inList.has(addressKey(url)));
 
     addFailed.value = false;
     let added: Source[] = [];
@@ -201,21 +215,19 @@ async function add(urls: string[]) {
     if (toCheck.length > 0) {
         adding.value = true;
         const checks = await checkLinks(toCheck);
-        if (!checks) {
+        failed = checks.filter((check) => check.problem);
+        const working = checks.filter((check) => !check.problem).map((check) => check.url);
+        const response = working.length > 0 ? await addSources(props.watchListId, working) : [];
+
+        if (!response) {
             adding.value = false;
             addFailed.value = true;
             return false;
         }
-        failed = checks.filter((check) => check.problem);
-        const working = checks.filter((check) => !check.problem).map((check) => check.url);
-        const response = working.length > 0 ? await addSources(props.watchListId, working) : [];
+        scanning.value = true;
+        added = await scanNewSources(response);
+        scanning.value = false;
         adding.value = false;
-
-        if (!response) {
-            addFailed.value = true;
-            return false;
-        }
-        added = response;
     }
 
     result.value = [
@@ -234,10 +246,9 @@ async function add(urls: string[]) {
 </script>
 
 <template>
-    <!-- One fixed height for both tabs and their results, so the dialog never resizes; the content scrolls inside.
-         Tall enough for the tabs and the square drop box. -->
+    <!-- One fixed height for both tabs and their results, so the dialog never resizes; the content scrolls inside. -->
     <!-- -mx-1 px-1: room for the fields' focus rings, which the scrolling box would otherwise cut at the sides. -->
-    <div class="-mx-1 flex h-[32.5rem] max-h-[calc(100dvh-12rem)] flex-col gap-3 overflow-y-auto px-1">
+    <div class="-mx-1 flex h-[28rem] max-h-[calc(100dvh-12rem)] flex-col gap-3 overflow-y-auto px-1">
         <TabsRoot v-model="tab" class="flex flex-col gap-3">
             <TabsList aria-label="How to add sources" class="tabs tabs-border relative">
                 <TabsTrigger value="paste" class="tab data-[state=active]:tab-active">Paste links</TabsTrigger>
@@ -261,7 +272,8 @@ async function add(urls: string[]) {
                         {{ line }}
                     </li>
                 </ul>
-                <p v-if="adding" role="status" class="text-sm">
+                <p v-if="scanning" role="status" class="text-sm">Finding their first stories…</p>
+                <p v-else-if="adding" role="status" class="text-sm">
                     Validating {{ pastedLinks.length === 1 ? 'source' : `${pastedLinks.length} sources` }}…
                 </p>
                 <Alert v-if="addFailed" type="error">The sources couldn't be added. Please try again.</Alert>
@@ -276,7 +288,7 @@ async function add(urls: string[]) {
             <TabsContent value="file" class="flex flex-col gap-3">
                 <div
                     :class="[
-                        'flex aspect-square flex-col items-center justify-center gap-4 rounded-box border-2 border-dashed p-6 text-center transition-colors motion-reduce:transition-none',
+                        'flex flex-col items-center justify-center gap-4 rounded-box border-2 border-dashed p-6 text-center transition-colors motion-reduce:transition-none',
                         dragging ? 'border-primary bg-base-200' : 'border-base-content/30',
                     ]"
                     @dragover.prevent="dragging = true"
@@ -302,7 +314,8 @@ async function add(urls: string[]) {
                     <ul class="max-h-64 overflow-y-auto rounded-box border border-base-300 text-sm">
                         <li v-for="url in found" :key="url" class="border-b border-base-300 px-3 py-2 break-words last:border-b-0">{{ url }}</li>
                     </ul>
-                    <p v-if="adding" role="status" class="text-sm">Validating {{ found.length === 1 ? 'source' : `${found.length} sources` }}…</p>
+                    <p v-if="scanning" role="status" class="text-sm">Finding their first stories…</p>
+                    <p v-else-if="adding" role="status" class="text-sm">Validating {{ found.length === 1 ? 'source' : `${found.length} sources` }}…</p>
                     <Alert v-if="addFailed" type="error">The sources couldn't be added. Please try again.</Alert>
                     <div class="flex flex-wrap gap-3">
                         <Button variant="outline" :busy="adding" @click="addFound">

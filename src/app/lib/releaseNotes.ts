@@ -6,6 +6,15 @@ export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
         notes: [
+            'New sources show their latest stories straight away, instead of after the next hourly check.',
+            "Adding many sources at once works with big news sites too. If a link can't be checked, only that one is left out, and the rest are added.",
+            'The same address written two ways (with or without www., http or https) is added only once.',
+            'The file upload box is smaller again, so the addresses it finds show without scrolling.',
+        ],
+    },
+    {
+        version: '0.1.0',
+        notes: [
             "Send a story to Corporate Disclosures as a draft: add the magazine once with your own MODX login in Settings → Channels, then pick Send to Corporate Disclosures in the story's Share menu.",
             'The draft comes with a suggested title and short brief, ending with the source link. Edit them as you like before you send.',
             "Suggested drafts are always in British English, even when the story isn't.",

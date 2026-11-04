@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "@supabase/functions-js": "jsr:@supabase/functions-js@^2",
+    "@supabase/server": "npm:@supabase/server@1.9.2",
+    "cheerio": "npm:cheerio@1.1.2",
+    "chrono-node": "npm:chrono-node@2.9.0"
+  }
+}

@@ -341,9 +341,12 @@ onMounted(load);
                     </p>
                     <p v-else-if="shownSearch" class="max-w-prose break-words">No stories match "{{ shownSearch }}".</p>
                     <p v-else-if="keywords.length > 0" class="max-w-prose">
-                        No stories mention these keywords yet. New ones appear here after the next scan.
+                        No stories mention these keywords yet. Wirescout checks your sources every hour, and new stories appear here
+                        on their own.
                     </p>
-                    <p v-else class="max-w-prose">No stories yet. New ones appear here after the next scan.</p>
+                    <p v-else class="max-w-prose">
+                        No stories yet. All is well: Wirescout checks your sources every hour, and new stories appear here on their own.
+                    </p>
                 </Card>
 
                 <ul v-else class="flex flex-col gap-4">
