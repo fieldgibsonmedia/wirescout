@@ -5,6 +5,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['Fixed: a source you add could show as failing, although its link check had just passed.'],
+    },
+    {
+        version: '0.5.5',
         notes: ['The Wirescout robot now sits next to the name on the sign-in screens, in the daily digest and in account emails.'],
     },
     {

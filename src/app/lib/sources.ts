@@ -138,11 +138,12 @@ export async function checkLinks(urls: string[]): Promise<LinkCheck[]> {
     return results;
 }
 
-// Reads sources just added that the scanner hasn't checked yet, so their first stories show now instead
-// of after the next hourly scan. One source per call, like checkLinks. A failed read is left to that scan.
-// Returns the sources with their new status.
+// Reads sources just added that the scanner hasn't checked yet, or that failed its last check (shared with
+// another list: the link check just passed, so the old "failing" would be wrong), so their stories and status
+// show now instead of after the next hourly scan. One source per call, like checkLinks. A failed read is left
+// to that scan. Returns the sources with their new status.
 export async function scanNewSources(sources: Source[]): Promise<Source[]> {
-    const unchecked = sources.filter((source) => !source.lastCheckedAt);
+    const unchecked = sources.filter((source) => !source.lastCheckedAt || source.problem);
     let next = 0;
     async function worker() {
         while (next < unchecked.length) {
