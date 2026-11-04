@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: A source added shows "failing" after its check passed (fix), v0.5.6
+
+- From `docs/known-issues.md`. Cause: the app and `scan-new-sources` read only sources never checked, so a shared source that failed its last hourly check kept its old status until the next scan.
+- Fix: both also read a source that failed its last check (`src/app/lib/sources.ts`, `supabase/functions/scan-new-sources/index.ts`). A working source is still never read from there. Version 0.5.6 with its "What's new".
+- Checked: reproduced locally before the fix (a real, working feed marked as failing; added it: "1 added", row still red with Fix); after it, the same steps show it working with 31 stories. A second call doesn't read it again; a source outside the user's lists is refused (404). 66 unit tests, type-check, build. Made-up account and test data deleted afterwards (Ken's ok).
+- Release: Ken redeploys the function first (`npx supabase functions deploy scan-new-sources`), then merges the release PR.
+
 ## 2026-11-04: The robot with the name, v0.5.5
 
 - Ken's points: the name "Wirescout" goes with the robot icon wherever possible, and that's a rule (`docs/mvp-plan.md`, Decisions, "Brand").
