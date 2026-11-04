@@ -425,7 +425,10 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "hook_before_user_created":
+            "add_super_admin":
+{ Args: { "account_email": string }; Returns: boolean
+                           },
+"hook_before_user_created":
 { Args: { "event": Json }; Returns: Json
                            },
 "is_super_admin":
@@ -437,9 +440,17 @@ isOneToOne: false
 "record_active_day":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"remove_super_admin":
+{ Args: { "admin_id": string }; Returns: undefined
+                           },
 "story_sends":
 { Args: { "article_ids": (number)[] }; Returns: {
               "article_id": number,"edit_url": string,"publication_id": number,"sent_at": string,"sent_by": string,"sent_by_me": boolean
+            }[]
+                           },
+"super_admins":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "email": string,"full_name": string,"id": string
             }[]
                            }
           }

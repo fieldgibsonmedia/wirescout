@@ -328,7 +328,15 @@ Ken's 9 points from testing live, grouped into 3 jobs (one branch each, from `or
 - Delete account (point 6): at the bottom of Account settings, with a confirmation. Deletes the account and everything in it: watch lists, magazine connections (their MODX sessions are ended first), usage. Needs an Edge Function (only the server may delete an account). Shared records other people rely on (e.g. "already sent to <magazine>") are checked during the job. Ken's call (2026-11-04): the drafts a deleted account sent stay in the publish log without the person, so colleagues still see "A former colleague already sent this story".
 - Live impact: a migration, a new Edge Function and the SQL line (Ken runs all 3), then the web app. Touches login and permissions: Ken's "approve" before coding.
 
-**Job 3, analytics and privacy (points 7, 8), v0.4.0:**
+**Job 2b, system admins (Ken, 2026-11-04, after job 2's release), v0.4.0:**
+
+- Wirescout always keeps at least one super admin. The database refuses to remove the last one, however it's done: the System admins tab, deleting the account (in the app or the dashboard), or SQL.
+- Delete account: the only super admin sees "You are the only super admin at the moment. Assign another super admin before deleting your account." instead of the confirmation. The `delete-account` function refuses too.
+- System settings gets two tabs, like a watch list's: Platform access (who can sign up) and System admins. A super admin adds another by the email of an existing account (no invitations), and removes one, themselves too, while another is left.
+- The SQL line is only for the first super admin.
+- Live impact: a migration and the `delete-account` redeploy (Ken runs both), then the web app. Only Ken is a super admin, so journalists see only the version change.
+
+**Job 3, analytics and privacy (points 7, 8), v0.5.0:**
 
 - PostHog replaces Wirescout's own usage counting (Ken, 2026-11-04). Free tier, EU hosting. Ken creates the account.
     - Tracked: page views, active users, the main features (add sources, share, send a draft, search, save, digest links opened, settings changed), errors. Each tied to the signed-in user, so the numbers show who uses Wirescout.

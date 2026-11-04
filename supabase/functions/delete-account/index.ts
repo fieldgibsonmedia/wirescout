@@ -3,7 +3,7 @@
 // behind on a magazine. Deleting the user removes their profile, and with it their watch lists (and the saved
 // stories in them), magazine connections and usage (the database's "on delete cascade"). Shared sources and
 // their stories stay: other lists may follow them. The publish log stays without the person, so colleagues still
-// see "A former colleague already sent this story". Signed-in users only.
+// see "A former colleague already sent this story". The only super admin can't delete theirs. Signed-in users only.
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
 import { logout } from "../../../src/publish/modx.js";
@@ -13,6 +13,12 @@ export default {
   fetch: withSupabase({ auth: "user" }, async (_request, ctx) => {
     const userId = ctx.userClaims!.id;
     const admin = ctx.supabaseAdmin;
+
+    // Wirescout always keeps a super admin (the database refuses too). Checked before anything is ended.
+    const { data: superAdmins } = await admin.from("profiles").select("id").eq("is_super_admin", true);
+    if (superAdmins?.length === 1 && superAdmins[0].id === userId) {
+      return reply(409, { error: "You are the only super admin at the moment. Assign another super admin before deleting your account." });
+    }
 
     const { data: connections } = await admin.from("magazine_connections").select("publication_id").eq("user_id", userId);
     for (const { publication_id } of connections ?? []) {

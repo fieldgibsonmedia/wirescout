@@ -1,8 +1,12 @@
 <script setup lang="ts">
-// Settings → Manager → System settings, for the super admin only (router.ts; the database refuses everyone else).
-// Who may sign up: whole domains and single addresses (allowed_email_domains, read by the sign-up check).
+// Settings → Manager → System settings, for super admins only (router.ts; the database refuses everyone else).
+// Two tabs (Ken, 2026-11-04): Platform access and System admins (SystemAdminsTab). ?tab=admins opens the second.
+// Platform access: who may sign up: whole domains and single addresses (allowed_email_domains, read by the sign-up check).
 // Removing one stops new sign-ups from it; accounts already made stay.
+import { TabsContent, TabsIndicator, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
 import { computed, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import SystemAdminsTab from '@/components/SystemAdminsTab.vue';
 import Alert from '@/components/ui/Alert.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
@@ -13,6 +17,8 @@ import { supabase } from '@/lib/supabase';
 
 // A domain (example.com) or one full address (jane@example.com).
 const ENTRY_PATTERN = /^([^@\s]+@)?[a-z0-9-]+(\.[a-z0-9-]+)+$/;
+
+const tab = ref(useRoute().query.tab === 'admins' ? 'admins' : 'access');
 
 const entries = ref<string[]>([]);
 const loadFailed = ref(false);
@@ -93,44 +99,58 @@ onMounted(load);
 <template>
     <PageHeader title="System settings" description="Settings for everyone who uses Wirescout." />
 
-    <Card>
-        <h2 class="text-xl font-bold">Who can sign up</h2>
-        <p class="max-w-prose text-base-content/70">
-            People with an email at one of these domains, or one of these single addresses, can create an account.
-        </p>
+    <TabsRoot v-model="tab" class="flex flex-col gap-4">
+        <TabsList aria-label="System settings" class="tabs tabs-border relative">
+            <TabsTrigger value="access" class="tab data-[state=active]:tab-active">Platform access</TabsTrigger>
+            <TabsTrigger value="admins" class="tab data-[state=active]:tab-active">System admins</TabsTrigger>
+            <TabsIndicator class="tab-indicator" />
+        </TabsList>
 
-        <form class="flex max-w-md flex-col gap-4" novalidate @submit.prevent="add" @input="added = ''">
-            <TextField
-                v-model="newEntry"
-                name="allowed-entry"
-                label="Domain or email"
-                autocomplete="off"
-                helper="A whole domain, like example.com, or one person's email."
-                :error="addError"
-            />
-            <div class="flex flex-wrap items-center gap-4">
-                <Button type="submit" :busy="addBusy">Add</Button>
-                <Alert v-if="added" type="success">{{ added }} can sign up now.</Alert>
-                <Alert v-if="addFailed" type="error">It couldn't be added. Please try again.</Alert>
-            </div>
-        </form>
+        <TabsContent value="access" class="flex flex-col gap-4">
+            <Card>
+                <h2 class="text-xl font-bold">Who can sign up</h2>
+                <p class="max-w-prose text-base-content/70">
+                    People with an email at one of these domains, or one of these single addresses, can create an account.
+                </p>
 
-        <Alert v-if="loadFailed" type="error">The list couldn't be loaded.</Alert>
-        <template v-else>
-            <div v-for="group in [{ title: 'Domains', items: domains }, { title: 'Single addresses', items: addresses }]" :key="group.title" class="flex flex-col gap-2">
-                <h3 class="font-bold">{{ group.title }}</h3>
-                <p v-if="group.items.length === 0" class="text-base-content/70">None yet.</p>
-                <ul v-else class="flex flex-col divide-y divide-base-300 border-t border-base-300">
-                    <li v-for="entry in group.items" :key="entry" class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2">
-                        <span class="break-all">{{ entry }}</span>
-                        <Button variant="ghost" @click="askRemove(entry)">
-                            Remove<span class="sr-only"> {{ entry }}</span>
-                        </Button>
-                    </li>
-                </ul>
-            </div>
-        </template>
-    </Card>
+                <form class="flex max-w-md flex-col gap-4" novalidate @submit.prevent="add" @input="added = ''">
+                    <TextField
+                        v-model="newEntry"
+                        name="allowed-entry"
+                        label="Domain or email"
+                        autocomplete="off"
+                        helper="A whole domain, like example.com, or one person's email."
+                        :error="addError"
+                    />
+                    <div class="flex flex-wrap items-center gap-4">
+                        <Button type="submit" :busy="addBusy">Add</Button>
+                        <Alert v-if="added" type="success">{{ added }} can sign up now.</Alert>
+                        <Alert v-if="addFailed" type="error">It couldn't be added. Please try again.</Alert>
+                    </div>
+                </form>
+
+                <Alert v-if="loadFailed" type="error">The list couldn't be loaded.</Alert>
+                <template v-else>
+                    <div v-for="group in [{ title: 'Domains', items: domains }, { title: 'Single addresses', items: addresses }]" :key="group.title" class="flex flex-col gap-2">
+                        <h3 class="font-bold">{{ group.title }}</h3>
+                        <p v-if="group.items.length === 0" class="text-base-content/70">None yet.</p>
+                        <ul v-else class="flex flex-col divide-y divide-base-300 border-t border-base-300">
+                            <li v-for="entry in group.items" :key="entry" class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2">
+                                <span class="break-all">{{ entry }}</span>
+                                <Button variant="ghost" @click="askRemove(entry)">
+                                    Remove<span class="sr-only"> {{ entry }}</span>
+                                </Button>
+                            </li>
+                        </ul>
+                    </div>
+                </template>
+            </Card>
+        </TabsContent>
+
+        <TabsContent value="admins" class="flex flex-col gap-4">
+            <SystemAdminsTab />
+        </TabsContent>
+    </TabsRoot>
 
     <ConfirmDialog
         v-model:open="removeOpen"

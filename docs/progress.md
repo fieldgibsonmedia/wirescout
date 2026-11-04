@@ -2,6 +2,17 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-04: System admins (after job 2's release), v0.4.0
+
+- Ken's points after releasing v0.3.0: the only super admin could delete their account, and super admins could only be set with SQL.
+- The database always keeps at least one super admin: a trigger refuses to remove or delete the last one (the System admins tab, deleting the account in the app or the dashboard, SQL).
+- Delete account: the only super admin sees "You are the only super admin at the moment. Assign another super admin before deleting your account." with a link to System admins, instead of the confirmation. `delete-account` refuses too (409), before ending any MODX session.
+- System settings has two tabs: Platform access (who can sign up, unchanged) and System admins (add by the email of an existing account, remove with a confirmation, yourself too while another is left). `?tab=admins` opens the second.
+- 1 migration (`20261104120618_system_admins.sql`). Version 0.4.0 with its "What's new"; analytics moves to v0.5.0.
+- Checked: 138 database tests (13 new), db lint, unit tests, type-check, build. In the browser with 2 made-up local accounts (Ken's ok): the message for the only super admin and its link; both tabs; adding an email without an account, an existing one and a duplicate; removing yourself (back to the dashboard, Manager gone); `delete-account` called as the only super admin (409, account kept); a normal Delete account. No console errors. Both test accounts deleted afterwards (the last one with the trigger off for that one delete).
+- Not checked: phone width and dark mode.
+- Release, in this order (Ken): push the migration (`npx supabase db push`), redeploy the function (`npx supabase functions deploy delete-account`), then merge the release PR.
+
 ## 2026-11-04: Accounts (after the first journalist, job 2), v0.3.0
 
 - Super admin: `profiles.is_super_admin`, which users can't set. Ken sets it with one SQL line (`docs/project.md`, Admin tasks).
@@ -13,6 +24,9 @@ Newest first. One entry per job: date, what was done, what's next.
 - Not checked: ending a real MODX session on delete (no magazine copy running; same `logout` call as Disconnect). Phone width and light mode.
 - Also checked: the scanner's first run with the moved code (11:24 UTC) passed.
 - Release, in this order (Ken): push the migration (`npx supabase db push`), deploy the function (`npx supabase functions deploy delete-account`), run the super admin SQL line, then merge the release PR.
+- Release PR #23 opened. Done by Ken on 2026-11-04, before the merge: migration `20261104110801_accounts.sql` pushed, `delete-account` deployed, his profile set as super admin (checked: 1 super admin).
+- Released: PR #23 merged by Ken at 11:52 UTC; the web app deploy passed, and `wirescout.app` serves v0.3.0 (checked in its code). Not checked yet: Manager and Delete account on live.
+- Next: job 3, analytics and privacy (plan in `docs/mvp-plan.md`; Ken's "approve" before coding), in the next session. Proposed on top of the plan, not yet approved: PostHog gets only the user id, the Analytics screen adds names from our database; the PDF made in the browser with jsPDF, loaded on click; locally nothing goes to PostHog, and the Analytics function is tested against made-up PostHog answers.
 
 ## 2026-11-04: Sources and wording (after the first journalist, job 1), v0.2.0
 

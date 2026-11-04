@@ -2,6 +2,7 @@
 // The signed-in person's account: their name, email and password, the theme on this device, and deleting it.
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { computed, nextTick, ref, watch } from 'vue';
+import { RouterLink } from 'vue-router';
 import Alert from '@/components/ui/Alert.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
@@ -37,6 +38,7 @@ const passwordFailed = ref(false);
 const deleteOpen = ref(false);
 const deleteBusy = ref(false);
 const deleteError = ref('');
+const onlySuperAdmin = ref(false);
 
 const themes = [
     { value: 'auto', label: 'Auto', description: "Follows your computer's setting." },
@@ -144,6 +146,19 @@ async function changePassword() {
     newPassword.value = '';
     confirmation.value = '';
     passwordSaved.value = true;
+}
+
+// Wirescout always keeps a super admin: the only one is asked to assign another first (the server refuses too).
+async function askDelete() {
+    onlySuperAdmin.value = false;
+    if (profile.value?.is_super_admin) {
+        const { data } = await supabase.rpc('super_admins');
+        if (data?.length === 1) {
+            onlySuperAdmin.value = true;
+            return;
+        }
+    }
+    deleteOpen.value = true;
 }
 
 // Only the server may delete an account (the delete-account function). Once it's gone, the session here is
@@ -286,8 +301,12 @@ async function showPasswordErrors() {
             Deletes your account and everything in it: your watch lists, saved stories, magazine connections and usage. It can't be undone.
         </p>
         <div>
-            <Button variant="error" @click="deleteOpen = true">Delete account</Button>
+            <Button variant="error" @click="askDelete">Delete account</Button>
         </div>
+        <Alert v-if="onlySuperAdmin" type="warning">
+            You are the only super admin at the moment. Assign another super admin before deleting your account.
+            <RouterLink :to="{ name: 'system-settings', query: { tab: 'admins' } }" class="link">Go to System admins</RouterLink>
+        </Alert>
     </Card>
 
     <ConfirmDialog
