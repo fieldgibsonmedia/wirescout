@@ -1,9 +1,19 @@
 // What's new in each version, newest first, for the dashboard's "What's new" card, in words a journalist would use.
 // The newest entry takes package.json's version, so the app shows one version everywhere. When the version goes up,
-// type the old number into this entry and add a new one on top. The version stays 0.1.0 until Ken says otherwise.
+// type the old number into this entry and add a new one on top. Every job that changes what users get raises the version
+// (docs/mvp-plan.md, Decisions).
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: [
+            'New sources show their latest stories straight away, instead of after the next hourly check.',
+            "Adding many sources at once works with big news sites too. If a link can't be checked, only that one is left out, and the rest are added.",
+            'The same address written two ways (with or without www., http or https) is added only once.',
+            'The file upload box is smaller again, so the addresses it finds show without scrolling.',
+        ],
+    },
+    {
+        version: '0.1.0',
         notes: [
             "Send a story to Corporate Disclosures as a draft: add the magazine once with your own MODX login in Settings → Channels, then pick Send to Corporate Disclosures in the story's Share menu.",
             'The draft comes with a suggested title and short brief, ending with the source link. Edit them as you like before you send.',

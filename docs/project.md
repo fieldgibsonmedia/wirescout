@@ -2,7 +2,7 @@
 
 ## What Wirescout is
 
-An internal Field Gibson Media tool for journalists. It watches a curated list of news sources and alerts them about new stories, like Google Alerts limited to the sources they choose.
+An internal Field Gibson Media tool for journalists, in production since 2026-11-03. It watches a curated list of news sources and alerts them about new stories, like Google Alerts limited to the sources they choose.
 
 ## Stack
 
@@ -36,13 +36,14 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `src/admin/index.js`: the admin emails (below). `emails.js` writes them, `months.js` picks the months. Tests next to them.
 - `src/app/lib/usage.ts`: records usage for the report (days, shares, digest clicks).
 - `src/app/lib/magazines.ts`: the magazines, the user's connections and who already sent which story (`story_sends`), for Settings → Channels, the Share menu and the Send dialog (`components/SendDraftDialog.vue`).
-- `src/app/lib/releaseNotes.ts`: the dashboard's "What's new". Add notes with each release. Its newest entry and the side nav take the version from `package.json`, which stays 0.1.0 until Ken says otherwise.
+- `src/app/lib/releaseNotes.ts`: the dashboard's "What's new". Add notes with each release. Its newest entry and the side nav take the version from `package.json`. Every job that changes what users get raises the version (`docs/mvp-plan.md`, Decisions).
 - `src/digest/index.js`: the digest (below). `due.js` decides who gets one, `email.js` writes it. Tests next to them.
-- `src/scanner/index.js`: the scan (below). `read-source.js` picks feed or page, `feed.js` and `page.js` read them, `health.js` decides whether the scanner looks broken and writes the health email. Tests next to them (`*.test.js`).
+- `src/scanner/index.js`: the scan (below). `check-source.js` checks one source and saves its stories and status, `read-source.js` picks feed or page, `feed.js` and `page.js` read them, `health.js` decides whether the scanner looks broken and writes the health email. Tests next to them (`*.test.js`).
 - `supabase/config.toml`: local Supabase settings (sign-ups on for allowed emails, the sign-up check, email templates).
 - `supabase/templates/`: the account emails (confirm account, new password, email change). The cloud project needs the same templates pasted into its dashboard.
 - `supabase/migrations/`: the database schema and access rules, one SQL file per change.
-- `supabase/functions/check-links/`: an Edge Function that checks links before they're added, with the scanner's own code (`src/scanner/check-link.js`). Up to 10 links per call, signed-in users only.
+- `supabase/functions/check-links/`: an Edge Function that checks links before they're added, with the scanner's own code (`src/scanner/check-link.js`). The app sends one link per call (the free plan's 2 seconds of processing per call); signed-in users only.
+- `supabase/functions/scan-new-sources/`: reads a source just added, once, and saves its stories and status with the scanner's own code (`src/scanner/check-source.js`), so a new list shows stories right away. One source per call, only the user's own sources that were never checked.
 - `supabase/functions/magazine-connect/`, `post-draft/`, `draft-text/`: posting drafts to the magazines' MODX (`docs/post-to-modx-plan.md`), with `_shared/magazines.ts`. Their code lives in `src/publish/`: `modx.js` (the MODX connector), `session-crypto.js` (locks the stored sessions), `draft.js` (the suggested draft text). Tests next to them. `modx-staging-test.js` is the proven reference for the connector calls.
 - `supabase/tests/database/`: access tests (pgTAP).
 - `supabase/seed.sql`: made-up sources and articles, loaded into the local database on every reset.

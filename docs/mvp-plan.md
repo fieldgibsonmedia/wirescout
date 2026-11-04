@@ -24,8 +24,8 @@ Agreed with Ken on 2026-10-27. Turns the prototype into an internal MVP for more
 | Sharing | LinkedIn and email through share links: LinkedIn's share window and the user's own email app | No setup, no logins to expire, free; the journalist posts or sends as themselves |
 | Look | Apple's web blue (`#0071E3`) as the primary colour until Wirescout has a brand | Apple's system blue `#007AFF` is too light for white button text (4.0:1) |
 | Bulk sources | File upload (`.xlsx`, `.csv`, `.txt`) with `read-excel-file`, loaded only for `.xlsx` | People expect to upload a file; paste-only was rejected. Keeps the app small for everyone else |
-| Analytics | Our own usage report job, no PostHog | PostHog is too much for now |
-| Version | Stays 0.1.0 until Ken says otherwise, when real users are invited (Ken, 2026-11-03). Every place that shows it reads `package.json` | Ken's call; one source keeps it consistent |
+| Analytics | PostHog, read in Wirescout's own Analytics screen (Ken, 2026-11-04, "After the first journalist", job 3). Before: our own usage report | Journalists use it now: Ken needs more than days and shares, without learning PostHog's UI |
+| Version | Every job that changes what users get (app, digest, emails) raises it, with a "What's new" entry (Ken, 2026-11-04): a fix or small tweak the last number (0.1.0 → 0.1.1), a new feature the middle one (0.1.0 → 0.2.0). Docs-only jobs don't. Every place that shows it reads `package.json`. Before: 0.1.0 until real users were invited | Journalists use it now: the version tells them what changed |
 
 ## Scanning without selectors
 
@@ -308,6 +308,38 @@ Three parts, in this order. Part 1 has no code and fixes the colleague's sign-up
 - Everyone signs in again once (the app's storage belongs to the old address). Today that's Ken and the colleague.
 - Live impact: the web app (Ken, the colleague), the digest's links, the account emails' links.
 
+### After the first journalist (agreed 2026-11-04)
+
+Ken's 9 points from testing live, grouped into 3 jobs (one branch each, from `origin/mvp`), in this order. Each job raises the version (Decisions).
+
+**Job 1, sources and wording (points 1, 2, 3, 4, 9), v0.2.0:**
+
+- Paste error (point 1): Ken pasted 20 links and got "The sources couldn't be added"; the second try worked. Not the empty line: blank lines and repeats are dropped before anything is sent. Likely cause: the link check timed out on slow sites (Bloomberg, WSJ, FT, Reuters). Reproduce locally with the same 20 links first, then fix the cause. A failure must never hide which links did work.
+- Upload a file (point 2): the drop box goes back to its natural height (undo `aspect-square` from "Before the first journalist", job 5), and the dialog's fixed height with it, so the found addresses show without scrolling past the box.
+- Duplicates (point 3): one link pasted or uploaded twice is already added once, and links already in the list count as "already in the list". New: the same address written differently counts as one: `http://` or `https://`, with or without `www.`, a trailing `/`. Within the paste or file, and against the list.
+- Channels (point 4): the intro reads "Connect your MODX account to send story drafts to Field Gibson Media magazines."
+- First stories right away (point 9, Ken's pick of 2): after sources are added, Wirescout reads them once, with the scanner's own code and rules (newest 50, new links only), and saves their stories and status. A new list shows stories within seconds instead of after the next hourly scan. Plus a note on the list, while it has no stories yet: Wirescout checks the sources every hour and new stories appear on their own.
+- Live impact: the web app, and an Edge Function (Ken deploys it). No migration expected; ask Ken if one turns out to be needed.
+
+**Job 2, accounts (points 5, 6), v0.3.0:**
+
+- Super admin: a flag on the profile that users can't set themselves. Ken sets it on his own account with one SQL line in the dashboard (his address stays out of the public repo).
+- Settings → System Settings (super admin only): the allowed domains and single addresses (`allowed_email_domains`, already used by the sign-up check), with Add and Remove. The database allows it for the super admin only, not just the screen.
+- Delete account (point 6): at the bottom of Account settings, with a confirmation. Deletes the account and everything in it: watch lists, magazine connections (their MODX sessions are ended first), usage. Needs an Edge Function (only the server may delete an account). Shared records other people rely on (e.g. "already sent to <magazine>") are checked during the job.
+- Live impact: a migration, a new Edge Function and the SQL line (Ken runs all 3), then the web app. Touches login and permissions: Ken's "approve" before coding.
+
+**Job 3, analytics and privacy (points 7, 8), v0.4.0:**
+
+- PostHog replaces Wirescout's own usage counting (Ken, 2026-11-04). Free tier, EU hosting. Ken creates the account.
+    - Tracked: page views, active users, the main features (add sources, share, send a draft, search, save, digest links opened, settings changed), errors. Each tied to the signed-in user, so the numbers show who uses Wirescout.
+    - No cookies: PostHog keeps nothing in the browser between visits; each visit is tied to the user at sign-in. No cookie banner needed.
+    - Replays on, with everything people type hidden.
+- Settings → Analytics (super admin only): active users, top pages, top features, errors and replays, per day, week, month and year. An Edge Function reads PostHog with Ken's PostHog key, which never reaches the browser. Replays open in PostHog's player.
+    - "Download report": a PDF of the usage numbers, without errors, for management. It replaces the monthly usage report email.
+- The app stops its own counting (`usage.ts`), and `admin.yml` stops the monthly usage report; access request emails stay. The old tables and their data stay untouched.
+- Privacy (point 7): the Usage section leaves Account settings. A "Privacy policy" link next to the version at the bottom of the side nav opens a dialog: what PostHog records (including replays, typed text hidden), who sees it, and that Wirescout never stores MODX passwords, only an encrypted sign-in session so drafts can be sent.
+- Live impact: the web app (every user is tracked from the release), an Edge Function and its PostHog secret (Ken sets and deploys them), and `admin.yml`. Ken's "approve" before coding.
+
 ## Branches
 
 - Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.
@@ -334,6 +366,8 @@ Jobs added on 2026-10-27 sit between the steps, so the step numbers stay the sam
 6. Post from Wirescout (last: it touches the live magazine sites)
     - Before the first journalist (Ken's 12 changes, agreed 2026-11-03), still v0.1.0: version, missing digest, drafts to magazines, Remember me, polish, admin source alerts
     - Own domain `wirescout.app` (agreed 2026-11-03): account emails through Brevo (Ken, no code), then app emails through Brevo, then the app at `wirescout.app`
+    - In production since 2026-11-03: Ken invited the first journalist
+    - After the first journalist (Ken's 9 points, agreed 2026-11-04), 3 jobs: sources and wording, accounts, analytics and privacy
 
 ## Known risks
 

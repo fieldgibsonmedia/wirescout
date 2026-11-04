@@ -84,7 +84,7 @@ async function save() {
     <Card>
         <h2 class="text-xl font-bold">Magazines</h2>
         <p class="max-w-prose text-base-content/70">
-            Send story drafts to a magazine as yourself: add it with your own account there, the one you use in its MODX manager.
+            Connect your MODX account to send story drafts to Field Gibson Media magazines.
         </p>
         <Alert v-if="magazinesFailed" type="error">Your magazines couldn't be loaded.</Alert>
         <Alert v-if="disconnectFailed" type="error">{{ disconnectFailed }}</Alert>

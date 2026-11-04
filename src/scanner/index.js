@@ -3,7 +3,7 @@
 // The logs only show totals: the repo is public, and which sources people follow is theirs.
 import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
-import { readProblem, readSource } from "./read-source.js";
+import { checkSource } from "./check-source.js";
 import { findScannerBreak, sendHealthEmail } from "./health.js";
 
 // Sources read at the same time: enough to finish in a few minutes, few enough to be polite.
@@ -25,57 +25,6 @@ const supabase = createClient(CONFIG.supabaseUrl, CONFIG.supabaseSecretKey, {
   auth: { persistSession: false },
 });
 
-// Checks one source and saves the result. Returns its counts, for the totals and the health check.
-async function checkSource(source) {
-  let result;
-  let error = null;
-  let readFailure = null;
-  try {
-    result = await readSource(source);
-  } catch (readError) {
-    error = readError.cause?.code ?? readError.message;
-    readFailure = readProblem(readError);
-    // Keep the feed found earlier: the site may be down for a moment.
-    result = { stories: [], readFrom: source.read_from, feedUrl: source.feed_url };
-  }
-
-  // Stories already saved are skipped, so only new ones are returned.
-  // Saved oldest first: stories found in the same check show newest first in the app, which breaks ties by id.
-  let saved = 0;
-  if (result.stories.length) {
-    const inserted = await supabase
-      .from("articles")
-      .upsert(
-        result.stories.toReversed().map((story) => ({ source_id: source.id, ...story })),
-        { onConflict: "source_id,url", ignoreDuplicates: true },
-      )
-      .select("id");
-    if (inserted.error) throw inserted.error;
-    saved = inserted.data.length;
-  }
-
-  const updated = await supabase
-    .from("sources")
-    .update({
-      last_checked_at: new Date().toISOString(),
-      stories_found: result.stories.length,
-      read_from: result.readFrom,
-      feed_url: result.feedUrl,
-      problem: readFailure,
-    })
-    .eq("id", source.id);
-  if (updated.error) throw updated.error;
-
-  return {
-    found: result.stories.length,
-    saved,
-    url: source.url,
-    storiesBefore: source.stories_found,
-    storiesNow: result.stories.length,
-    error,
-  };
-}
-
 // Only the sources that at least one watch list follows.
 const { data: sources, error } = await supabase
   .from("sources")
@@ -89,7 +38,7 @@ async function worker() {
   while (next < sources.length) {
     const source = sources[next++];
     try {
-      results.push(await checkSource(source));
+      results.push(await checkSource(supabase, source));
     } catch (saveError) {
       failed++;
       console.error(`Couldn't save a source's check: ${saveError.message}`);

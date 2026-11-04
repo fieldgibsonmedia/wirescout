@@ -89,38 +89,81 @@ export function isWebAddress(text: string) {
     return ['http:', 'https:'].includes(url.protocol) && url.hostname.includes('.');
 }
 
-// Why a link can't be added, from the check-links function (the scanner's own check).
-export type LinkCheck = { url: string; problem: 'not_found' | 'blocked' | 'unreachable' | 'no_stories' | null };
-
-// The function takes 10 links per call (its processing limit); a few calls run at a time.
-const CHECK_BATCH = 10;
-const PARALLEL_CHECKS = 3;
-
-// Checks links before they're added: one result per link, or null if the check itself failed.
-export async function checkLinks(urls: string[]): Promise<LinkCheck[] | null> {
-    const batches: string[][] = [];
-    for (let start = 0; start < urls.length; start += CHECK_BATCH) {
-        batches.push(urls.slice(start, start + CHECK_BATCH));
+// The same address written differently: http or https, with or without www., a trailing slash.
+// Used to spot a link that's already in the list, or pasted twice.
+export function addressKey(url: string) {
+    if (!URL.canParse(url)) {
+        return url;
     }
+    const { hostname, pathname, search } = new URL(url);
+    return `${hostname.replace(/^www\./, '')}${pathname.replace(/\/+$/, '')}${search}`;
+}
 
-    const results: LinkCheck[][] = [];
+// The addresses once each, in the order they come; of two ways of writing one, the first is kept.
+export function uniqueAddresses(urls: string[]) {
+    const seen = new Set<string>();
+    return urls.filter((url) => {
+        const key = addressKey(url);
+        if (seen.has(key)) {
+            return false;
+        }
+        seen.add(key);
+        return true;
+    });
+}
+
+// Why a link can't be added, from the check-links function (the scanner's own check).
+// "unchecked": the check itself failed, so the link wasn't added; trying again may work.
+export type LinkCheck = { url: string; problem: 'not_found' | 'blocked' | 'unreachable' | 'no_stories' | 'unchecked' | null };
+
+// One link per call: the free plan gives each call 2 seconds of processing, and a big news page
+// can take most of it on its own. A few calls run at a time.
+const PARALLEL_CHECKS = 5;
+
+// Checks links before they're added: one result per link, in the same order.
+export async function checkLinks(urls: string[]): Promise<LinkCheck[]> {
+    const results: LinkCheck[] = [];
     let next = 0;
-    let failed = false;
     async function worker() {
-        while (next < batches.length && !failed) {
+        while (next < urls.length) {
             const index = next++;
             const { data, error } = await supabase.functions.invoke<{ results: LinkCheck[] }>('check-links', {
-                body: { urls: batches[index] },
+                body: { urls: [urls[index]] },
             });
-            if (error || !data) {
-                failed = true;
-                return;
-            }
-            results[index] = data.results;
+            results[index] = error || !data ? { url: urls[index], problem: 'unchecked' } : data.results[0];
         }
     }
     await Promise.all(Array.from({ length: PARALLEL_CHECKS }, worker));
-    return failed ? null : results.flat();
+    return results;
+}
+
+// Reads sources just added that the scanner hasn't checked yet, so their first stories show now instead
+// of after the next hourly scan. One source per call, like checkLinks. A failed read is left to that scan.
+// Returns the sources with their new status.
+export async function scanNewSources(sources: Source[]): Promise<Source[]> {
+    const unchecked = sources.filter((source) => !source.lastCheckedAt);
+    let next = 0;
+    async function worker() {
+        while (next < unchecked.length) {
+            const source = unchecked[next++];
+            await supabase.functions.invoke('scan-new-sources', { body: { source_id: source.id } });
+        }
+    }
+    await Promise.all(Array.from({ length: PARALLEL_CHECKS }, worker));
+
+    const rows: SourceRow[] = [];
+    for (let start = 0; start < unchecked.length; start += LOOKUP_BATCH) {
+        const ids = unchecked.slice(start, start + LOOKUP_BATCH).map((source) => source.id);
+        const { data, error } = await supabase.from('sources').select(SOURCE_COLUMNS).in('id', ids);
+        if (error) {
+            return sources;
+        }
+        rows.push(...data);
+    }
+    return sources.map((source) => {
+        const row = rows.find((found) => found.id === source.id);
+        return row ? toSource(row) : source;
+    });
 }
 
 const listFormat = new Intl.ListFormat('en-GB');
@@ -128,7 +171,7 @@ const listFormat = new Intl.ListFormat('en-GB');
 // One line per reason for the links that failed their check, e.g. 'X and Y return "page not found". …'.
 // Pass ['This link'] as the names when there's only the one link in a field.
 export function checkMessages(failed: LinkCheck[], names = failed.map((check) => check.url)) {
-    const problems = ['not_found', 'blocked', 'unreachable', 'no_stories'] as const;
+    const problems = ['not_found', 'blocked', 'unreachable', 'no_stories', 'unchecked'] as const;
     return problems.flatMap((problem) => {
         const links = names.filter((_, index) => failed[index].problem === problem);
         if (links.length === 0) {
@@ -138,6 +181,9 @@ export function checkMessages(failed: LinkCheck[], names = failed.map((check) =>
         const one = links.length === 1;
         if (problem === 'not_found') {
             return `${list} ${one ? 'returns' : 'return'} "page not found". Check the ${one ? 'link' : 'links'} and try again.`;
+        }
+        if (problem === 'unchecked') {
+            return `${list} couldn't be checked. Please try again.`;
         }
         const reason = { blocked: 'the site blocks Wirescout', unreachable: "the site can't be reached", no_stories: 'no stories found' }[problem];
         return `${list} couldn't be added: ${reason}.`;
