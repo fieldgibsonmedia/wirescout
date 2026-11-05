@@ -10,6 +10,8 @@ insert into auth.users (id, email) values
 
 update public.profiles set is_super_admin = true where id = '00000000-0000-0000-0000-0000000000d1';
 update public.profiles set full_name = 'Rosa Diaz' where id = '00000000-0000-0000-0000-0000000000d1';
+-- The local database's seeded dev account is a super admin too: Rosa must be the only one.
+update public.profiles set is_super_admin = false where id = '00000000-0000-0000-0000-0000000000de';
 
 -- As Sam
 set local role authenticated;
