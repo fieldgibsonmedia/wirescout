@@ -4,7 +4,9 @@
 //   Lines without a link are listed while typing, so they can be fixed before adding.
 // - Upload a file: drop or choose an .xlsx, .csv or .txt file, and every web address in it is found
 //   (no column to pick), in Excel also the links behind cell text ("Green finance | Issuer").
-//   The user sees the list, then adds it with one button.
+//   The user sees the list, then adds it with one button. For a documents list, each link from a file takes its
+//   row's first cell as the source's name (EF Data's issuer list: "Covivio", not covivio.eu), unless that cell is
+//   empty, a number or a link. Not for news lists: a source's name is shared by everyone who follows it.
 // Each link is checked first: the ones that fail aren't added, and the user sees why. The same address
 // written differently (http or https, www., a trailing slash) counts once.
 // Sources the scanner hasn't checked yet are read once right away, so their first stories (or PDFs) show now.
@@ -59,6 +61,8 @@ const dragging = ref(false);
 const reading = ref(false);
 const fileError = ref('');
 const found = ref<string[]>([]);
+// The names found in the file, by addressKey.
+const foundNames = ref(new Map<string, string>());
 const adding = ref(false);
 // While adding: how many links are checked (or sources read) so far, out of how many.
 const progress = ref({ done: 0, total: 0 });
@@ -121,7 +125,7 @@ async function addPasted() {
 }
 
 async function addFound() {
-    if (await add(found.value)) {
+    if (await add(found.value, kind.value === 'documents' ? foundNames.value : new Map())) {
         found.value = [];
     }
 }
@@ -151,6 +155,7 @@ async function readFile(file: File) {
     notAdded.value = [];
     addFailed.value = false;
     found.value = [];
+    foundNames.value = new Map();
 
     const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
     if (extension === 'numbers') {
@@ -167,15 +172,16 @@ async function readFile(file: File) {
     }
 
     reading.value = true;
-    const text = await fileText(file, extension);
+    const contents = await fileContents(file, extension);
     reading.value = false;
 
-    if (text === null) {
+    if (contents === null) {
         fileError.value = "This file couldn't be read. Check that it opens in Excel, or save it as CSV and try again.";
         return;
     }
 
-    const addresses = findAddresses(text);
+    foundNames.value = contents.names;
+    const addresses = findAddresses(contents.text);
     if (addresses.length === 0) {
         fileError.value = 'No web addresses found in this file.';
     } else if (addresses.length > MAX_ADDRESSES) {
@@ -185,31 +191,90 @@ async function readFile(file: File) {
     }
 }
 
-// The file's text. For Excel, the text of every cell on every sheet. Null if the file can't be read.
-async function fileText(file: File, extension: string) {
+// The file's text (for Excel, the text of every cell on every sheet), and the name of each link: its row's first
+// cell, by addressKey. Null if the file can't be read.
+async function fileContents(file: File, extension: string) {
+    const names = new Map<string, string>();
+    const addName = (address: string, cell: unknown) => {
+        const name = sourceName(cell);
+        if (name && !names.has(addressKey(address))) {
+            names.set(addressKey(address), name);
+        }
+    };
     try {
         if (extension !== 'xlsx') {
-            return await file.text();
+            const text = await file.text();
+            if (extension === 'csv') {
+                for (const line of text.split('\n')) {
+                    // The first field, quoted ("Acme, Inc.") or not.
+                    const first = line.match(/^\s*"((?:[^"]|"")*)"|^[^,;\t]*/);
+                    const cell = first?.[1]?.replace(/""/g, '"') ?? first?.[0];
+                    findAddresses(line).forEach((address) => addName(address, cell));
+                }
+            }
+            return { text, names };
         }
         const { default: readXlsxFile } = await import('read-excel-file/browser');
         const sheets = await readXlsxFile(file);
+        for (const row of sheets.flatMap((sheet) => sheet.data)) {
+            for (const cell of row) {
+                if (typeof cell === 'string') {
+                    findAddresses(cell).forEach((address) => addName(address, row[0]));
+                }
+            }
+        }
         const cells = sheets.flatMap((sheet) => sheet.data.flat()).filter((cell) => typeof cell === 'string');
-        return [...cells, ...(await hiddenLinks(file))].join('\n');
+        const links = await hiddenLinks(file);
+        for (const link of links) {
+            const sheet = sheets.find((item) => item.sheet === link.sheet);
+            addName(link.url, sheet?.data[link.row - 1]?.[0]);
+        }
+        return { text: [...cells, ...links.map((link) => link.url)].join('\n'), names };
     } catch {
         return null;
     }
 }
 
-// The addresses of an Excel file's links behind cell text: the cell shows "Green finance | Issuer", the address is
-// kept in the sheet's links file (xl/worksheets/_rels/sheet1.xml.rels).
+// A row's first cell as a source's name, or '' if it's empty, a number or a link.
+function sourceName(cell: unknown) {
+    const name = typeof cell === 'string' ? cell.trim() : '';
+    if (!name || /^[\d\s.,%-]+$/.test(name) || name.match(ADDRESS_PATTERN) || BARE_DOMAIN_PATTERN.test(name)) {
+        return '';
+    }
+    return name.slice(0, 200);
+}
+
+// An Excel file's links behind cell text: the cell shows "Green finance | Issuer", the address is kept in the
+// sheet's links file (xl/worksheets/_rels/sheet1.xml.rels). Each with its sheet's name and row, where the sheet
+// says which cell holds it; links kept but not in a cell have no row (0).
 async function hiddenLinks(file: File) {
     const { unzipSync, strFromU8 } = await import('fflate');
     const files = unzipSync(new Uint8Array(await file.arrayBuffer()), {
-        filter: (entry) => /^xl\/worksheets\/_rels\/[^/]+\.rels$/.test(entry.name),
+        filter: (entry) => /^xl\/(workbook\.xml|_rels\/workbook\.xml\.rels|worksheets\/[^/]+\.xml|worksheets\/_rels\/[^/]+\.rels)$/.test(entry.name),
     });
-    return Object.values(files).flatMap((content) =>
-        [...strFromU8(content).matchAll(/Target="(https?:\/\/[^"]+)"/g)].map((match) => match[1].replace(/&amp;/g, '&')),
+    const text = (name: string) => (files[name] ? strFromU8(files[name]) : '');
+    const attribute = (tag: string, name: string) => decodeXml(tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1] ?? '');
+    const tags = (xml: string, name: string) => xml.match(new RegExp(`<${name}\\s[^>]*>`, 'g')) ?? [];
+
+    // Sheet file (xl/worksheets/sheet1.xml) → its name, through the workbook's ids.
+    const sheetFiles = new Map(tags(text('xl/_rels/workbook.xml.rels'), 'Relationship').map((tag) => [attribute(tag, 'Id'), attribute(tag, 'Target')]));
+    const sheetNames = new Map(
+        tags(text('xl/workbook.xml'), 'sheet').map((tag) => [`xl/${sheetFiles.get(attribute(tag, 'r:id'))?.replace(/^\/?xl\//, '')}`, attribute(tag, 'name')]),
     );
+
+    return Object.keys(files)
+        .filter((name) => /^xl\/worksheets\/_rels\//.test(name))
+        .flatMap((relsName) => {
+            const sheetFile = relsName.replace('_rels/', '').replace(/\.rels$/, '');
+            const rows = new Map(tags(text(sheetFile), 'hyperlink').map((tag) => [attribute(tag, 'r:id'), Number(attribute(tag, 'ref').match(/\d+/)?.[0] ?? 0)]));
+            return tags(text(relsName), 'Relationship')
+                .filter((tag) => /^https?:\/\//.test(attribute(tag, 'Target')))
+                .map((tag) => ({ url: attribute(tag, 'Target'), sheet: sheetNames.get(sheetFile) ?? '', row: rows.get(attribute(tag, 'Id')) ?? 0 }));
+        });
+}
+
+function decodeXml(value: string) {
+    return value.replace(/&(amp|lt|gt|quot|apos);/g, (_, entity) => ({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" })[entity as string] ?? '');
 }
 
 // Every web address in the text, once each (however it's written), in the order they appear.
@@ -222,7 +287,7 @@ function findAddresses(text: string) {
 }
 
 // Checks the links and adds the ones that work. Returns false if they couldn't be added at all.
-async function add(urls: string[]) {
+async function add(urls: string[], names = new Map<string, string>()) {
     result.value = '';
     notAdded.value = [];
     const inList = new Set(props.sources.map((source) => addressKey(source.url)));
@@ -239,7 +304,7 @@ async function add(urls: string[]) {
         const checks = await checkLinks(toCheck, kind.value, () => progress.value.done++);
         failed = checks.filter((check) => check.problem);
         const working = checks.filter((check) => !check.problem).map((check) => check.url);
-        const response = working.length > 0 ? await addSources(props.watchListId, working) : [];
+        const response = working.length > 0 ? await addSources(props.watchListId, working, names) : [];
 
         if (!response) {
             adding.value = false;

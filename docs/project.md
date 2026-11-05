@@ -19,7 +19,7 @@ An internal Field Gibson Media tool for journalists, in production since 2026-11
 The MVP stack is decided in `docs/mvp-plan.md`. Built so far:
 
 - Supabase (Postgres 17 + Auth), developed locally with the Supabase CLI (`npx supabase`, a dev dependency) in Docker. The cloud project sends account emails through Brevo (SMTP, as `no-reply@wirescout.app`), set in its dashboard. The digest, admin and scanner emails go through Brevo too (the `EMAIL_*` secrets), sending as `no-reply@wirescout.app` (`EMAIL_FROM`, a plain value in their workflows).
-- Web app: Vue 3 + TypeScript, Vite, Tailwind + DaisyUI, Reka UI, Vue Router, `@supabase/supabase-js`, `read-excel-file` (bulk source upload), `posthog-js` (usage analytics), `jspdf` (the Analytics screen's report). It talks to Supabase directly; access is protected by row-level security. Published on GitHub Pages at `wirescout.app` (custom domain, DNS at Namecheap).
+- Web app: Vue 3 + TypeScript, Vite, Tailwind + DaisyUI, Reka UI, Vue Router, `@supabase/supabase-js`, `read-excel-file` (bulk source upload; a documents list takes each link's issuer name from its row's first cell), `posthog-js` (usage analytics), `jspdf` (the Analytics screen's report). It talks to Supabase directly; access is protected by row-level security. Published on GitHub Pages at `wirescout.app` (custom domain, DNS at Namecheap).
 
 ## Layout
 

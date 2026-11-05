@@ -460,6 +460,13 @@ Next jobs (agreed with Ken 2026-11-05, for a new session; each needs its own pla
     - Production steps (Ken), at the release: push the migration with the others, before merging; redeploy `analytics` (its query changes) along with `check-links` and `scan-new-sources`.
 - Then the release (production steps above; PR text drafted in the session of 2026-11-05).
 - Job B: issuer names instead of domains: the upload saves each link's issuer name (column A of their spreadsheet) as the source's name (`sources.name`).
+    - Plan (approved 2026-11-05, built), v0.7.4, branch `issuer-names`. In the release with job A (Ken, 2026-11-05: B, C and D all go in this release).
+    1. Excel upload to a documents list: each link takes the text in column A of its row (links behind cell text too: the sheet says which cell holds each), unless that text is empty, a number or itself a link. CSV the same, from the line's first field. Pasted links get no name, as now.
+    2. The name is saved when the source is created (`sources.name`, which users may already set on insert). The app, the Sources tab, Search and the digest already show the name instead of the domain.
+    3. Documents lists only: a news spreadsheet's column A may be anything, and a source's name is shared by everyone who follows it, with no way to change it from the app.
+    4. A source someone added before keeps its name (or none). On live nobody has documents sources yet.
+    5. A test with a made-up spreadsheet; then Rishi's whole file in the browser on the dev account.
+    - Live impact: the bulk upload (all users; news lists unchanged). No migration.
 - Job C (Ken's idea): a list's stories (news and documents) grouped by when they were found, under headings Today, This week, Last month, Last 6 months, Last year, older; all shown by default. A filter icon next to the view switch opens a dialog with a time range (Today | This week | Last month | Last 6 months | Last year | All) that narrows the list.
 - Job D: research the 104 "no PDFs found" pages (a sample of 20): documents linked without ".pdf" (`/download?id=…`), built with JavaScript, or listed on another page. Then a plan.
 
