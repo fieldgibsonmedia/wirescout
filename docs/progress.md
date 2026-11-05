@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Plan for email changes and the allowed list, end of session
+
+- Plan written in `docs/mvp-plan.md` ("Email change must pass the allowed list", not approved). Ken wants it done in a new session.
+- Next (new session): read that plan, show it to Ken, start coding only after his "approve".
+- Also in `mvp` since the last release: the rule in `communication.md` to send a PR link only once every step before the merge is done (docs only).
+- Still to check when they happen: a digest email arriving on nodemailer 10, and the next access request email's wording.
+- Other open known issue: GitHub starts scheduled runs late.
+
 ## 2026-11-05: Developers left out of analytics, release notes order (PR #31)
 
 - Done: accounts marked `exclude_from_analytics` (in `app_metadata`) send nothing to PostHog. v0.6.1's What's new lists its security update, and notes go most important first (`docs/mvp-plan.md`, Decisions, "Release notes").
