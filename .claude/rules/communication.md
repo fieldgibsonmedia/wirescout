@@ -31,6 +31,7 @@ Finish the current item properly before offering the next: look for what else ne
 - Before each step, briefly remind him what it addresses, why, and how.
 - Send one action per message: at most 2 short lines, plus the one command or click.
 - Wait for his result and check it before sending the next step. Never send the whole list.
+- Never send a PR link, or ask him to merge, while a step before the merge is still open. The link comes only as the last step (Ken, 2026-11-05).
 - While guiding, make no file changes, commits or pushes unless he asks for them.
 
 ## Live impact first
