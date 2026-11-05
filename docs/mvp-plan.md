@@ -395,7 +395,7 @@ Why: some sources show no stories, because their page is empty until a browser r
 - Live impact: the scanner (`scanner.yml` installs the browser: a CI change, Ken's ok) and longer hourly runs.
 - Open before coding: the numbers from step 1, then Ken's "approve".
 
-### Email change must pass the allowed list (proposed 2026-11-05, not approved yet)
+### Email change must pass the allowed list (approved 2026-11-05, built in v0.6.2)
 
 Why: the sign-up check (`hook_before_user_created`) runs only when an account is created. A signed-in user can change their email in Account settings to any address, after confirming from both (`docs/known-issues.md`). Ken picked this as the next job (2026-11-05); to be done in a new session.
 
@@ -406,7 +406,6 @@ Why: the sign-up check (`hook_before_user_created`) runs only when an account is
 
 - Live impact: Account settings → change email, for everyone. Existing accounts and their emails are untouched. 1 migration (schema and security: Ken's ok, `workflow.md`).
 - Production steps (Ken), in this order: push the migration (`npx supabase db push`), then merge the release PR. The app calls `email_allowed`, so it must exist before the app deploys.
-- Open before coding: Ken's "approve".
 
 ## Branches
 

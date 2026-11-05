@@ -428,6 +428,9 @@ isOneToOne: false
             "add_super_admin":
 { Args: { "account_email": string }; Returns: boolean
                            },
+"email_allowed":
+{ Args: { "address": string }; Returns: boolean
+                           },
 "hook_before_user_created":
 { Args: { "event": Json }; Returns: Json
                            },

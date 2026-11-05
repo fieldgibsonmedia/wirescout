@@ -2,6 +2,12 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Email changes must pass the allowed list (v0.6.2)
+
+- Done on branch `email-change-allowed-list`: a trigger on `auth.users` refuses an email change to an address not on the allowed list; Account settings asks `email_allowed` first and says why. What's new note, version 0.6.2.
+- Checked locally: pgTAP (5 new tests), lint, unit tests, type-check, build; the local Auth API refuses a not-allowed change (500) and accepts an allowed one; Account settings shows the message, and an allowed change sends both links.
+- Next: Ken's review and "approve", then the release. Production steps (Ken), in order: `npx supabase db push`, then merge the release PR (the app calls `email_allowed`).
+
 ## 2026-11-05: Plan for email changes and the allowed list, end of session
 
 - Plan written in `docs/mvp-plan.md` ("Email change must pass the allowed list", not approved). Ken wants it done in a new session.

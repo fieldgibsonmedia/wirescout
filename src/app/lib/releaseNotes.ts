@@ -6,6 +6,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ["Security: you can change your email only to one that's allowed on Wirescout, like when signing up."],
+    },
+    {
+        version: '0.6.1',
         notes: [
             'Security and stability: updated the parts that send emails and fetch web pages, with their latest security fixes.',
             'Fixed: a source could show stories from the whole website (e.g. blog posts) instead of only those on the page you added.',
