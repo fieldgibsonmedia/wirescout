@@ -443,6 +443,20 @@ What they want alerts for (Rishi, 2026-11-05): allocation reports, impact report
 2. Job 2, app (v0.7.0): create a list as News or Documents; a documents list shows title, label, section, date found and the PDF link, with a "Bond documents · All" switch; the bulk upload also reads links hidden behind cell text.
 3. Job 3, digest (v0.7.1): a documents list's digest has every new bond document (up to 50, with "See all"), not 5, each with its label.
 
+- Fix (Ken, 2026-11-05, v0.7.2): links are saved as the page writes them (dropping the part after ".pdf" broke Gothenburg's), and every new link, news and documents, is opened once before it's saved: "not found" waits for the next scan.
+- Also in v0.7.2 (Ken, 2026-11-05): the Sources tab shows the total and 25 sources per page (or 50, 100); more space above "Follows" in New watch list.
+
+Next jobs (agreed with Ken 2026-11-05, for a new session; each needs its own plan and "approve"):
+
+- Job A, before the release, in v0.7.2:
+    1. No repeat alerts for re-uploaded files: a new PDF with the same title and the same file name apart from its numbers (`1763545120-green-financing-framework.pdf`) as one already saved from that source doesn't count as new. Title and file name both, so a new "Press release" PDF still counts. Documents lists only.
+    2. A spreadsheet for Rishi of the links from his file that weren't added, with issuer, link and reason (local test on 2026-11-05: 104 no PDFs found, 37 blocked, unreachable or not found). Made from `~/Downloads/EF Data - Issuer reporting with links.xlsx` with the scanner's link check; a file for Ken, never committed.
+    3. Usage events say whether the list is news or documents (`sources_added` already does), so Analytics shows the bond team's use.
+- Then the release (production steps above; PR text drafted in the session of 2026-11-05).
+- Job B: issuer names instead of domains: the upload saves each link's issuer name (column A of their spreadsheet) as the source's name (`sources.name`).
+- Job C (Ken's idea): a list's stories (news and documents) grouped by when they were found, under headings Today, This week, Last month, Last 6 months, Last year, older; all shown by default. A filter icon next to the view switch opens a dialog with a time range (Today | This week | Last month | Last 6 months | Last year | All) that narrows the list.
+- Job D: research the 104 "no PDFs found" pages (a sample of 20): documents linked without ".pdf" (`/download?id=…`), built with JavaScript, or listed on another page. Then a plan.
+
 - Release the 3 jobs together: nobody can make a documents list before job 2, and the digest needs job 3.
 - Cost: under $1 a month (Haiku 5.5, $0.10 per million input tokens; the first labelling of a full list of 11,000 PDFs is about $0.10).
 - Live impact: the scanner, the app's source adding and the digest are live for journalists; their news lists must work exactly as now. The migration changes the sources' unique key: push it just before merging, as source adding fails in between.

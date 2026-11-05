@@ -2,6 +2,23 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: End of session, where things stand
+
+- `mvp` holds document lists jobs 1 to 3 (v0.7.1), on GitHub. Locally `mvp` is 2 commits ahead: the merge of `origin/main` before the release; pushing it failed 3 times (GitHub "Internal Server Error"), not retried since Ken wants to test first.
+- Branch `working-links` (from local `mvp`), not committed, waiting for Ken's "approve": the link fix (links kept as written, new links opened before saving), the Sources tab total and pages, the "Follows" spacing. Version 0.7.2. All checks passed.
+- Local dev account test data: "Bond issuers" (12 issuers, 5 PDFs marked new, a digest in Mailpit) and "Many sources (test)" (60 unchecked sources).
+- Next (new session): ask Ken to approve committing `working-links` into `mvp`, then job A (`docs/mvp-plan.md`, "Document lists for bond alerts", "Next jobs"), then the release, then jobs B, C, D.
+- Postponed: the digest on time (branch `digest-on-time`).
+
+## 2026-11-05: Working links only (fix), v0.7.2
+
+- Ken found a broken PDF link while testing locally (Gothenburg). Cause: the reader dropped the part after ".pdf" (`?MOD=AJPERES`), which about 6% of the list's PDF links have (24 sites).
+- Done on branch `working-links`: links stay as the page writes them; the scanner opens each new link once (news and documents) and leaves out those that answer 404 or 410 until the next scan (`withoutBrokenLinks`, `src/scanner/read-source.js`). The scan log counts them.
+- Checked locally: unit tests (82, 1 new with the Gothenburg case), the 12 test issuers re-read from scratch (398 PDFs), 43 saved links opened: 41 open, 1 blocks the check, 1 slow; the reported PDF opens.
+- Also (Ken, 2026-11-05): the Sources tab shows the total ("350 sources", "12 of 350 sources" while searching) and 25 sources per page (or 50, 100), for news and documents lists. Checked in the browser with a 60-source test list ("Many sources (test)", dev account): pages, per page, search back to page 1.
+- Also (Ken, 2026-11-05): more space between the name field and the "Follows" choice in New watch list (44px, checked in the browser).
+- Next: Ken tests locally, then the release.
+
 ## 2026-11-05: Document lists for bond alerts, job 3 (digest), v0.7.1
 
 - Done on branch `document-lists-digest`: the digest takes only what counts as new (`counts_as_new`); a documents list shows up to 50 new bond documents, each with its label; the subject counts stories and documents apart ("8 new stories and 2 new documents in 3 watch lists"). What's new, version 0.7.1.

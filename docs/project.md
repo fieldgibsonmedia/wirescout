@@ -61,7 +61,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
     3. A feed the page names in its `<head>`.
     4. The page itself: the biggest list of similar links that read like headlines.
     5. A guessed feed (`feed`, `rss` next to the page, then `/feed`, `/rss`).
-3. Save the stories whose link is new for that source. Stories are never deleted.
+3. Save the stories whose link is new for that source and opens: each new link is opened once, and one the site says doesn't exist (404, 410) waits for the next scan. Blocked or slow links are saved. Stories are never deleted.
 4. Record the source's status: last checked, stories found, feed or page.
 5. If the scanner itself looks broken (at least half of the sources that found stories last time find none, and at least 3), email `ADMIN_EMAIL`. Once per break, not every hour. One failing source emails nobody: the journalist sees it in the digest and the Sources tab.
 6. Documents lists (`docs/mvp-plan.md`, "Document lists for bond alerts"): the PDFs on a source's page at its first check are kept but aren't new (`articles.found_on_first_check`). Claude Haiku 5.5 labels each PDF (`articles.document_kind`: allocation report, impact report, framework, SPO, new bond issue, or other), up to 2,000 a run; what's left, or failed, is labelled next run. Unlabelled PDFs are shown. Only bond documents count as new (`watch_list_articles.counts_as_new`).

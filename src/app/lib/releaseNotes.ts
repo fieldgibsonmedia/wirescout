@@ -6,6 +6,14 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: [
+            "Wirescout now opens each new story's and document's link before showing it: a link the site says doesn't exist is left out, and tried again later.",
+            'Fixed: some PDF links (e.g. Gothenburg\'s) opened "page not found".',
+            'The Sources tab shows how many sources a list has, 25 per page (or 50, 100).',
+        ],
+    },
+    {
+        version: '0.7.1',
         notes: ['Your daily digest lists every new bond document in your bond document lists, each with its label.'],
     },
     {
