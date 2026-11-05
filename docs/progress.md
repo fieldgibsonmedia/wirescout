@@ -2,6 +2,12 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Released v0.6.1 (PR #30)
+
+- Ken redeployed `check-links` and `scan-new-sources`, then merged PR #30 into `main` (11:07 UTC). The app deploy run succeeded.
+- Checked on live (Ken): the tab icon, the new stories badges, the sign-in screens (from v0.5.8). The first scanner (11:15) and digest (11:20) runs on nodemailer 10 succeeded.
+- Still to check when they happen: a digest email arriving, and the next access request email's wording.
+
 ## 2026-11-05: Pages built with JavaScript shelved
 
 - Ken ran step 1 on live (count of sources in a watch list, by status): 63 read, 8 blocked, 0 "No stories found". A hidden browser would fix none of them, and blocked sites aren't worked around, so the job is shelved (Ken, 2026-11-05).
