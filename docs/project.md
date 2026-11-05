@@ -10,6 +10,7 @@ An internal Field Gibson Media tool for journalists, in production since 2026-11
     - `cheerio` reads feeds and pages, `chrono-node` reads dates written on pages.
     - `@supabase/supabase-js` saves stories and source status with the secret key (`SUPABASE_*` variables). In the cloud it's the key named `wirescout_scanner` (Project Settings → API Keys), saved in the GitHub secret `SUPABASE_SECRET_KEY`.
     - `nodemailer` sends the health email to a developer over SMTP (`EMAIL_*`, `ADMIN_EMAIL`).
+    - `@anthropic-ai/sdk` labels the PDFs of documents lists with Claude Haiku 5.5 (`ANTHROPIC_API_KEY`).
     - GitHub Actions runs it every hour (`.github/workflows/scanner.yml`), installing only the runtime packages (`npm ci --omit=dev`).
 - Daily digest: Node.js 22, same packages as the scanner. GitHub Actions runs it every 15 minutes (`.github/workflows/digest.yml`).
 - Admin emails: the same again, every hour (`.github/workflows/admin.yml`).
@@ -18,7 +19,7 @@ An internal Field Gibson Media tool for journalists, in production since 2026-11
 The MVP stack is decided in `docs/mvp-plan.md`. Built so far:
 
 - Supabase (Postgres 17 + Auth), developed locally with the Supabase CLI (`npx supabase`, a dev dependency) in Docker. The cloud project sends account emails through Brevo (SMTP, as `no-reply@wirescout.app`), set in its dashboard. The digest, admin and scanner emails go through Brevo too (the `EMAIL_*` secrets), sending as `no-reply@wirescout.app` (`EMAIL_FROM`, a plain value in their workflows).
-- Web app: Vue 3 + TypeScript, Vite, Tailwind + DaisyUI, Reka UI, Vue Router, `@supabase/supabase-js`, `read-excel-file` (bulk source upload), `posthog-js` (usage analytics), `jspdf` (the Analytics screen's report). It talks to Supabase directly; access is protected by row-level security. Published on GitHub Pages at `wirescout.app` (custom domain, DNS at Namecheap).
+- Web app: Vue 3 + TypeScript, Vite, Tailwind + DaisyUI, Reka UI, Vue Router, `@supabase/supabase-js`, `read-excel-file` (bulk source upload; a documents list takes each link's issuer name from its row's first cell), `posthog-js` (usage analytics), `jspdf` (the Analytics screen's report). It talks to Supabase directly; access is protected by row-level security. Published on GitHub Pages at `wirescout.app` (custom domain, DNS at Namecheap).
 
 ## Layout
 
@@ -39,11 +40,11 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `src/app/lib/magazines.ts`: the magazines, the user's connections and who already sent which story (`story_sends`), for Settings → Channels, the Share menu and the Send dialog (`components/SendDraftDialog.vue`).
 - `src/app/lib/releaseNotes.ts`: the dashboard's "What's new". Add notes with each release. Its newest entry and the side nav take the version from `package.json`. Every job that changes what users get raises the version (`docs/mvp-plan.md`, Decisions).
 - `src/digest/index.js`: the digest (below). `due.js` decides who gets one, `email.js` writes it. Tests next to them.
-- `src/scanner/index.js`: the scan (below). `check-source.js` checks one source and saves its stories and status, `read-source.js` picks feed or page, `feed.js` and `page.js` read them, `health.js` decides whether the scanner looks broken and writes the health email. Tests next to them (`*.test.js`).
+- `src/scanner/index.js`: the scan (below). `check-source.js` checks one source and saves its stories and status, `read-source.js` picks feed or page, `feed.js` and `page.js` read them, `documents.js` reads a documents source's PDFs and `label-documents.js` labels them, `health.js` decides whether the scanner looks broken and writes the health email. Tests next to them (`*.test.js`).
 - `supabase/config.toml`: local Supabase settings (sign-ups on for allowed emails, the sign-up check, email templates).
 - `supabase/templates/`: the account emails (confirm account, new password, email change). The cloud project needs the same templates pasted into its dashboard.
 - `supabase/migrations/`: the database schema and access rules, one SQL file per change.
-- `supabase/functions/check-links/`: an Edge Function that checks links before they're added, with the scanner's own code (`src/scanner/check-link.js`). The app sends one link per call (the free plan's 2 seconds of processing per call); signed-in users only.
+- `supabase/functions/check-links/`: an Edge Function that checks links before they're added, with the scanner's own code (`src/scanner/check-link.js`); for a documents list, that the page shows PDFs. The app sends one link per call (the free plan's 2 seconds of processing per call); signed-in users only.
 - `supabase/functions/delete-account/`: deletes the signed-in user's own account (Account settings), ending their MODX sessions first. The database deletes the rest with the profile, and PostHog what it recorded about them.
 - `supabase/functions/analytics/`: Manager → Analytics, for super admins. Reads PostHog with the personal API key, adds names and story titles from the database. Its code is in `src/analytics/posthog.js` (tests next to it).
 - `supabase/functions/scan-new-sources/`: reads a source just added, once, and saves its stories and status with the scanner's own code (`src/scanner/check-source.js`), so a new list shows stories right away. One source per call, only the user's own sources that were never checked or failed their last check.
@@ -54,15 +55,16 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 ## How a scan works
 
 1. Take every source that at least one watch list follows.
-2. Read its stories (the newest 50), first match wins:
+2. Read its stories (the newest 50), first match wins (a documents source: every PDF on the page instead, with its section heading, step 6):
     1. The feed found last time.
     2. The address itself, if it's a feed.
     3. A feed the page names in its `<head>`.
     4. The page itself: the biggest list of similar links that read like headlines.
     5. A guessed feed (`feed`, `rss` next to the page, then `/feed`, `/rss`).
-3. Save the stories whose link is new for that source. Stories are never deleted.
+3. Save the stories whose link is new for that source and opens: each new link is opened once, and one the site says doesn't exist (404, 410) waits for the next scan. Blocked or slow links are saved. Stories are never deleted.
 4. Record the source's status: last checked, stories found, feed or page.
 5. If the scanner itself looks broken (at least half of the sources that found stories last time find none, and at least 3), email `ADMIN_EMAIL`. Once per break, not every hour. One failing source emails nobody: the journalist sees it in the digest and the Sources tab.
+6. Documents lists (`docs/mvp-plan.md`, "Document lists for bond alerts"): the PDFs on a source's page at its first check are kept but aren't new (`articles.found_on_first_check`). Claude Haiku 5.5 labels each PDF (`articles.document_kind`: allocation report, impact report, framework, SPO, new bond issue, or other), up to 2,000 a run; what's left, or failed, is labelled next run. Unlabelled PDFs are shown. A page without PDF links is also searched for PDF addresses in its own data (pages built with JavaScript). Only bond documents count as new (`watch_list_articles.counts_as_new`). A PDF with the same title, section and file name, apart from its numbers, as one already saved from that source is a re-upload (`articles.is_reupload`): shown, never new.
 
 The logs show only totals: the repo is public, and which sources people follow is theirs.
 
@@ -70,13 +72,13 @@ The logs show only totals: the repo is public, and which sources people follow i
 
 1. Take every user whose digest is due: Monday to Friday in their time zone, their time has passed, and none yet today. A skipped run is caught up later the same day.
 2. For each watch list: the stories found since their last digest (at most 7 days back), through the keywords (`watch_list_articles`), and the failing sources.
-3. Email up to 5 stories per list, each linking to its page in the app (`/lists/<list>/stories/<story>`), never to the source site. Failing sources link to the list's Sources tab.
+3. Email up to 5 stories per list, each linking to its page in the app (`/lists/<list>/stories/<story>`), never to the source site. Failing sources link to the list's Sources tab. A documents list: its new bond documents (`counts_as_new`), up to 50, each with its label.
 4. No new stories in any list: no email. Either way, `profiles.last_digest_at` records that today's digest is done.
 
 ## Usage analytics and admin emails
 
-- The app sends usage to PostHog (EU, project 334525), only while someone is signed in, tied to their user id: the screens they open, the main features (sources added, stories shared, drafts sent, searches, stories saved, digest links opened, settings changed), errors, and replays with typed text hidden. Nothing is kept in the browser (no cookies). Locally there's no key, so nothing is sent.
-- Super admins read it in Manager → Analytics, over 1 Day, 1 Week, 1 Month, 6 Months, 1 Year or All, and download the numbers as a PDF.
+- The app sends usage to PostHog (EU, project 334525), only while someone is signed in, tied to their user id: the screens they open, the main features (sources added, stories shared, drafts sent, searches, stories saved, digest links opened, settings changed, Load more), errors, and replays with typed text hidden. Nothing is kept in the browser (no cookies). Locally there's no key, so nothing is sent.
+- Super admins read it in Manager → Analytics, over 1 Day, 1 Week, 1 Month, 6 Months, 1 Year or All, and download the numbers as a PDF. Features used in documents lists are their own rows (`list_kind`).
 - New accounts must agree to the privacy policy at sign-up; `profiles.privacy_accepted_at` records when (empty for accounts made before v0.5.0).
 - Ad blockers (e.g. Privacy Badger, uBlock Origin) block PostHog's own addresses, so their users aren't counted yet. Fix planned: PostHog's managed reverse proxy (`docs/mvp-plan.md`).
 - The old usage tables (`active_days`, `usage_events`, `usage_reports`) stay with their data, but nothing writes to them since v0.5.0.
@@ -93,6 +95,7 @@ npm ci
 - Start the local Supabase (below) and follow some sources in a local watch list.
 - Copy `.env.example` to `.env`, with the local secret key from `npx supabase status`.
 - Point `EMAIL_*` at Mailpit (host `127.0.0.1`, port `54325`, no user or password) and `ADMIN_EMAIL` at a made-up address.
+- Optional: `ANTHROPIC_API_KEY`, to label documents lists' PDFs. Without it they stay unlabelled.
 - `npm run scan`, then see the stories in the app and any health email in Mailpit.
 - `npm test`: the scanner's, the digest's and the admin emails' tests.
 

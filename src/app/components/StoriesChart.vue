@@ -1,11 +1,13 @@
 <script setup lang="ts">
 // A small bar chart of a watch list's stories per day over the last 7 days, today last (watch_list_stats.daily_counts).
+// documents: a documents list's chart, which counts bond documents.
 // Earlier days in gray, today in the primary colour (both 3:1 or more on the card, in light and dark).
 // Hovering a day shows its count; screen readers get every day in the chart's label, and the caption gives the total.
 import { computed } from 'vue';
 
 const props = defineProps<{
     counts: number[];
+    documents?: boolean;
 }>();
 
 const WIDTH = 110;
@@ -39,11 +41,13 @@ const days = computed(() => {
 
 const total = computed(() => props.counts.reduce((sum, count) => sum + count, 0));
 const label = computed(
-    () => `Stories found per day, last 7 days: ${days.value.map((day) => `${day.label} ${day.count}`).join(', ')}`,
+    () =>
+        `${props.documents ? 'Documents' : 'Stories'} found per day, last 7 days: ${days.value.map((day) => `${day.label} ${day.count}`).join(', ')}`,
 );
 
 function stories(count: number) {
-    return `${count} ${count === 1 ? 'story' : 'stories'}`;
+    const [one, many] = props.documents ? ['document', 'documents'] : ['story', 'stories'];
+    return `${count} ${count === 1 ? one : many}`;
 }
 
 // A bar standing on the baseline, its top corners rounded.

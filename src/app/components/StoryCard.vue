@@ -1,5 +1,6 @@
 <script setup lang="ts">
-// One story: "New" marker, source and date, "Sent to <magazine>" when someone already sent it there,
+// One story: "New" marker, source and date, "Sent to <magazine>" when someone already sent it there, for a documents
+// list's PDF its label ("Impact report") and the section it's in on the page,
 // the title (opens the story on its own site), summary, the Share menu and Save. Used in the watch list and on the story's own page. Bind the saved state with v-model:saved.
 import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/20/solid';
 import { computed, watch } from 'vue';
@@ -18,6 +19,8 @@ const props = defineProps<{
     source: string;
     date: string;
     isNew?: boolean;
+    label?: string;
+    section?: string | null;
 }>();
 
 const saved = defineModel<boolean>('saved', { required: true });
@@ -31,7 +34,9 @@ const sentTo = computed(() => magazines.value.filter((magazine) => storySends.va
     <Card>
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-base-content/70">
             <Badge v-if="isNew" variant="success" size="sm">New</Badge>
+            <Badge v-if="label" size="sm">{{ label }}</Badge>
             <span>{{ source }}</span>
+            <span v-if="section">{{ section }}</span>
             <span>{{ date }}</span>
             <Badge v-for="magazine in sentTo" :key="magazine.id" variant="outline" size="sm">Sent to {{ magazine.name }}</Badge>
         </div>
@@ -44,7 +49,7 @@ const sentTo = computed(() => magazines.value.filter((magazine) => storySends.va
         </h3>
         <p v-if="summary" class="max-w-prose">{{ summary }}</p>
         <div class="flex flex-wrap items-center gap-2">
-            <ShareMenu :article-id="articleId" :title="title" :url="url" />
+            <ShareMenu :article-id="articleId" :watch-list-id="watchListId" :title="title" :url="url" />
             <SaveButton v-model:saved="saved" :watch-list-id="watchListId" :article-id="articleId" :title="title" />
         </div>
     </Card>

@@ -73,14 +73,14 @@ isOneToOne: false
                   ]
                 },"articles": {
                   Row: {
-                    "first_seen_at": string,"id": number,"published_at": string | null,"source_id": string,"summary": string | null,"title": string,"url": string
+                    "document_kind": string | null,"first_seen_at": string,"found_on_first_check": boolean,"id": number,"is_reupload": boolean,"published_at": string | null,"section": string | null,"source_id": string,"summary": string | null,"title": string,"url": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "first_seen_at"?: string,"id"?: never,"published_at"?: string | null,"source_id": string,"summary"?: string | null,"title": string,"url": string
+                    "document_kind"?: string | null,"first_seen_at"?: string,"found_on_first_check"?: boolean,"id"?: never,"is_reupload"?: boolean,"published_at"?: string | null,"section"?: string | null,"source_id": string,"summary"?: string | null,"title": string,"url": string
                   }
                   Update: {
-                    "first_seen_at"?: string,"id"?: never,"published_at"?: string | null,"source_id"?: string,"summary"?: string | null,"title"?: string,"url"?: string
+                    "document_kind"?: string | null,"first_seen_at"?: string,"found_on_first_check"?: boolean,"id"?: never,"is_reupload"?: boolean,"published_at"?: string | null,"section"?: string | null,"source_id"?: string,"summary"?: string | null,"title"?: string,"url"?: string
                   }
                   Relationships: [
                     {
@@ -235,14 +235,14 @@ isOneToOne: false
                   ]
                 },"sources": {
                   Row: {
-                    "created_at": string,"feed_url": string | null,"id": string,"last_checked_at": string | null,"name": string | null,"problem": string | null,"read_from": string | null,"stories_found": number | null,"url": string
+                    "created_at": string,"feed_url": string | null,"id": string,"kind": string,"last_checked_at": string | null,"name": string | null,"problem": string | null,"read_from": string | null,"stories_found": number | null,"url": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"feed_url"?: string | null,"id"?: string,"last_checked_at"?: string | null,"name"?: string | null,"problem"?: string | null,"read_from"?: string | null,"stories_found"?: number | null,"url": string
+                    "created_at"?: string,"feed_url"?: string | null,"id"?: string,"kind"?: string,"last_checked_at"?: string | null,"name"?: string | null,"problem"?: string | null,"read_from"?: string | null,"stories_found"?: number | null,"url": string
                   }
                   Update: {
-                    "created_at"?: string,"feed_url"?: string | null,"id"?: string,"last_checked_at"?: string | null,"name"?: string | null,"problem"?: string | null,"read_from"?: string | null,"stories_found"?: number | null,"url"?: string
+                    "created_at"?: string,"feed_url"?: string | null,"id"?: string,"kind"?: string,"last_checked_at"?: string | null,"name"?: string | null,"problem"?: string | null,"read_from"?: string | null,"stories_found"?: number | null,"url"?: string
                   }
                   Relationships: [
                     
@@ -365,14 +365,14 @@ isOneToOne: false
                   ]
                 },"watch_lists": {
                   Row: {
-                    "created_at": string,"id": string,"keywords": (string)[],"last_viewed_at": string,"name": string,"user_id": string
+                    "created_at": string,"id": string,"keywords": (string)[],"kind": string,"last_viewed_at": string,"name": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"keywords"?: (string)[],"last_viewed_at"?: string,"name": string,"user_id"?: string
+                    "created_at"?: string,"id"?: string,"keywords"?: (string)[],"kind"?: string,"last_viewed_at"?: string,"name": string,"user_id"?: string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"keywords"?: (string)[],"last_viewed_at"?: string,"name"?: string,"user_id"?: string
+                    "created_at"?: string,"id"?: string,"keywords"?: (string)[],"kind"?: string,"last_viewed_at"?: string,"name"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -388,7 +388,7 @@ isOneToOne: false
           Views: {
             "watch_list_articles": {
                   Row: {
-                    "first_seen_at": string,"id": number,"published_at": string | null,"search_text": string | null,"source_id": string,"summary": string | null,"title": string,"url": string,"watch_list_id": string
+                    "counts_as_new": boolean | null,"document_kind": string | null,"first_seen_at": string,"id": number,"published_at": string | null,"search_text": string | null,"section": string | null,"source_id": string,"summary": string | null,"title": string,"url": string,"watch_list_id": string
                   }
                   ComputedFields: never
                   Relationships: [

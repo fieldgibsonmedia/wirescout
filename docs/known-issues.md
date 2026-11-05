@@ -7,7 +7,17 @@ Bugs found while working on something else. One entry each: date, what, where, h
 - The scanner, set for :17, ran at 09:58 and 10:54 UTC on 2026-10-30: about 40 minutes late. The digest's first scheduled run (11:19) didn't happen at all after the merge; Ken started it by hand.
 - So a digest can arrive 30–60 minutes after the chosen time.
 - 2026-11-03: the digest, set for every 15 minutes, ran only about once an hour on 2–3 November (35 runs in 35 hours). If that's too late, a more punctual trigger (an outside scheduler starting the workflow) is an option.
+- 2026-11-05: the digest ran at 11:20 and then 12:29 UTC (4 runs skipped): Ken's 11:30 digest arrived an hour late.
+- Fix built and postponed (2026-11-05): the database starts the digest itself, on branch `digest-on-time` (`docs/mvp-plan.md`, "Daily digest on time").
 - See it: GitHub → Actions → a workflow's runs, against its cron times.
+
+## 2026-11-05: The daily digest lands in Outlook's Junk folder
+
+- Ken's digest (Outlook, 2026-11-05) went to Junk, although SPF, DKIM and DMARC all passed (`Authentication-Results`: `dmarc=pass`, `compauth=pass`). Brevo and the `wirescout.app` DNS records are set up right.
+- Cause, most likely: `wirescout.app` is a few days old and has sent few emails, so Microsoft's filter trusts it little. It improves as people mark it "Not junk".
+- For now (Ken, 2026-11-05): each person marks it "Not junk" and "Always trust email from…".
+- Better, for everyone at once: the company's Microsoft 365 admin allows `wirescout.app` as a sender. Open: who runs it, and whether the other allowed domains use the same system.
+- See it: the digest's headers in Outlook (File → Properties), lines `Authentication-Results` and `X-MS-Exchange-Organization-SCL`.
 
 ## 2026-10-29: 10 of the 23 old sources can't be read without a browser
 

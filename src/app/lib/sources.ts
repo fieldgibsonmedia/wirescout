@@ -1,6 +1,8 @@
-// News sources, followed by URL. A source is shared by every watch list that follows its URL.
+// Sources, followed by URL. A source is shared by every watch list of the same kind that follows its URL: a news
+// source for its stories, a documents source for its PDFs (the same page can be both).
 import { track } from '@/lib/analytics';
 import { supabase } from '@/lib/supabase';
+import { listKind, type ListKind } from '@/lib/watchLists';
 
 // status: "Working", why it fails ("Page not found · check the address") or "Not checked yet".
 // lastChecked: when the scanner last checked it ("10:40" today, "28 Oct, 10:40" before), or ''.
@@ -16,12 +18,13 @@ export type Source = {
 };
 
 // The columns toSource needs.
-export const SOURCE_COLUMNS = 'id, url, name, last_checked_at, stories_found, problem';
+export const SOURCE_COLUMNS = 'id, url, name, kind, last_checked_at, stories_found, problem';
 
 type SourceRow = {
     id: string;
     url: string;
     name: string | null;
+    kind: string;
     last_checked_at: string | null;
     stories_found: number | null;
     problem: string | null;
@@ -45,11 +48,16 @@ const PROBLEMS: Record<string, { status: string; explanation: string }> = {
         status: 'No stories found',
         explanation: 'Wirescout found no stories on this page. Paste the link of the page that lists the news, or of its RSS feed.',
     },
+    no_documents: {
+        status: 'No PDFs found',
+        explanation: 'Wirescout found no PDFs on this page. Paste the link of the page that lists the documents.',
+    },
 };
 
 export function toSource(source: SourceRow): Source {
     const failing = source.last_checked_at !== null && !source.stories_found;
-    const problem = failing ? PROBLEMS[source.problem ?? 'none'] ?? PROBLEMS.none : null;
+    const nothingFound = source.kind === 'documents' ? PROBLEMS.no_documents : PROBLEMS.none;
+    const problem = failing ? (source.problem ? PROBLEMS[source.problem] : null) ?? nothingFound : null;
     return {
         id: source.id,
         url: source.url,
@@ -121,17 +129,19 @@ export type LinkCheck = { url: string; problem: 'not_found' | 'blocked' | 'unrea
 // can take most of it on its own. A few calls run at a time.
 const PARALLEL_CHECKS = 5;
 
-// Checks links before they're added: one result per link, in the same order.
-export async function checkLinks(urls: string[]): Promise<LinkCheck[]> {
+// Checks links before they're added: one result per link, in the same order. A documents list's link must show PDFs.
+// onChecked (optional) runs after each link, for a long list's progress.
+export async function checkLinks(urls: string[], kind: ListKind, onChecked?: () => void): Promise<LinkCheck[]> {
     const results: LinkCheck[] = [];
     let next = 0;
     async function worker() {
         while (next < urls.length) {
             const index = next++;
             const { data, error } = await supabase.functions.invoke<{ results: LinkCheck[] }>('check-links', {
-                body: { urls: [urls[index]] },
+                body: { urls: [urls[index]], kind },
             });
             results[index] = error || !data ? { url: urls[index], problem: 'unchecked' } : data.results[0];
+            onChecked?.();
         }
     }
     await Promise.all(Array.from({ length: PARALLEL_CHECKS }, worker));
@@ -141,14 +151,15 @@ export async function checkLinks(urls: string[]): Promise<LinkCheck[]> {
 // Reads sources just added that the scanner hasn't checked yet, or that failed its last check (shared with
 // another list: the link check just passed, so the old "failing" would be wrong), so their stories and status
 // show now instead of after the next hourly scan. One source per call, like checkLinks. A failed read is left
-// to that scan. Returns the sources with their new status.
-export async function scanNewSources(sources: Source[]): Promise<Source[]> {
+// to that scan. Returns the sources with their new status. onRead (optional) runs after each, with how many there are.
+export async function scanNewSources(sources: Source[], onRead?: (total: number) => void): Promise<Source[]> {
     const unchecked = sources.filter((source) => !source.lastCheckedAt || source.problem);
     let next = 0;
     async function worker() {
         while (next < unchecked.length) {
             const source = unchecked[next++];
             await supabase.functions.invoke('scan-new-sources', { body: { source_id: source.id } });
+            onRead?.(unchecked.length);
         }
     }
     await Promise.all(Array.from({ length: PARALLEL_CHECKS }, worker));
@@ -172,7 +183,7 @@ const listFormat = new Intl.ListFormat('en-GB');
 
 // One line per reason for the links that failed their check, e.g. 'X and Y return "page not found". …'.
 // Pass ['This link'] as the names when there's only the one link in a field.
-export function checkMessages(failed: LinkCheck[], names = failed.map((check) => check.url)) {
+export function checkMessages(failed: LinkCheck[], kind: ListKind, names = failed.map((check) => check.url)) {
     const problems = ['not_found', 'blocked', 'unreachable', 'no_stories', 'unchecked'] as const;
     return problems.flatMap((problem) => {
         const links = names.filter((_, index) => failed[index].problem === problem);
@@ -187,7 +198,8 @@ export function checkMessages(failed: LinkCheck[], names = failed.map((check) =>
         if (problem === 'unchecked') {
             return `${list} couldn't be checked. Please try again.`;
         }
-        const reason = { blocked: 'the site blocks Wirescout', unreachable: "the site can't be reached", no_stories: 'no stories found' }[problem];
+        const nothingFound = kind === 'documents' ? 'no PDFs found' : 'no stories found';
+        const reason = { blocked: 'the site blocks Wirescout', unreachable: "the site can't be reached", no_stories: nothingFound }[problem];
         return `${list} couldn't be added: ${reason}.`;
     });
 }
@@ -195,12 +207,14 @@ export function checkMessages(failed: LinkCheck[], names = failed.map((check) =>
 // Long address lists are looked up in batches: they travel in the request's URL, which has a size limit.
 const LOOKUP_BATCH = 20;
 
-// Adds the URLs to the watch list, reusing a source if someone added its URL before.
+// Adds the URLs to the watch list, reusing a source of the list's kind if someone added its URL before.
+// names: a name for a new source, by addressKey (a source added before keeps its own).
 // Returns the added sources, or null if they couldn't be added.
-export async function addSources(watchListId: string, urls: string[]): Promise<Source[] | null> {
+export async function addSources(watchListId: string, urls: string[], names = new Map<string, string>()): Promise<Source[] | null> {
+    const kind = listKind(watchListId);
     const created = await supabase.from('sources').upsert(
-        urls.map((url) => ({ url })),
-        { onConflict: 'url', ignoreDuplicates: true },
+        urls.map((url) => ({ url, kind, name: names.get(addressKey(url)) ?? null })),
+        { onConflict: 'url,kind', ignoreDuplicates: true },
     );
     if (created.error) {
         return null;
@@ -211,6 +225,7 @@ export async function addSources(watchListId: string, urls: string[]): Promise<S
         const { data, error } = await supabase
             .from('sources')
             .select(SOURCE_COLUMNS)
+            .eq('kind', kind)
             .in('url', urls.slice(start, start + LOOKUP_BATCH));
         if (error) {
             return null;
@@ -225,19 +240,20 @@ export async function addSources(watchListId: string, urls: string[]): Promise<S
         return null;
     }
 
-    track('sources_added', { count: found.length });
+    track('sources_added', { count: found.length, kind });
     return found.map(toSource);
 }
 
 // Swaps a source for the one at url, in this watch list only: other lists following the old source keep it.
 // The new source keeps the old one's place in the list. Returns it, or null if it couldn't be swapped.
 export async function replaceSource(watchListId: string, sourceId: string, url: string): Promise<Source | null> {
-    const created = await supabase.from('sources').upsert({ url }, { onConflict: 'url', ignoreDuplicates: true });
+    const kind = listKind(watchListId);
+    const created = await supabase.from('sources').upsert({ url, kind }, { onConflict: 'url,kind', ignoreDuplicates: true });
     if (created.error) {
         return null;
     }
 
-    const { data, error } = await supabase.from('sources').select(SOURCE_COLUMNS).eq('url', url).single();
+    const { data, error } = await supabase.from('sources').select(SOURCE_COLUMNS).eq('kind', kind).eq('url', url).single();
     if (error) {
         return null;
     }

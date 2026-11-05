@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// A watch list's sources as a table (TanStack Table): search, sort by any column (failing sources first by
-// default), tick boxes to move or remove many at once, and a "⋯" menu on each row (Edit, Move to…, Remove),
+// A watch list's sources as a table (TanStack Table): the total, search, sort by any column (failing sources first by
+// default), 25 per page (or 50, 100), tick boxes to move or remove many at once, and a "⋯" menu on each row (Edit, Move to…, Remove),
 // plus Fix on failing sources. Each source's name opens its page on the site, failing or not, to see what's there. "Add sources" opens a dialog to paste links or upload a file.
 // On a phone each row stacks into a small card. Emits changed when the sources change, so the page reloads
 // its stories.
@@ -15,20 +15,23 @@ import {
 import {
     columnFilteringFeature,
     createFilteredRowModel,
+    createPaginatedRowModel,
     createSortedRowModel,
     filterFn_includesString,
     globalFilteringFeature,
+    rowPaginationFeature,
     rowSelectionFeature,
     rowSortingFeature,
     sortFn_text,
     tableFeatures,
     useTable,
     type ColumnDef,
+    type PaginationState,
     type RowSelectionState,
     type SortingState,
     type Updater,
 } from '@tanstack/vue-table';
-import { computed, ref, type Ref } from 'vue';
+import { computed, ref, watch, type Ref } from 'vue';
 import AddManySources from '@/components/AddManySources.vue';
 import SourceMenu from '@/components/SourceMenu.vue';
 import Alert from '@/components/ui/Alert.vue';
@@ -52,7 +55,7 @@ import {
     type Source,
 } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
-import { loadWatchLists, watchLists } from '@/lib/watchLists';
+import { listKind, loadWatchLists, watchLists } from '@/lib/watchLists';
 
 const props = defineProps<{
     watchListId: string;
@@ -73,6 +76,8 @@ const features = tableFeatures({
     filteredRowModel: createFilteredRowModel(),
     filterFns: { includesString: filterFn_includesString },
     rowSelectionFeature,
+    rowPaginationFeature,
+    paginatedRowModel: createPaginatedRowModel(),
 });
 
 // Failing sources first, then the ones not checked yet, then the working ones.
@@ -102,6 +107,8 @@ const columns: ColumnDef<typeof features, Source, unknown>[] = [
 const search = ref('');
 const sorting = ref<SortingState>([{ id: 'status', desc: false }]);
 const rowSelection = ref<RowSelectionState>({});
+const PAGE_SIZES = [25, 50, 100];
+const pagination = ref<PaginationState>({ pageIndex: 0, pageSize: PAGE_SIZES[0] });
 
 // The table changes its state through these, so the refs stay the one place it lives.
 function updates<T>(target: Ref<T>) {
@@ -114,8 +121,16 @@ const table = useTable<typeof features, Source>({
     features,
     columns,
     data: sources,
-    state: computed(() => ({ sorting: sorting.value, globalFilter: search.value, rowSelection: rowSelection.value })),
+    state: computed(() => ({
+        sorting: sorting.value,
+        globalFilter: search.value,
+        rowSelection: rowSelection.value,
+        pagination: pagination.value,
+    })),
     onSortingChange: updates(sorting),
+    onPaginationChange: updates(pagination),
+    // Removing a source keeps the page; a search starts again from the first (below).
+    autoResetPageIndex: false,
     onGlobalFilterChange: updates(search),
     onRowSelectionChange: updates(rowSelection),
     getRowId: (source) => source.id,
@@ -124,11 +139,34 @@ const table = useTable<typeof features, Source>({
     enableSortingRemoval: false,
 });
 
+// The sources on the page shown, and how many match the search on all pages.
 const rows = computed(() => table.getRowModel().rows);
+const matchCount = computed(() => table.getPrePaginatedRowModel().rows.length);
+const pageCount = computed(() => table.getPageCount());
+
+// "350 sources", or while searching "12 of 350 sources".
+const totalText = computed(() => {
+    const total = sources.value.length === 1 ? '1 source' : `${sources.value.length} sources`;
+    return search.value ? `${matchCount.value} of ${total}` : total;
+});
+
+watch(search, () => {
+    pagination.value = { ...pagination.value, pageIndex: 0 };
+});
+// After removing or moving sources, the last page may be gone: show the one before.
+watch(pageCount, (count) => {
+    if (pagination.value.pageIndex >= count && count > 0) {
+        pagination.value = { ...pagination.value, pageIndex: count - 1 };
+    }
+});
+
+function setPageSize(event: Event) {
+    pagination.value = { pageIndex: 0, pageSize: Number((event.target as HTMLSelectElement).value) };
+}
 const selected = computed(() => Object.keys(rowSelection.value).filter((id) => rowSelection.value[id]));
 const allShownSelected = computed(() => rows.value.length > 0 && rows.value.every((row) => rowSelection.value[row.id]));
 
-// The header tick box ticks or clears the sources shown (after the search), not hidden ones.
+// The header tick box ticks or clears the sources on the page shown (after the search), not hidden ones.
 function toggleAllShown() {
     const next = { ...rowSelection.value };
     const select = !allShownSelected.value;
@@ -161,8 +199,12 @@ const moveErrors = ref<Record<string, string>>({});
 const moveBusy = ref(false);
 const moved = ref('');
 
+// A documents list's sources follow PDFs: they only move to another documents list, and news sources to news lists.
+const kind = computed(() => listKind(props.watchListId));
 const otherLists = computed(() =>
-    watchLists.value.filter((list) => list.id !== props.watchListId).map((list) => ({ value: list.id, label: list.name })),
+    watchLists.value
+        .filter((list) => list.id !== props.watchListId && list.kind === kind.value)
+        .map((list) => ({ value: list.id, label: list.name })),
 );
 const moveOptions = computed(() => [...otherLists.value, { value: NEW_LIST, label: 'New watch list…' }]);
 
@@ -193,7 +235,7 @@ async function saveEdit() {
         return;
     }
     if (!isWebAddress(url)) {
-        editErrors.value = { url: 'Enter the full web address of a news page, starting with https://' };
+        editErrors.value = { url: 'Enter the full web address of the page, starting with https://' };
         return;
     }
     if (sources.value.some((other) => other.id !== source.id && addressKey(other.url) === addressKey(url))) {
@@ -224,8 +266,8 @@ async function saveEdit() {
 
 // Checks one link with the scanner's code: why it can't be used, or null if it works.
 async function checkLink(url: string) {
-    const checks = await checkLinks([url]);
-    return checks[0].problem ? checkMessages(checks, ['This link'])[0] : null;
+    const checks = await checkLinks([url], kind.value);
+    return checks[0].problem ? checkMessages(checks, kind.value, ['This link'])[0] : null;
 }
 
 async function removeSource(sourceId: string) {
@@ -294,7 +336,11 @@ async function move() {
 
     moveBusy.value = true;
     if (moveTarget.value === NEW_LIST) {
-        const { data, error } = await supabase.from('watch_lists').insert({ name: newListName.value.trim() }).select('id').single();
+        const { data, error } = await supabase
+            .from('watch_lists')
+            .insert({ name: newListName.value.trim(), kind: kind.value })
+            .select('id')
+            .single();
         if (error) {
             moveBusy.value = false;
             moveErrors.value = { name: "The watch list couldn't be created. Please try again." };
@@ -343,8 +389,10 @@ async function move() {
             <Button variant="ghost" @click="rowSelection = {}">Clear</Button>
         </div>
 
+        <p v-if="sources.length > 0" role="status" class="text-sm text-base-content/70">{{ totalText }}</p>
+
         <Card v-if="sources.length === 0">
-            <p class="max-w-prose">No sources yet. Add one to start seeing its stories.</p>
+            <p class="max-w-prose">No sources yet. Add one to start seeing its {{ kind === 'documents' ? 'PDFs' : 'stories' }}.</p>
         </Card>
         <p v-else-if="rows.length === 0" class="text-base-content/70">No sources match “{{ search }}”.</p>
 
@@ -432,6 +480,20 @@ async function move() {
                 </tbody>
             </table>
         </div>
+
+        <nav v-if="matchCount > PAGE_SIZES[0]" aria-label="Sources pages" class="flex flex-wrap items-center justify-between gap-3">
+            <label class="flex items-center gap-2 text-sm">
+                Per page
+                <select class="select select-sm w-auto" :value="pagination.pageSize" @change="setPageSize">
+                    <option v-for="size in PAGE_SIZES" :key="size" :value="size">{{ size }}</option>
+                </select>
+            </label>
+            <div class="flex items-center gap-2">
+                <Button variant="outline" :disabled="!table.getCanPreviousPage()" @click="table.previousPage()">Previous</Button>
+                <span class="text-sm" aria-live="polite">Page {{ pagination.pageIndex + 1 }} of {{ pageCount }}</span>
+                <Button variant="outline" :disabled="!table.getCanNextPage()" @click="table.nextPage()">Next</Button>
+            </div>
+        </nav>
     </div>
 
     <Dialog v-model:open="addingSources" title="Add sources">
@@ -481,7 +543,7 @@ async function move() {
         <TextField
             v-model="editUrl"
             name="url"
-            label="News page address"
+            :label="kind === 'documents' ? 'Page address' : 'News page address'"
             type="url"
             inputmode="url"
             autocomplete="url"

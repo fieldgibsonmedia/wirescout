@@ -14,11 +14,24 @@ const story = (id) => ({
 });
 
 const lists = [
-  { id: "list-1", name: "Regulators", newCount: 7, problemCount: 3, stories: [1, 2, 3, 4, 5].map(story) },
-  { id: "list-2", name: "Climate", newCount: 1, problemCount: 0, stories: [story(6)] },
-  { id: "list-3", name: "Quiet", newCount: 0, problemCount: 0, stories: [] },
-  { id: "list-4", name: "Broken", newCount: 0, problemCount: 1, stories: [] },
+  { id: "list-1", name: "Regulators", kind: "news", newCount: 7, problemCount: 3, stories: [1, 2, 3, 4, 5].map(story) },
+  { id: "list-2", name: "Climate", kind: "news", newCount: 1, problemCount: 0, stories: [story(6)] },
+  { id: "list-3", name: "Quiet", kind: "news", newCount: 0, problemCount: 0, stories: [] },
+  { id: "list-4", name: "Broken", kind: "news", newCount: 0, problemCount: 1, stories: [] },
 ];
+
+// A documents list: its new bond documents, labelled.
+const issuers = {
+  id: "list-5",
+  name: "Issuers",
+  kind: "documents",
+  newCount: 2,
+  problemCount: 0,
+  stories: [
+    { ...story(7), title: "Green bond impact report 2025", source: "issuer.example", documentKind: "impact_report" },
+    { ...story(8), title: "Final terms loan 121", source: "issuer.example", documentKind: null },
+  ],
+};
 
 test("the subject counts new stories and the lists that have them", () => {
   assert.equal(buildDigest({ lists, profile, appUrl }).subject, "Wirescout: 8 new stories in 2 watch lists");
@@ -71,4 +84,22 @@ test("text from the sources is escaped and long summaries are cut at a word", ()
 test("the footer names the time and time zone", () => {
   const { html } = buildDigest({ lists, profile, appUrl });
   assert.match(html, /Sent Monday to Friday at 07:15 \(Europe\/London\)\./);
+});
+
+test("a documents list shows its new documents with their labels", () => {
+  const { subject, html, text } = buildDigest({ lists: [issuers], profile, appUrl });
+
+  assert.equal(subject, "Wirescout: 2 new documents in 1 watch list");
+  assert.match(html, /Issuers<\/a>\s*<div[^>]*>2 new documents</);
+  assert.match(html, /Impact report · issuer\.example · 29 Oct, 16:19/);
+  assert.match(html, /Not labelled yet · issuer\.example/);
+  assert.match(html, /See all new Issuers documents on Wirescout/);
+  assert.match(text, /ISSUERS · 2 new documents/);
+});
+
+test("the subject counts stories and documents apart", () => {
+  assert.equal(
+    buildDigest({ lists: [...lists, issuers], profile, appUrl }).subject,
+    "Wirescout: 8 new stories and 2 new documents in 3 watch lists",
+  );
 });

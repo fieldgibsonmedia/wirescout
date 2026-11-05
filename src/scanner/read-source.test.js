@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { feedMatchesPage, readProblem, readSource } from "./read-source.js";
+import { feedMatchesPage, readProblem, readSource, withoutBrokenLinks } from "./read-source.js";
 
 const httpError = (status) => Object.assign(new Error(`HTTP ${status}`), { status });
 
@@ -74,4 +74,62 @@ test("a feed matches when at least half of the page's top stories are in it", ()
   assert.equal(feedMatchesPage(stories(["/1", "/2", "/3", "/4", "/5"]), page), true);
   // A page with no stories of its own takes any feed.
   assert.equal(feedMatchesPage(stories(["/a"]), []), true);
+});
+
+test("a documents source reads the PDFs on the page, never the feed it names", () =>
+  withSites(
+    {
+      [PAGE_URL]: PRESS_PAGE.replace("</main>", '<a href="/files/green-bond-report-2025.pdf">Green bond report 2025</a></main>'),
+      "https://www.example.com/feed": feedOf(["/press/1", "/press/2", "/press/3"]),
+    },
+    async () => {
+      const result = await readSource({ url: PAGE_URL, kind: "documents", feed_url: null });
+      assert.equal(result.readFrom, "page");
+      assert.equal(result.feedUrl, null);
+      assert.deepEqual(result.stories.map((story) => story.url), ["https://www.example.com/files/green-bond-report-2025.pdf"]);
+    },
+  ));
+
+test("a bot check instead of the page counts as blocked, for news and documents", async () => {
+  const radware = `<html><head><title>Radware Bot Manager Captcha</title></head><body>Please verify</body></html>`;
+  const f5 = `<html><head><script>window["bobcmn"] = "1";</script><script src="/TSPD/08628e3686?type=10"></script></head><body></body></html>`;
+  await withSites({ [PAGE_URL]: radware }, async () => {
+    for (const kind of ["news", "documents"]) {
+      const error = await readSource({ url: PAGE_URL, kind, feed_url: null }).catch((thrown) => thrown);
+      assert.equal(readProblem(error), "blocked");
+    }
+  });
+  await withSites({ [PAGE_URL]: f5 }, async () => {
+    const error = await readSource({ url: PAGE_URL, kind: "documents" }).catch((thrown) => thrown);
+    assert.equal(readProblem(error), "blocked");
+  });
+  // A page that works may carry the same script: its stories are read as usual.
+  await withSites({ [PAGE_URL]: PRESS_PAGE.replace("</head>", '<script src="/TSPD/08628e3686?type=10"></script></head>') }, async () => {
+    const result = await readSource({ url: PAGE_URL, feed_url: null });
+    assert.equal(result.stories.length, 4);
+  });
+});
+
+test("a new link the site says doesn't exist is left out; blocked or slow ones stay", async () => {
+  const realFetch = globalThis.fetch;
+  const answers = {
+    // Gothenburg serves its PDFs only with the query after ".pdf".
+    "https://goteborg.example/pricing-supplement.pdf?MOD=AJPERES": 200,
+    "https://goteborg.example/pricing-supplement.pdf": 404,
+    "https://issuer.example/old-report.pdf": 410,
+    "https://issuer.example/members-only.pdf": 403,
+  };
+  globalThis.fetch = async (url) => {
+    if (!(url in answers)) throw new TypeError("fetch failed");
+    return new Response("%PDF", { status: answers[url] });
+  };
+  try {
+    const stories = [...Object.keys(answers), "https://slow.example/report.pdf"].map((url) => ({ url }));
+    assert.deepEqual(
+      (await withoutBrokenLinks(stories)).map((story) => story.url),
+      ["https://goteborg.example/pricing-supplement.pdf?MOD=AJPERES", "https://issuer.example/members-only.pdf", "https://slow.example/report.pdf"],
+    );
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });

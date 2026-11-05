@@ -16,6 +16,7 @@ export const FEATURES = [
   "story_saved",
   "digest_link_opened",
   "settings_changed",
+  "load_more",
 ];
 
 // PostHog runs at most 3 queries at once per project.
@@ -35,9 +36,12 @@ export function queries(days) {
     topPages: `select properties.screen as screen, count() as views, count(distinct distinct_id) as people
       from events where event = '$pageview' and ${since}
       group by screen order by views desc limit ${LIMIT}`,
-    topFeatures: `select event, count() as times, count(distinct distinct_id) as people
+    // A feature used in a documents list is its own row (list_kind; sources_added says kind). Everything else,
+    // news lists and events from before documents lists, is the plain row.
+    topFeatures: `select event, if(coalesce(properties.list_kind, properties.kind) = 'documents', 'documents', '') as list_kind,
+        count() as times, count(distinct distinct_id) as people
       from events where event in (${FEATURES.map((name) => `'${name}'`).join(", ")}) and ${since}
-      group by event order by times desc`,
+      group by event, list_kind order by times desc`,
     topStories: `select toInt(properties.article_id) as article_id, countIf(event = 'story_shared') as shares,
         countIf(event = 'draft_sent') as drafts
       from events where event in ('story_shared', 'draft_sent') and properties.article_id is not null and ${since}
@@ -102,7 +106,7 @@ export function buildReport(answers, { people, stories, projectId }) {
   return {
     activeUsers: map(answers.activeUsers, ([id, days, pages, lastSeen]) => ({ ...person(id), days, pages, lastSeen })),
     topPages: map(answers.topPages, ([screen, views, people]) => ({ screen: screen ?? "", views, people })),
-    topFeatures: map(answers.topFeatures, ([event, times, people]) => ({ event, times, people })),
+    topFeatures: map(answers.topFeatures, ([event, listKind, times, people]) => ({ event, listKind, times, people })),
     topStories: map(answers.topStories, ([id, shares, drafts]) => ({
       ...(stories.get(id) ?? { title: "A story no longer in Wirescout", url: "", source: "" }),
       shares,

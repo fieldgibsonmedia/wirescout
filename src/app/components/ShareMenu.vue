@@ -14,11 +14,13 @@ import SendDraftDialog from '@/components/SendDraftDialog.vue';
 import { magazines } from '@/lib/magazines';
 import { profile } from '@/lib/profile';
 import { track } from '@/lib/analytics';
+import { listKind } from '@/lib/watchLists';
 
 const props = defineProps<{
     title: string;
     url: string;
     articleId: number;
+    watchListId: string;
 }>();
 
 const linkedInUrl = computed(() => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(props.url)}`);
@@ -59,7 +61,7 @@ function returnFocus(event: Event) {
 const copied = ref(false);
 
 async function copyLink() {
-    track('story_shared', { channel: 'copy_link', article_id: props.articleId });
+    track('story_shared', { channel: 'copy_link', article_id: props.articleId, list_kind: listKind(props.watchListId) });
     await navigator.clipboard.writeText(props.url);
     copied.value = true;
     setTimeout(() => (copied.value = false), 3000);
@@ -89,10 +91,10 @@ const itemClass =
                         <DropdownMenuSeparator v-if="anyShareOption" class="my-2 h-px bg-base-300" />
                     </template>
                     <DropdownMenuItem v-if="options.copyLink" :class="itemClass" @select="copyLink">Copy link</DropdownMenuItem>
-                    <DropdownMenuItem v-if="options.email" as-child @select="track('story_shared', { channel: 'email', article_id: articleId })">
+                    <DropdownMenuItem v-if="options.email" as-child @select="track('story_shared', { channel: 'email', article_id: articleId, list_kind: listKind(watchListId) })">
                         <a :href="emailUrl" :class="itemClass">Email</a>
                     </DropdownMenuItem>
-                    <DropdownMenuItem v-if="options.linkedIn" as-child @select="track('story_shared', { channel: 'linkedin', article_id: articleId })">
+                    <DropdownMenuItem v-if="options.linkedIn" as-child @select="track('story_shared', { channel: 'linkedin', article_id: articleId, list_kind: listKind(watchListId) })">
                         <a :href="linkedInUrl" target="_blank" rel="noopener" :class="itemClass">
                             LinkedIn<span class="sr-only"> (opens in a new tab)</span>
                         </a>
@@ -101,7 +103,7 @@ const itemClass =
             </DropdownMenuPortal>
         </DropdownMenuRoot>
 
-        <SendDraftDialog v-if="sendingTo" v-model:open="sending" :magazine-id="sendingTo" :article-id="articleId" @close-auto-focus="returnFocus" />
+        <SendDraftDialog v-if="sendingTo" v-model:open="sending" :magazine-id="sendingTo" :article-id="articleId" :watch-list-id="watchListId" @close-auto-focus="returnFocus" />
 
         <!-- Tells everyone, screen readers included, that the link is on the clipboard. -->
         <span role="status" class="flex items-center gap-1 text-sm text-success">

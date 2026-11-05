@@ -1,3 +1,4 @@
+import { readDocuments } from "./documents.js";
 import { findFeedLinks, readFeed } from "./feed.js";
 import { readPage } from "./page.js";
 
@@ -7,6 +8,11 @@ const TIMEOUT_MS = 20_000;
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36";
 
+// A bot check shown instead of the page, though the site answered 200: Radware (CDP), F5 (TAQA's /TSPD/),
+// Cloudflare, Imperva, DataDome. Only looked for when a page shows nothing: F5 also adds /TSPD/ to pages that work.
+const BOT_CHECK =
+  /validate\.perfdrive\.com|<title>\s*(Radware Bot Manager|Just a moment\.\.\.|Attention Required! \| Cloudflare)|\/TSPD\/|_Incapsula_Resource|captcha-delivery\.com/i;
+
 // Common feed addresses, tried only when the page itself shows no stories (e.g. it's built with JavaScript).
 const GUESSED_FEEDS = ["feed", "rss", "/feed", "/rss"];
 
@@ -14,6 +20,14 @@ const GUESSED_FEEDS = ["feed", "rss", "/feed", "/rss"];
 // Returns { stories, readFrom: "feed" | "page" | null, feedUrl }. Throws if the page can't be fetched.
 // signal (optional) stops every fetch at once, e.g. when a link check runs out of time.
 export async function readSource(source, signal) {
+  // A documents list's source: the PDFs on the page, never a feed.
+  if (source.kind === "documents") {
+    const page = await fetchText(source.url, signal);
+    const stories = readDocuments(page.text, page.url);
+    if (!stories.length) throwIfBotCheck(page);
+    return { stories, readFrom: "page", feedUrl: null };
+  }
+
   // The address is itself a feed: nothing to compare it with.
   if (source.feed_url === source.url) {
     const stories = await tryFeed(source.feed_url, signal);
@@ -43,7 +57,16 @@ export async function readSource(source, signal) {
     if (stories) return { stories, readFrom: "feed", feedUrl };
   }
 
+  throwIfBotCheck(page);
   return { stories: [], readFrom: null, feedUrl: null };
+}
+
+// A page that's a bot check counts as the site turning Wirescout away (readProblem: "blocked"), not as a page without
+// stories.
+function throwIfBotCheck(page) {
+  if (BOT_CHECK.test(page.url) || BOT_CHECK.test(page.text)) {
+    throw Object.assign(new Error("Bot check"), { status: 403 });
+  }
 }
 
 // A feed matches the page when at least half of the page's top stories are in it.
@@ -62,6 +85,36 @@ export function feedMatchesPage(feedStories, pageStories) {
 // the "?" part, every link looks alike and the feed is kept, as before.
 function sameLink(url) {
   return url.replace(/^https?:\/\/(www\.)?/, "").replace(/[?#].*$/, "").replace(/\/$/, "");
+}
+
+// Links opened at the same time while checking a source's new stories, and how long each may take.
+const LINK_CHECKS_PARALLEL = 8;
+const LINK_TIMEOUT_MS = 5_000;
+
+// The stories whose link opens, in the same order: a link the site says doesn't exist (404, 410) is left out.
+// A site that blocks the check or is slow still counts: the page itself links to it.
+export async function withoutBrokenLinks(stories) {
+  const opens = [];
+  let next = 0;
+  async function worker() {
+    while (next < stories.length) {
+      const index = next++;
+      opens[index] = await linkOpens(stories[index].url);
+    }
+  }
+  await Promise.all(Array.from({ length: LINK_CHECKS_PARALLEL }, worker));
+  return stories.filter((_, index) => opens[index]);
+}
+
+async function linkOpens(url) {
+  try {
+    const response = await fetch(url, { headers: { "User-Agent": USER_AGENT }, signal: AbortSignal.timeout(LINK_TIMEOUT_MS) });
+    // Only the answer matters: a PDF isn't downloaded.
+    await response.body?.cancel();
+    return ![404, 410].includes(response.status);
+  } catch {
+    return true;
+  }
 }
 
 // Why a source couldn't be read, from the error readSource threw, for the app to show:

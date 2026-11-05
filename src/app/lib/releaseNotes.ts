@@ -6,6 +6,42 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: [
+            "Bond documents lists find PDFs on more issuers' pages, including pages built with JavaScript.",
+            'A site that shows Wirescout a robot check now says "the site blocks Wirescout", not "no stories found".',
+        ],
+    },
+    {
+        version: '0.7.4',
+        notes: [
+            'Uploading a spreadsheet of issuers to a bond documents list names each source after the issuer in its first column (e.g. "Covivio", not covivio.eu).',
+        ],
+    },
+    {
+        version: '0.7.3',
+        notes: ['A PDF an issuer puts up again under a new file name no longer shows as new: you see it once.'],
+    },
+    {
+        version: '0.7.2',
+        notes: [
+            "Wirescout now opens each new story's and document's link before showing it: a link the site says doesn't exist is left out, and tried again later.",
+            'Fixed: some PDF links (e.g. Gothenburg\'s) opened "page not found".',
+            'The Sources tab shows how many sources a list has, 25 per page (or 50, 100).',
+        ],
+    },
+    {
+        version: '0.7.1',
+        notes: ['Your daily digest lists every new bond document in your bond document lists, each with its label.'],
+    },
+    {
+        version: '0.7.0',
+        notes: [
+            "New: bond document lists. Choose Bond documents when you create a watch list, add issuers' pages, and Wirescout shows each new PDF on them, labelled: allocation report, impact report, framework, second-party opinion or new bond issue.",
+            'Uploading an Excel file of sources also finds the links behind cell text.',
+        ],
+    },
+    {
+        version: '0.6.2',
         notes: ["Security: you can change your email only to one that's allowed on Wirescout, like when signing up."],
     },
     {

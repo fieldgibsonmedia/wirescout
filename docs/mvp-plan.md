@@ -407,6 +407,87 @@ Why: the sign-up check (`hook_before_user_created`) runs only when an account is
 - Live impact: Account settings → change email, for everyone. Existing accounts and their emails are untouched. 1 migration (schema and security: Ken's ok, `workflow.md`).
 - Production steps (Ken), in this order: push the migration (`npx supabase db push`), then merge the release PR. The app calls `email_allowed`, so it must exist before the app deploys.
 
+### Daily digest on time (postponed 2026-11-05)
+
+Why: GitHub starts scheduled runs when it has capacity. On 2026-11-05 the digest ran at 11:20 and then 12:29 UTC (4 runs skipped), so Ken's 11:30 digest arrived at 12:29 (`docs/known-issues.md`, "GitHub starts scheduled runs late"). To be done in a new session.
+
+1. One migration: turn on `pg_cron` and `pg_net` (built into Supabase, free plan included). A function `public.start_digest()` (security definer, no execute for `public`, `anon`, `authenticated`) reads the secret `github_digest_token` from Vault (`vault.decrypted_secrets`) and, with `net.http_post`, calls GitHub's "run now" for the digest: `POST https://api.github.com/repos/fieldgibsonmedia/wirescout/actions/workflows/digest.yml/dispatches`, body `{"ref":"main"}`, headers `Authorization: Bearer <token>`, `Accept: application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28`, `User-Agent: wirescout`. No secret: it does nothing. A `pg_cron` job runs it at :05, :20, :35, :50 (same times as `digest.yml`).
+2. The local database has no secret, so it never contacts GitHub. Never put the token in the repo, a migration or the seed.
+3. `digest.yml` stays as it is: it already has `workflow_dispatch`, and its own schedule stays as a backup. Both starting at once is safe: `concurrency: digest` runs one at a time, and `profiles.last_digest_at` stops a second digest the same day.
+4. pgTAP tests: without the secret `start_digest()` queues no request (`net.http_request_queue` stays empty), signed-in users and visitors can't run it, the cron job exists with its schedule.
+5. Version 0.6.3, What's new: "Your daily digest now arrives on time, a few minutes after the time you chose." (Decisions, "Release notes").
+6. Docs: `docs/project.md` ("How the daily digest works", Layout's `digest.yml` line: started by the database every 15 minutes, GitHub's own schedule as backup), and the known issue updated.
+
+- The scanner and admin emails keep GitHub's timer: an hour late doesn't matter for them.
+- How to see a failed call: `select * from net._http_response order by created desc limit 5;` (SQL Editor). GitHub answers 204 when the run starts. A failed call costs nothing: GitHub's own schedule still sends the digest, late.
+- Live impact: when digests arrive, for everyone. Their content and who gets them don't change. 1 migration (schema: Ken's ok, `workflow.md`).
+- Production steps (Ken), in this order:
+    1. Create a fine-grained GitHub token (account `fieldgibsonmedia`): Settings → Developer settings → Fine-grained tokens. Resource owner `fieldgibsonmedia`, only the `wirescout` repository, permission Actions: Read and write, nothing else. Expiry: the longest allowed; record the date in `docs/progress.md`. When it expires, digests fall back to GitHub's late timer until Ken saves a new one.
+    2. Save it in the cloud project (SQL Editor): `select vault.create_secret('<token>', 'github_digest_token');`. A new token later: `select vault.update_secret((select id from vault.secrets where name = 'github_digest_token'), '<new token>');`.
+    3. Push the migration (`npx supabase db push --linked`).
+    4. Merge the release PR. Then check the next run in GitHub → Actions → Daily digest: its event is `workflow_dispatch`, a few seconds after :05, :20, :35 or :50.
+- Postponed by Ken (2026-11-05): a digest late now and then is fine for now. Built and checked locally on branch `digest-on-time` (pushed, not merged). To pick it up: merge `origin/mvp` into that branch, run the checks again, then Ken's production steps above.
+
+### Document lists for bond alerts (approved 2026-11-05)
+
+Why: EF Data's team checks issuers' websites by hand for new bond PDFs. Their spreadsheet (402 issuers, 523 links, tested 2026-11-05): 456 links readable, 36 block the scanner, 9 dead, a few built with JavaScript. About 4 in 5 readable pages list their PDFs in plain HTML (11,000 PDFs in all, median 11 to 17 per page), mixed with other files and in many languages: a keyword list misses about 1 in 7 bond PDFs, so a model labels them.
+
+What they want alerts for (Rishi, 2026-11-05): allocation reports, impact reports, frameworks, SPOs (second-party opinions), and new bond issues (final terms, pricing supplements). Not prospectuses, not general sustainability reports, nothing else.
+
+1. Job 1, scanner and database (1 migration, no version: users see nothing new until job 2):
+    - A watch list is "news" or "documents" (`watch_lists.kind`); so is a source (`sources.kind`, unique with its address, so one page can be both). News lists don't change.
+    - A documents source: every PDF link on the page (outside menus), no 50 limit, with the section heading above it (`articles.section`). No feeds.
+    - PDFs on the page at its first check are saved but aren't new (`articles.found_on_first_check`): not in the new counts, never in a digest.
+    - Each PDF is labelled by Claude Haiku 5.5 from its title, file name and section (`articles.document_kind`): `allocation_report`, `impact_report`, `framework`, `spo`, `new_issue`, `other`. Empty = not checked yet: shown, so nothing is missed. The hourly scanner labels what's still empty, a few hundred at most per run, so a failed call is retried next hour. No `ANTHROPIC_API_KEY`: nothing is labelled.
+    - New counts of a documents list leave out `other`.
+2. Job 2, app (v0.7.0): create a list as News or Documents; a documents list shows title, label, section, date found and the PDF link, with a "Bond documents · All" switch; the bulk upload also reads links hidden behind cell text.
+3. Job 3, digest (v0.7.1): a documents list's digest has every new bond document (up to 50, with "See all"), not 5, each with its label.
+
+- Fix (Ken, 2026-11-05, v0.7.2): links are saved as the page writes them (dropping the part after ".pdf" broke Gothenburg's), and every new link, news and documents, is opened once before it's saved: "not found" waits for the next scan.
+- Also in v0.7.2 (Ken, 2026-11-05): the Sources tab shows the total and 25 sources per page (or 50, 100); more space above "Follows" in New watch list.
+
+Next jobs (agreed with Ken 2026-11-05, for a new session; each needs its own plan and "approve"):
+
+- Job A, before the release, in v0.7.2:
+    1. No repeat alerts for re-uploaded files: a new PDF with the same title and the same file name apart from its numbers (`1763545120-green-financing-framework.pdf`) as one already saved from that source doesn't count as new. Title and file name both, so a new "Press release" PDF still counts. Documents lists only.
+    2. A spreadsheet for Rishi of the links from his file that weren't added, with issuer, link and reason (local test on 2026-11-05: 104 no PDFs found, 37 blocked, unreachable or not found). Made from `~/Downloads/EF Data - Issuer reporting with links.xlsx` with the scanner's link check; a file for Ken, never committed.
+    3. Usage events say whether the list is news or documents (`sources_added` already does), so Analytics shows the bond team's use.
+- Job A (approved 2026-11-05, built), v0.7.3, branch `document-repeats`:
+    1. Re-uploads: when the scanner saves a new PDF for a documents source (not its first check), it looks for a PDF already saved from that source with the same title and section (capitals and spaces ignored; the section added by Ken, 2026-11-05, as different bonds' notices share titles) and the same file name once its numbers are taken out (`1763545120-green-financing-framework.pdf` → `green-financing-framework.pdf`; the `?…` part ignored). Found: saved with `articles.is_reupload = true`. 1 migration: that column (default false), and `counts_as_new` leaves re-uploads out. They still show under All PDFs, never as New or in the digest. A different title ("Impact report 2025" after "Impact report 2024") stays new. Unit tests with both cases; one pgTAP test for the view.
+    2. Rishi's spreadsheet: a throwaway script in the scratchpad reads `~/Downloads/EF Data - Issuer reporting with links.xlsx`, checks each link with the scanner's `checkLink` (documents), and writes `~/Downloads/EF Data - links not added.xlsx`: issuer, link, reason (No PDFs found, Blocked, Unreachable, Not found). Only the links that fail. Never committed; the writing package goes in the scratchpad, not the project.
+    3. Usage by list kind: `story_saved`, `story_shared`, `draft_sent` and `digest_link_opened` send `list_kind` (news or documents), as `sources_added` already does (`kind`). Analytics → Features used shows one row per feature and kind ("Stories saved · Bond documents"); events from before, and search and settings, count as news or have no kind. The PDF report the same.
+    - Live impact: the scanner (documents sources only; news stories are saved exactly as now), the Analytics screen (super admins), the app's events. Nobody has a documents list on live yet. 1 migration (schema: Ken's ok).
+    - Production steps (Ken), at the release: push the migration with the others, before merging; redeploy `analytics` (its query changes) along with `check-links` and `scan-new-sources`.
+- Then the release (production steps above; PR text drafted in the session of 2026-11-05).
+- Job B: issuer names instead of domains: the upload saves each link's issuer name (column A of their spreadsheet) as the source's name (`sources.name`).
+    - Plan (approved 2026-11-05, built), v0.7.4, branch `issuer-names`. In the release with job A (Ken, 2026-11-05: B, C and D all go in this release).
+    1. Excel upload to a documents list: each link takes the text in column A of its row (links behind cell text too: the sheet says which cell holds each), unless that text is empty, a number or itself a link. CSV the same, from the line's first field. Pasted links get no name, as now.
+    2. The name is saved when the source is created (`sources.name`, which users may already set on insert). The app, the Sources tab, Search and the digest already show the name instead of the domain.
+    3. Documents lists only: a news spreadsheet's column A may be anything, and a source's name is shared by everyone who follows it, with no way to change it from the app.
+    4. A source someone added before keeps its name (or none). On live nobody has documents sources yet.
+    5. A test with a made-up spreadsheet; then Rishi's whole file in the browser on the dev account.
+    - Live impact: the bulk upload (all users; news lists unchanged). No migration.
+- Job C: stories grouped and filtered by when they were found. Postponed (Ken, 2026-11-05): idea and reasons in `docs/ideas.md`. Instead, a `load_more` event measures whether anyone reads past the first 50 stories.
+- Job D: research the 104 "no PDFs found" pages (a sample of 20): documents linked without ".pdf" (`/download?id=…`), built with JavaScript, or listed on another page. Then a plan.
+    - Research (2026-11-05): 20 of the 97 "no PDFs found" pages (every 5th of Rishi's not-added list), read as the scanner reads them:
+        - 10 (50%) are overview pages: the documents sit on other pages (Bank of China, Brazil, MuniFin, NRW.BANK, Swedbank…). 3 of them (Oslo, Swedbank, Flanders) may load their list with JavaScript; can't tell without a browser.
+        - 5 (25%) have the PDFs inside the page's own data, not as links (Elopak, HDB, Singapore MOF, Luxembourg, Woori): readable without a browser.
+        - 2 are bot checks (Radware at CDP, TAQA): really "blocked", wrongly called "no PDFs found".
+        - 2 are disclaimer pages to accept first (LBBW, Credito Sportivo).
+        - 1 links its PDFs without ".pdf" (AOFM `/media/1427`).
+    - Plan (approved 2026-11-05, built), v0.7.5, branch `more-documents`:
+        1. Documents reader: when a page has no PDF links, it also takes PDF addresses written in the page's own data (scripts, `data-` attributes, `onclick`), named from the file name and labelled as usual. Unit tests with the 5 pages' shapes; then the 5 pages read for real.
+        2. Bot checks (Radware, Cloudflare's "Just a moment", Akamai) count as "blocked", not "no PDFs found", so the message says what happened. News and documents.
+        3. Overview and disclaimer pages: no code. After 1 and 2, all 156 links are checked again, and Rishi's file gets a column "What to do": for "no PDFs found", "Send the page that lists the PDFs"; for blocked, unreachable and not found, the reason as now. Not committed.
+        4. Not doing: accepting disclaimers for the user (they're legal notices meant for a person), links without ".pdf" (1 in 20), a hidden browser (shelved before; at most 3 in 20).
+        5. A `load_more` event on "Load more" (with `list_kind`), for the postponed job C (`docs/ideas.md`).
+        - Live impact: the scanner (documents sources only for 1; all sources for 2: a bot check page was "no stories" and becomes "blocked", nothing else changes), `check-links` and `scan-new-sources` (same code, already redeployed in this release). No migration.
+
+- Release the 3 jobs together: nobody can make a documents list before job 2, and the digest needs job 3.
+- Cost: under $1 a month (Haiku 5.5, $0.10 per million input tokens; the first labelling of a full list of 11,000 PDFs is about $0.10).
+- Live impact: the scanner, the app's source adding and the digest are live for journalists; their news lists must work exactly as now. The migration changes the sources' unique key: push it just before merging, as source adding fails in between.
+- Production steps (Ken): `ANTHROPIC_API_KEY` in GitHub secrets (done 2026-11-05); push the migrations; deploy the `check-links` and `scan-new-sources` functions (they run the scanner's code, which reads PDFs now); their email domain on the allowed list.
+
 ## Branches
 
 - Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.

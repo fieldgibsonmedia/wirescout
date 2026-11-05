@@ -34,6 +34,7 @@ test("the queries cover the chosen period", () => {
   for (const query of Object.values(week)) assert.match(query, /interval 7 day/);
   for (const query of Object.values(queries(null))) assert.doesNotMatch(query, /interval/, "All: no time limit");
   assert.match(week.topFeatures, /'sources_added', 'story_shared', 'draft_sent'/);
+  assert.match(week.topFeatures, /group by event, list_kind/, "Documents lists' use is its own row");
 });
 
 test("queries go to PostHog's EU API with the key, at most 3 at once", async () => {
@@ -65,7 +66,7 @@ test("the report adds names and story titles, and links replays to PostHog", () 
       [GONE, 1, 2, "2026-11-01T10:00:00Z"],
     ],
     topPages: [["watch-list", 20, 2]],
-    topFeatures: [["story_shared", 3, 1]],
+    topFeatures: [["story_shared", "documents", 3, 1]],
     topStories: [[42, 2, 1]],
     errors: [["", 2, 1, "2026-11-04T09:00:00Z"]],
     replays: [["session-1", ANN, "2026-11-04T09:00:00Z", 150000]],
@@ -81,6 +82,7 @@ test("the report adds names and story titles, and links replays to PostHog", () 
 
   assert.deepEqual(report.activeUsers[0], { name: "Ann Example", email: "ann@example.com", days: 4, pages: 30, lastSeen: "2026-11-04T10:00:00Z" });
   assert.equal(report.activeUsers[1].name, "A former user");
+  assert.deepEqual(report.topFeatures[0], { event: "story_shared", listKind: "documents", times: 3, people: 1 });
   assert.deepEqual(report.topStories[0], { title: "Green bonds", url: "https://news.example.com/1", source: "news.example.com", shares: 2, drafts: 1 });
   assert.equal(report.errors[0].message, "Unknown error");
   assert.deepEqual(report.replays[0], {

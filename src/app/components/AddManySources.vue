@@ -3,10 +3,13 @@
 // - Paste links: one per line, text around them is fine, and a bare domain on its own line counts.
 //   Lines without a link are listed while typing, so they can be fixed before adding.
 // - Upload a file: drop or choose an .xlsx, .csv or .txt file, and every web address in it is found
-//   (no column to pick). The user sees the list, then adds it with one button.
+//   (no column to pick), in Excel also the links behind cell text ("Green finance | Issuer").
+//   The user sees the list, then adds it with one button. For a documents list, each link from a file takes its
+//   row's first cell as the source's name (EF Data's issuer list: "Covivio", not covivio.eu), unless that cell is
+//   empty, a number or a link. Not for news lists: a source's name is shared by everyone who follows it.
 // Each link is checked first: the ones that fail aren't added, and the user sees why. The same address
 // written differently (http or https, www., a trailing slash) counts once.
-// Sources the scanner hasn't checked yet are read once right away, so their first stories show now.
+// Sources the scanner hasn't checked yet are read once right away, so their first stories (or PDFs) show now.
 // The Excel reader is only downloaded when an .xlsx file is used.
 import { ArrowUpTrayIcon, PlusIcon } from '@heroicons/vue/20/solid';
 import { TabsContent, TabsIndicator, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
@@ -25,6 +28,7 @@ import {
     type LinkCheck,
     type Source,
 } from '@/lib/sources';
+import { listKind } from '@/lib/watchLists';
 
 const props = defineProps<{
     watchListId: string;
@@ -35,7 +39,9 @@ const emit = defineEmits<{
     added: [sources: Source[]];
 }>();
 
-const MAX_ADDRESSES = 100;
+// EF Data's issuer list has about 500 links: one upload. Checking and reading that many takes 5 to 10 minutes,
+// so the status line counts them.
+const MAX_ADDRESSES = 500;
 const MAX_FILE_SIZE = 1024 * 1024;
 
 // Starts at http://, https:// or www. and runs to the next space, quote or bracket.
@@ -45,6 +51,7 @@ const ADDRESS_PATTERN = /\b(?:https?:\/\/|www\.)[^\s"'<>()[\]{}]+/gi;
 const BARE_DOMAIN_PATTERN = /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(\/\S*)?$/i;
 
 const tab = ref('paste');
+const kind = computed(() => listKind(props.watchListId));
 
 const pasted = ref('');
 const pasteError = ref('');
@@ -54,7 +61,12 @@ const dragging = ref(false);
 const reading = ref(false);
 const fileError = ref('');
 const found = ref<string[]>([]);
+// The names found in the file, by addressKey.
+const foundNames = ref(new Map<string, string>());
 const adding = ref(false);
+// While adding: how many links are checked (or sources read) so far, out of how many.
+const progress = ref({ done: 0, total: 0 });
+const progressText = computed(() => (progress.value.total > 1 ? ` ${progress.value.done} of ${progress.value.total}` : ''));
 // After adding: reading the new sources for their first stories.
 const scanning = ref(false);
 const addFailed = ref(false);
@@ -113,7 +125,7 @@ async function addPasted() {
 }
 
 async function addFound() {
-    if (await add(found.value)) {
+    if (await add(found.value, kind.value === 'documents' ? foundNames.value : new Map())) {
         found.value = [];
     }
 }
@@ -143,6 +155,7 @@ async function readFile(file: File) {
     notAdded.value = [];
     addFailed.value = false;
     found.value = [];
+    foundNames.value = new Map();
 
     const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
     if (extension === 'numbers') {
@@ -159,15 +172,16 @@ async function readFile(file: File) {
     }
 
     reading.value = true;
-    const text = await fileText(file, extension);
+    const contents = await fileContents(file, extension);
     reading.value = false;
 
-    if (text === null) {
+    if (contents === null) {
         fileError.value = "This file couldn't be read. Check that it opens in Excel, or save it as CSV and try again.";
         return;
     }
 
-    const addresses = findAddresses(text);
+    foundNames.value = contents.names;
+    const addresses = findAddresses(contents.text);
     if (addresses.length === 0) {
         fileError.value = 'No web addresses found in this file.';
     } else if (addresses.length > MAX_ADDRESSES) {
@@ -177,18 +191,90 @@ async function readFile(file: File) {
     }
 }
 
-// The file's text. For Excel, the text of every cell on every sheet. Null if the file can't be read.
-async function fileText(file: File, extension: string) {
+// The file's text (for Excel, the text of every cell on every sheet), and the name of each link: its row's first
+// cell, by addressKey. Null if the file can't be read.
+async function fileContents(file: File, extension: string) {
+    const names = new Map<string, string>();
+    const addName = (address: string, cell: unknown) => {
+        const name = sourceName(cell);
+        if (name && !names.has(addressKey(address))) {
+            names.set(addressKey(address), name);
+        }
+    };
     try {
         if (extension !== 'xlsx') {
-            return await file.text();
+            const text = await file.text();
+            if (extension === 'csv') {
+                for (const line of text.split('\n')) {
+                    // The first field, quoted ("Acme, Inc.") or not.
+                    const first = line.match(/^\s*"((?:[^"]|"")*)"|^[^,;\t]*/);
+                    const cell = first?.[1]?.replace(/""/g, '"') ?? first?.[0];
+                    findAddresses(line).forEach((address) => addName(address, cell));
+                }
+            }
+            return { text, names };
         }
         const { default: readXlsxFile } = await import('read-excel-file/browser');
         const sheets = await readXlsxFile(file);
-        return sheets.flatMap((sheet) => sheet.data.flat()).filter((cell) => typeof cell === 'string').join('\n');
+        for (const row of sheets.flatMap((sheet) => sheet.data)) {
+            for (const cell of row) {
+                if (typeof cell === 'string') {
+                    findAddresses(cell).forEach((address) => addName(address, row[0]));
+                }
+            }
+        }
+        const cells = sheets.flatMap((sheet) => sheet.data.flat()).filter((cell) => typeof cell === 'string');
+        const links = await hiddenLinks(file);
+        for (const link of links) {
+            const sheet = sheets.find((item) => item.sheet === link.sheet);
+            addName(link.url, sheet?.data[link.row - 1]?.[0]);
+        }
+        return { text: [...cells, ...links.map((link) => link.url)].join('\n'), names };
     } catch {
         return null;
     }
+}
+
+// A row's first cell as a source's name, or '' if it's empty, a number or a link.
+function sourceName(cell: unknown) {
+    const name = typeof cell === 'string' ? cell.trim() : '';
+    if (!name || /^[\d\s.,%-]+$/.test(name) || name.match(ADDRESS_PATTERN) || BARE_DOMAIN_PATTERN.test(name)) {
+        return '';
+    }
+    return name.slice(0, 200);
+}
+
+// An Excel file's links behind cell text: the cell shows "Green finance | Issuer", the address is kept in the
+// sheet's links file (xl/worksheets/_rels/sheet1.xml.rels). Each with its sheet's name and row, where the sheet
+// says which cell holds it; links kept but not in a cell have no row (0).
+async function hiddenLinks(file: File) {
+    const { unzipSync, strFromU8 } = await import('fflate');
+    const files = unzipSync(new Uint8Array(await file.arrayBuffer()), {
+        filter: (entry) => /^xl\/(workbook\.xml|_rels\/workbook\.xml\.rels|worksheets\/[^/]+\.xml|worksheets\/_rels\/[^/]+\.rels)$/.test(entry.name),
+    });
+    const text = (name: string) => (files[name] ? strFromU8(files[name]) : '');
+    const attribute = (tag: string, name: string) => decodeXml(tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1] ?? '');
+    const tags = (xml: string, name: string) => xml.match(new RegExp(`<${name}\\s[^>]*>`, 'g')) ?? [];
+
+    // Sheet file (xl/worksheets/sheet1.xml) → its name, through the workbook's ids.
+    const sheetFiles = new Map(tags(text('xl/_rels/workbook.xml.rels'), 'Relationship').map((tag) => [attribute(tag, 'Id'), attribute(tag, 'Target')]));
+    const sheetNames = new Map(
+        tags(text('xl/workbook.xml'), 'sheet').map((tag) => [`xl/${sheetFiles.get(attribute(tag, 'r:id'))?.replace(/^\/?xl\//, '')}`, attribute(tag, 'name')]),
+    );
+
+    return Object.keys(files)
+        .filter((name) => /^xl\/worksheets\/_rels\//.test(name))
+        .flatMap((relsName) => {
+            const sheetFile = relsName.replace('_rels/', '').replace(/\.rels$/, '');
+            const rows = new Map(tags(text(sheetFile), 'hyperlink').map((tag) => [attribute(tag, 'r:id'), Number(attribute(tag, 'ref').match(/\d+/)?.[0] ?? 0)]));
+            return tags(text(relsName), 'Relationship')
+                .filter((tag) => /^https?:\/\//.test(attribute(tag, 'Target')))
+                .map((tag) => ({ url: attribute(tag, 'Target'), sheet: sheetNames.get(sheetFile) ?? '', row: rows.get(attribute(tag, 'Id')) ?? 0 }));
+        });
+}
+
+function decodeXml(value: string) {
+    return value.replace(/&(amp|lt|gt|quot|apos);/g, (_, entity) => ({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" })[entity as string] ?? '');
 }
 
 // Every web address in the text, once each (however it's written), in the order they appear.
@@ -201,7 +287,7 @@ function findAddresses(text: string) {
 }
 
 // Checks the links and adds the ones that work. Returns false if they couldn't be added at all.
-async function add(urls: string[]) {
+async function add(urls: string[], names = new Map<string, string>()) {
     result.value = '';
     notAdded.value = [];
     const inList = new Set(props.sources.map((source) => addressKey(source.url)));
@@ -214,10 +300,11 @@ async function add(urls: string[]) {
     let failed: LinkCheck[] = [];
     if (toCheck.length > 0) {
         adding.value = true;
-        const checks = await checkLinks(toCheck);
+        progress.value = { done: 0, total: toCheck.length };
+        const checks = await checkLinks(toCheck, kind.value, () => progress.value.done++);
         failed = checks.filter((check) => check.problem);
         const working = checks.filter((check) => !check.problem).map((check) => check.url);
-        const response = working.length > 0 ? await addSources(props.watchListId, working) : [];
+        const response = working.length > 0 ? await addSources(props.watchListId, working, names) : [];
 
         if (!response) {
             adding.value = false;
@@ -225,7 +312,8 @@ async function add(urls: string[]) {
             return false;
         }
         scanning.value = true;
-        added = await scanNewSources(response);
+        progress.value = { done: 0, total: 0 };
+        added = await scanNewSources(response, (total) => (progress.value = { done: progress.value.done + 1, total }));
         scanning.value = false;
         adding.value = false;
     }
@@ -239,7 +327,7 @@ async function add(urls: string[]) {
     ]
         .filter(Boolean)
         .join(', ');
-    notAdded.value = checkMessages(failed);
+    notAdded.value = checkMessages(failed, kind.value);
     emit('added', added);
     return true;
 }
@@ -272,9 +360,9 @@ async function add(urls: string[]) {
                         {{ line }}
                     </li>
                 </ul>
-                <p v-if="scanning" role="status" class="text-sm">Finding their first stories…</p>
+                <p v-if="scanning" role="status" class="text-sm">{{ kind === 'documents' ? 'Finding their PDFs' : 'Finding their first stories' }}{{ progressText }}…</p>
                 <p v-else-if="adding" role="status" class="text-sm">
-                    Validating {{ pastedLinks.length === 1 ? 'source' : `${pastedLinks.length} sources` }}…
+                    Validating {{ pastedLinks.length === 1 ? 'source' : 'sources' }}{{ progressText }}…
                 </p>
                 <Alert v-if="addFailed" type="error">The sources couldn't be added. Please try again.</Alert>
                 <div>
@@ -314,8 +402,8 @@ async function add(urls: string[]) {
                     <ul class="max-h-64 overflow-y-auto rounded-box border border-base-300 text-sm">
                         <li v-for="url in found" :key="url" class="border-b border-base-300 px-3 py-2 break-words last:border-b-0">{{ url }}</li>
                     </ul>
-                    <p v-if="scanning" role="status" class="text-sm">Finding their first stories…</p>
-                    <p v-else-if="adding" role="status" class="text-sm">Validating {{ found.length === 1 ? 'source' : `${found.length} sources` }}…</p>
+                    <p v-if="scanning" role="status" class="text-sm">{{ kind === 'documents' ? 'Finding their PDFs' : 'Finding their first stories' }}{{ progressText }}…</p>
+                    <p v-else-if="adding" role="status" class="text-sm">Validating {{ found.length === 1 ? 'source' : 'sources' }}{{ progressText }}…</p>
                     <Alert v-if="addFailed" type="error">The sources couldn't be added. Please try again.</Alert>
                     <div class="flex flex-wrap gap-3">
                         <Button variant="outline" :busy="adding" @click="addFound">

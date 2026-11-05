@@ -2,11 +2,91 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Document lists, job D (more pages read), v0.7.5; job C postponed
+
+- Job B committed, merged into `mvp` and pushed (Ken's "approve"). Job C (stories grouped by date) postponed by Ken after the data: 10,940 of the 10,943 PDFs in Rishi's list are found on day one, so dates found don't help. Kept in the new `docs/ideas.md`, with a `load_more` event to measure it.
+- Job D research: 20 of the 97 "no PDFs found" pages: 10 overview pages, 5 with the PDFs in their own data, 2 bot checks, 2 disclaimers, 1 without ".pdf" (`docs/mvp-plan.md`).
+- Done on branch `more-documents`: a page without PDF links is searched for PDF addresses in its own data (escaped HTML, plain addresses, `window.open`); a bot check page (Radware, F5, Cloudflare, Imperva, DataDome) counts as "blocked", for news and documents; `load_more` event with `list_kind` (Analytics → Features used). What's new, version 0.7.5.
+- Checked: unit tests (86, 3 new), type-check; Elopak, HDB, Woori and Singapore's MOF now show their PDFs. All 484 links re-checked: 125 fail (were 156): 62 no PDFs found (were 97), 40 blocked (were 35), 14 unreachable, 9 not found. Rishi's file updated with a "What to do" column (`~/Downloads/EF Data - links not added.xlsx`, not committed).
+- Not checked: `load_more` reaching PostHog (no PostHog locally).
+
+## 2026-11-05: Document lists, job B (issuer names), v0.7.4
+
+- Job A committed, merged into `mvp` and pushed (Ken's "approve"). Ken's call: jobs B, C and D all go in the next release; failed links stay out of lists (refused at upload, listed in Rishi's file).
+- Done on branch `issuer-names`: an Excel or CSV upload to a documents list names each new source after its row's first cell (links behind cell text too), unless that cell is empty, a number or a link. News lists and pasted links unchanged; a source added before keeps its name. No migration. What's new, version 0.7.4.
+- Checked locally: type-check, unit tests; in the browser (dev account): a made-up CSV (a quoted name with a comma saved, a number skipped, an existing source kept nameless), then Rishi's whole file: 491 found, 347 added, 345 named from column A (e.g. IBRD for the World Bank link), the 2 without a name already existed; no console errors.
+- Found along the way: the local functions container kept a stale copy of `documents.js` until restarted (`docker restart supabase_edge_runtime_wirescout`).
+- Local test data: "Names test" and "Bond issuers" (347 sources) on the dev account.
+
+## 2026-11-05: Document lists, job A (re-uploads, Rishi's list, usage by kind), v0.7.3
+
+- `working-links` (v0.7.2) committed and merged into `mvp`, `mvp` pushed (Ken's "approve").
+- Done on branch `document-repeats`: a new PDF with the same title, section (Ken, 2026-11-05) and file name, apart from its numbers, as one already saved from that source is a re-upload (`articles.is_reupload`, migration `20261105164307_document_reuploads.sql`): shown under All PDFs, never new or in the digest. Saves, shares, drafts and digest clicks send `list_kind`; Analytics → Features used shows documents lists' use as its own rows (also in the PDF). What's new, version 0.7.3.
+- Rishi's file: `~/Downloads/EF Data - links not added.xlsx` (not committed): 156 of 484 links, each checked twice: 97 no PDFs found, 35 blocked, 15 unreachable, 9 not found.
+- Checked locally: unit tests (83, 1 new), pgTAP (157, 1 new), lint, type-check, build; a real page (Covivio) scanned, then 2 saved PDFs faked as older uploads: the re-upload marked, the other not. With the section: the same notice title under 2 bonds is not a re-upload. In the browser (dev account): a documents list from a digest link, Save, Share → Copy link, All PDFs; no console errors.
+- Not checked: the events reaching PostHog and the Analytics rows with real data (no PostHog locally).
+- Local test data: "Re-upload test" (Covivio) on the dev account.
+- Release: push the migration with the others, redeploy `analytics` too.
+
+## 2026-11-05: End of session, where things stand
+
+- `mvp` holds document lists jobs 1 to 3 (v0.7.1), on GitHub. Locally `mvp` is 2 commits ahead: the merge of `origin/main` before the release; pushing it failed 3 times (GitHub "Internal Server Error"), not retried since Ken wants to test first.
+- Branch `working-links` (from local `mvp`), not committed, waiting for Ken's "approve": the link fix (links kept as written, new links opened before saving), the Sources tab total and pages, the "Follows" spacing. Version 0.7.2. All checks passed.
+- Local dev account test data: "Bond issuers" (12 issuers, 5 PDFs marked new, a digest in Mailpit) and "Many sources (test)" (60 unchecked sources).
+- Next (new session): ask Ken to approve committing `working-links` into `mvp`, then job A (`docs/mvp-plan.md`, "Document lists for bond alerts", "Next jobs"), then the release, then jobs B, C, D.
+- Postponed: the digest on time (branch `digest-on-time`).
+
+## 2026-11-05: Working links only (fix), v0.7.2
+
+- Ken found a broken PDF link while testing locally (Gothenburg). Cause: the reader dropped the part after ".pdf" (`?MOD=AJPERES`), which about 6% of the list's PDF links have (24 sites).
+- Done on branch `working-links`: links stay as the page writes them; the scanner opens each new link once (news and documents) and leaves out those that answer 404 or 410 until the next scan (`withoutBrokenLinks`, `src/scanner/read-source.js`). The scan log counts them.
+- Checked locally: unit tests (82, 1 new with the Gothenburg case), the 12 test issuers re-read from scratch (398 PDFs), 43 saved links opened: 41 open, 1 blocks the check, 1 slow; the reported PDF opens.
+- Also (Ken, 2026-11-05): the Sources tab shows the total ("350 sources", "12 of 350 sources" while searching) and 25 sources per page (or 50, 100), for news and documents lists. Checked in the browser with a 60-source test list ("Many sources (test)", dev account): pages, per page, search back to page 1.
+- Also (Ken, 2026-11-05): more space between the name field and the "Follows" choice in New watch list (44px, checked in the browser).
+- Next: Ken tests locally, then the release.
+
+## 2026-11-05: Document lists for bond alerts, job 3 (digest), v0.7.1
+
+- Done on branch `document-lists-digest`: the digest takes only what counts as new (`counts_as_new`); a documents list shows up to 50 new bond documents, each with its label; the subject counts stories and documents apart ("8 new stories and 2 new documents in 3 watch lists"). What's new, version 0.7.1.
+- Checked locally: unit tests (81, 2 new), type-check, build; a real digest to Mailpit for the dev account: 2 new documents with their labels, the "other" PDF and the thousands already on the pages left out.
+- Next: the release of jobs 1 to 3 (`docs/mvp-plan.md`, "Document lists for bond alerts", production steps).
+
+## 2026-11-05: Document lists for bond alerts, job 2 (app), v0.7.0
+
+- Done on branch `document-lists-app`: New watch list asks News stories or Bond documents; a documents list has a Documents tab with Bond documents · All PDFs · Saved, each PDF with its label and section (also on its story page); "No PDFs found" for sources and link checks (`check-links` takes `kind`); moving sources only between lists of the same kind; the Excel upload also reads links behind cell text (`fflate`); the dashboard says documents and leaves first-check PDFs out of its chart. Migration `20261105150652_document_lists_app.sql`: users may set a source's kind; dashboard numbers use `counts_as_new`. What's new, version 0.7.0.
+- Checked locally: unit tests (79), pgTAP (156), lint, type-check, build, on a fresh database; in the browser as the dev account (phone width): created a Bond documents list, pasted 7 issuer links (6 added, example.com refused with "no PDFs found"), labels and sections shown, the switch, a re-added PDF shown as New on the list, dashboard and story page; a news list unchanged. Rishi's whole spreadsheet in one upload (limit raised from 100 to 500, with a progress count): 491 links found behind cell text, done in about 3 minutes; 350 added, 104 "no PDFs found", 37 blocked, unreachable or not found.
+- Found along the way: the local functions only see files that existed when Supabase started (restart after adding scanner files), and the release must deploy `check-links` and `scan-new-sources` (added to the plan's production steps).
+- Next: job 3, the digest.
+
+## 2026-11-05: Document lists for bond alerts, job 1 (scanner and database)
+
+- Plan approved (`docs/mvp-plan.md`, "Document lists for bond alerts"), from EF Data's issuer list (523 links tested). Rishi wants alerts for allocation and impact reports, frameworks, SPOs and new bond issues; not prospectuses or general sustainability reports.
+- Ken added the GitHub secret `ANTHROPIC_API_KEY` (2026-11-05).
+- Done on branch `document-lists`: migration `20261105143948_document_lists.sql` (`kind` on watch lists and sources, a page can be both; `section`, `document_kind`, `found_on_first_check` on articles; `counts_as_new` in `watch_list_articles`). Scanner: `documents.js` reads a page's PDFs, `label-documents.js` labels them with Claude Haiku 5.5. `scanner.yml` passes the key. The app's source adding uses the new unique key (news only, as before).
+- Checked locally: unit tests (78), pgTAP (154), lint, type-check, build; a scan of 12 real issuer pages from the list (398 PDFs, all with sections, all kept as already there); deleted PDFs came back as new; the news lists' counts unchanged; the app's source-adding calls as the dev account.
+- Next: job 2, the app.
+
+## 2026-11-05: Digest on time, built and postponed
+
+- Built on branch `digest-on-time` (pushed, not merged): a `pg_cron` job starts `digest.yml` through GitHub's "run now", with a Vault token, at :05, :20, :35, :50. Version 0.6.3.
+- Checked locally: pgTAP (6 new tests, 153 in all), lint, unit tests, type-check, build; the local job ran on time and sent nothing.
+- Postponed by Ken: a digest late now and then is fine for now. How to pick it up: `docs/mvp-plan.md`, "Daily digest on time".
+- Next: ask Ken who runs the company's Microsoft 365 (to allow `wirescout.app`, so the digest stops landing in Junk).
+
+## 2026-11-05: Digest late and in Junk, plan for the next session
+
+- Ken's 11:30 digest arrived at 12:29, in Outlook's Junk folder.
+- Late: GitHub skipped 4 digest runs (11:20, then 12:29 UTC). Plan written in `docs/mvp-plan.md` ("Daily digest on time", not approved): the database starts the digest every 15 minutes.
+- Junk: SPF, DKIM and DMARC all pass; most likely the new domain's low reputation. Ken marks it "Not junk" for now (`docs/known-issues.md`).
+- Next (new session): read that plan, show it to Ken, start coding only after his "approve". Then ask Ken who runs the company's Microsoft 365 (to allow `wirescout.app` for everyone).
+- Still to check when it happens: the next access request email's wording. A digest on nodemailer 10 arrived (2026-11-05, 12:29 UTC).
+
 ## 2026-11-05: Email changes must pass the allowed list (v0.6.2)
 
 - Done on branch `email-change-allowed-list`: a trigger on `auth.users` refuses an email change to an address not on the allowed list; Account settings asks `email_allowed` first and says why. What's new note, version 0.6.2.
 - Checked locally: pgTAP (5 new tests), lint, unit tests, type-check, build; the local Auth API refuses a not-allowed change (500) and accepts an allowed one; Account settings shows the message, and an allowed change sends both links.
-- Next: Ken's review and "approve", then the release. Production steps (Ken), in order: `npx supabase db push`, then merge the release PR (the app calls `email_allowed`).
+- Release PR #32 opened. Ken pushed the migration `20261105120914_email_change_allowed_list.sql` to the cloud project (2026-11-05, applied). Ken merged PR #32 into `main` (12:54 UTC); the app deploy succeeded. Checked on live (Ken): a not-allowed email shows the message.
+- Still to check when they happen: a digest email arriving on nodemailer 10, and the next access request email's wording.
 
 ## 2026-11-05: Plan for email changes and the allowed list, end of session
 

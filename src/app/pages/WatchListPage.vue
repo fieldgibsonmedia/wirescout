@@ -5,6 +5,8 @@
 // the search box narrows them further. ?tab=sources opens the Sources tab (the digest's failing-sources link).
 // The name and keywords follow the watchLists store, so an edit from the side nav shows here too.
 // The Stories tab switches between all stories and the saved ones (newest save first, all at once).
+// A documents list (bond alerts) has a Documents tab instead, showing the bond documents by default: the PDFs
+// labelled as one, and those not labelled yet, so nothing is missed. "All PDFs" shows the others too.
 import { ExclamationTriangleIcon } from '@heroicons/vue/20/solid';
 import { TabsContent, TabsIndicator, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -17,9 +19,10 @@ import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import SearchField from '@/components/ui/SearchField.vue';
+import { track } from '@/lib/analytics';
 import { SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
-import { loadNewCounts, watchLists } from '@/lib/watchLists';
+import { documentKindLabel, loadNewCounts, watchLists, type ListKind } from '@/lib/watchLists';
 
 const props = defineProps<{
     id: string;
@@ -34,6 +37,8 @@ type Article = {
     sourceId: string;
     source: string;
     isNew: boolean;
+    label?: string;
+    section: string | null;
 };
 
 // Stories shown per page: "Load more" adds the next ones.
@@ -45,6 +50,7 @@ const name = ref('');
 // When the user last opened this list: stories first seen after it are new.
 const lastViewedAt = ref('');
 const keywords = ref<string[]>([]);
+const kind = ref<ListKind>('news');
 const sources = ref<Source[]>([]);
 const articles = ref<Article[]>([]);
 const hasMore = ref(false);
@@ -54,8 +60,20 @@ const loading = ref(true);
 const failed = ref(false);
 const notFound = ref(false);
 
-// Which stories the Stories tab shows.
-const view = ref<'all' | 'saved'>('all');
+// Which stories the Stories tab shows. bond: a documents list's bond documents (its default view).
+const view = ref<'bond' | 'all' | 'saved'>('all');
+const viewOptions = computed(() =>
+    kind.value === 'documents'
+        ? ([
+              { value: 'bond', label: 'Bond documents' },
+              { value: 'all', label: 'All PDFs' },
+              { value: 'saved', label: 'Saved' },
+          ] as const)
+        : ([
+              { value: 'all', label: 'All stories' },
+              { value: 'saved', label: 'Saved' },
+          ] as const),
+);
 // The stories saved in this list, for each card's Save / Saved.
 const savedIds = ref(new Set<number>());
 const savedArticles = ref<Article[]>([]);
@@ -78,7 +96,7 @@ async function load() {
     failed.value = false;
 
     const [list, listSources, savedStories] = await Promise.all([
-        supabase.from('watch_lists').select('name, last_viewed_at, keywords').eq('id', props.id).maybeSingle(),
+        supabase.from('watch_lists').select('name, last_viewed_at, keywords, kind').eq('id', props.id).maybeSingle(),
         supabase.from('watch_list_sources').select(`sources (${SOURCE_COLUMNS})` as const).eq('watch_list_id', props.id).order('created_at'),
         supabase.from('saved_stories').select('article_id').eq('watch_list_id', props.id),
     ]);
@@ -97,6 +115,8 @@ async function load() {
     name.value = list.data.name;
     lastViewedAt.value = list.data.last_viewed_at;
     keywords.value = list.data.keywords;
+    kind.value = list.data.kind as ListKind;
+    view.value = kind.value === 'documents' ? 'bond' : 'all';
     sources.value = listSources.data.map(({ sources: source }) => toSource(source));
     savedIds.value = new Set(savedStories.data.map((savedStory) => savedStory.article_id));
 
@@ -136,6 +156,8 @@ async function loadArticles() {
 }
 
 async function loadMore() {
+    // Whether anyone reads past the first page: decides the postponed date headings (docs/ideas.md).
+    track('load_more', { list_kind: kind.value, shown: articles.value.length });
     moreFailed.value = false;
     loadingMore.value = true;
     const current = request;
@@ -158,12 +180,15 @@ async function loadMore() {
 }
 
 // One page of stories from offset on, plus one more to tell whether there's another page.
-// The search matches any part of the title or summary, ignoring capitals.
+// The search matches any part of the title, summary or section, ignoring capitals.
 function fetchArticles(offset: number, term: string) {
     let query = supabase
         .from('watch_list_articles')
-        .select('id, url, title, summary, published_at, first_seen_at, source_id')
+        .select('id, url, title, summary, published_at, first_seen_at, source_id, section, document_kind, counts_as_new')
         .eq('watch_list_id', props.id);
+    if (view.value === 'bond') {
+        query = query.or('document_kind.is.null,document_kind.neq.other');
+    }
     if (term) {
         // % and _ are wildcards in ilike: escape them so they're searched for as typed.
         query = query.ilike('search_text', `%${term.replace(/[\\%_]/g, '\\$&')}%`);
@@ -179,7 +204,7 @@ async function loadSaved() {
     savedFailed.value = false;
     const { data, error } = await supabase
         .from('saved_stories')
-        .select('articles (id, url, title, summary, published_at, first_seen_at, source_id)')
+        .select('articles (id, url, title, summary, published_at, first_seen_at, source_id, section, document_kind)')
         .eq('watch_list_id', props.id)
         .order('saved_at', { ascending: false });
     savedLoading.value = false;
@@ -204,6 +229,8 @@ function setSaved(articleId: number, saved: boolean) {
 watch(view, (shown) => {
     if (shown === 'saved') {
         loadSaved();
+    } else if (!loading.value) {
+        loadArticles();
     }
 });
 
@@ -215,6 +242,9 @@ function toArticle(article: {
     published_at: string | null;
     first_seen_at: string;
     source_id: string;
+    section: string | null;
+    document_kind: string | null;
+    counts_as_new?: boolean | null;
 }): Article {
     return {
         id: article.id,
@@ -224,7 +254,10 @@ function toArticle(article: {
         date: dateFormat.format(new Date(article.published_at ?? article.first_seen_at)),
         sourceId: article.source_id,
         source: sources.value.find((source) => source.id === article.source_id)?.label ?? '',
-        isNew: new Date(article.first_seen_at) > new Date(lastViewedAt.value),
+        // What was on a documents list's pages at their first check, and its "other" PDFs, are never new.
+        isNew: article.counts_as_new !== false && new Date(article.first_seen_at) > new Date(lastViewedAt.value),
+        label: kind.value === 'documents' ? documentKindLabel(article.document_kind) : undefined,
+        section: article.section,
     };
 }
 
@@ -274,7 +307,9 @@ onMounted(load);
 
         <TabsRoot v-model="tab" class="flex flex-col gap-4">
             <TabsList aria-label="Watch list" class="tabs tabs-border relative">
-                <TabsTrigger value="stories" class="tab data-[state=active]:tab-active">Stories</TabsTrigger>
+                <TabsTrigger value="stories" class="tab data-[state=active]:tab-active">
+                    {{ kind === 'documents' ? 'Documents' : 'Stories' }}
+                </TabsTrigger>
                 <TabsTrigger value="sources" class="tab gap-2 data-[state=active]:tab-active">
                     Sources
                     <span v-if="failingSources > 0" class="badge badge-sm badge-error gap-1">
@@ -287,13 +322,14 @@ onMounted(load);
 
             <TabsContent value="stories" class="flex flex-col gap-4">
                 <div v-if="sources.length > 0 || savedIds.size > 0" class="flex flex-wrap items-center gap-2">
-                    <SearchField v-if="view === 'all' && sources.length > 0" v-model="search" label="Search stories" />
+                    <SearchField
+                        v-if="view !== 'saved' && sources.length > 0"
+                        v-model="search"
+                        :label="kind === 'documents' ? 'Search documents' : 'Search stories'"
+                    />
                     <div class="join ms-auto" role="group" aria-label="Show">
                         <button
-                            v-for="option in [
-                                { value: 'all', label: 'All stories' },
-                                { value: 'saved', label: 'Saved' },
-                            ] as const"
+                            v-for="option in viewOptions"
                             :key="option.value"
                             type="button"
                             :class="['btn join-item', view === option.value ? 'btn-primary' : 'border-base-300 bg-base-100']"
@@ -328,6 +364,8 @@ onMounted(load);
                                 :source="article.source"
                                 :date="article.date"
                                 :is-new="article.isNew"
+                                :label="article.label"
+                                :section="article.section"
                                 :saved="savedIds.has(article.id)"
                                 @update:saved="setSaved(article.id, $event)"
                             />
@@ -337,10 +375,16 @@ onMounted(load);
 
                 <Card v-else-if="articles.length === 0">
                     <p v-if="sources.length === 0" class="max-w-prose">
-                        Add a source to start seeing its stories.
+                        Add a source to start seeing its {{ kind === 'documents' ? 'PDFs' : 'stories' }}.
                         <button type="button" class="link" @click="tab = 'sources'">Go to Sources</button>
                     </p>
-                    <p v-else-if="shownSearch" class="max-w-prose break-words">No stories match "{{ shownSearch }}".</p>
+                    <p v-else-if="shownSearch" class="max-w-prose break-words">
+                        No {{ kind === 'documents' ? 'documents' : 'stories' }} match "{{ shownSearch }}".
+                    </p>
+                    <p v-else-if="kind === 'documents'" class="max-w-prose">
+                        No {{ view === 'bond' ? 'bond documents' : 'PDFs' }} yet. Wirescout checks your sources every hour, and new ones
+                        appear here on their own.
+                    </p>
                     <p v-else-if="keywords.length > 0" class="max-w-prose">
                         No stories mention these keywords yet. Wirescout checks your sources every hour, and new stories appear here
                         on their own.
@@ -361,13 +405,15 @@ onMounted(load);
                             :source="article.source"
                             :date="article.date"
                             :is-new="article.isNew"
+                            :label="article.label"
+                            :section="article.section"
                             :saved="savedIds.has(article.id)"
                             @update:saved="setSaved(article.id, $event)"
                         />
                     </li>
                 </ul>
 
-                <div v-if="view === 'all' && (hasMore || moreFailed)" class="flex flex-col items-start gap-2">
+                <div v-if="view !== 'saved' && (hasMore || moreFailed)" class="flex flex-col items-start gap-2">
                     <Alert v-if="moreFailed" type="error">More stories couldn't be loaded. Please try again.</Alert>
                     <Button variant="outline" :busy="loadingMore" @click="loadMore">Load more</Button>
                 </div>

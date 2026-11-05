@@ -1,6 +1,6 @@
 {
   "name": "wirescout",
-  "version": "0.6.2",
+  "version": "0.7.5",
   "description": "Lightweight scraper bot that monitors websites for new articles",
   "main": "src/scanner/index.js",
   "type": "module",
@@ -17,12 +17,14 @@
   "author": "Kenneth Zuniga and Martin Assman, Field Gibson Media",
   "license": "MIT",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
     "@heroicons/vue": "^2.2.0",
     "@supabase/supabase-js": "^2.118.0",
     "@tanstack/vue-table": "^9.3.1",
     "cheerio": "^1.0.0-rc.12",
     "chrono-node": "^2.9.0",
     "dotenv": "^16.0.3",
+    "fflate": "^0.8.3",
     "jspdf": "^4.2.1",
     "nodemailer": "^10.3.1",
     "posthog-js": "^1.438.13",

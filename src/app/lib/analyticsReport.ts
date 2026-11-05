@@ -18,7 +18,7 @@ export const PERIODS: { value: Period; label: string; description: string }[] = 
 export type Report = {
     activeUsers: { name: string; email: string; days: number; pages: number; lastSeen: string }[] | null;
     topPages: { screen: string; views: number; people: number }[] | null;
-    topFeatures: { event: AnalyticsEvent; times: number; people: number }[] | null;
+    topFeatures: { event: AnalyticsEvent; listKind: '' | 'documents'; times: number; people: number }[] | null;
     topStories: { title: string; url: string; source: string; shares: number; drafts: number }[] | null;
     errors: { message: string; times: number; people: number; lastSeen: string }[] | null;
     replays: { name: string; startedAt: string; activeMinutes: number; url: string }[] | null;
@@ -32,7 +32,14 @@ export const FEATURE_LABELS: Record<AnalyticsEvent, string> = {
     story_saved: 'Stories saved',
     digest_link_opened: 'Digest links opened',
     settings_changed: 'Settings changed',
+    load_more: 'Load more (past the first 50 stories)',
 };
+
+// A feature's row: use in documents lists is its own row.
+export function featureLabel(feature: { event: AnalyticsEvent; listKind: string }) {
+    const label = FEATURE_LABELS[feature.event] ?? feature.event;
+    return feature.listKind === 'documents' ? `${label} · Bond documents` : label;
+}
 
 // The screens, by route name (router.ts).
 const PAGE_LABELS: Record<string, string> = {

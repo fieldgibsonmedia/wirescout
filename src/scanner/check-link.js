@@ -9,17 +9,17 @@ const CHECK_TIMEOUT_MS = 15_000;
 const PRIVATE_HOST =
   /^(localhost|.*\.local|.*\.internal|0\.0\.0\.0|127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|\[.*\])$/i;
 
-// Returns { url, problem }: problem is null when the scanner finds stories on the link, else
-// "not_found", "blocked", "unreachable" or "no_stories".
-export async function checkLink(url) {
+// Returns { url, problem }: problem is null when the scanner finds stories on the link (PDFs, for a
+// documents list), else "not_found", "blocked", "unreachable" or "no_stories".
+export async function checkLink(url, kind = "news") {
   if (!isPublicAddress(url)) return { url, problem: "unreachable" };
-  return readLink(url, CHECK_TIMEOUT_MS);
+  return readLink(url, CHECK_TIMEOUT_MS, kind);
 }
 
 // checkLink without the public address rule, so the tests can use a local server.
-export async function readLink(url, timeoutMs) {
+export async function readLink(url, timeoutMs, kind = "news") {
   try {
-    const result = await readSource({ url }, AbortSignal.timeout(timeoutMs));
+    const result = await readSource({ url, kind }, AbortSignal.timeout(timeoutMs));
     return { url, problem: result.stories.length ? null : "no_stories" };
   } catch (error) {
     return { url, problem: readProblem(error) ?? "no_stories" };
