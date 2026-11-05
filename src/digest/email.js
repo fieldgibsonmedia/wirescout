@@ -1,9 +1,21 @@
 // The digest email: one section per watch list with its new stories (5 at most) and its failing sources.
+// A documents list (bond alerts) shows its new bond documents, each with its label, up to 50: the team wants
+// every one, and a normal day has a few.
 // Every link opens Wirescout, never the source site: a story opens its own page in the app, with the
 // Share menu, so the activity stays in the app.
 
 // Stories shown per list: "See all new stories on Wirescout" opens the rest.
 export const STORIES_PER_LIST = 5;
+export const DOCUMENTS_PER_LIST = 50;
+
+// As in the app (src/app/lib/watchLists.ts): what the model says a PDF is. Empty: not labelled yet.
+const DOCUMENT_KIND_LABELS = {
+  allocation_report: "Allocation report",
+  impact_report: "Impact report",
+  framework: "Framework",
+  spo: "Second-party opinion",
+  new_issue: "New bond issue",
+};
 const SUMMARY_LENGTH = 200;
 
 // Inline styles: email apps drop style sheets. Apple's web blue, and a red with 6:1 contrast on white.
@@ -16,12 +28,12 @@ const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, s
 // The text-style warning sign (U+FE0E): as an emoji it would turn yellow and ignore the red.
 const WARNING = "⚠︎";
 
-// lists: [{ id, name, newCount, problemCount, stories: [{ id, title, summary, source, date }] }],
-// stories newest first, at most STORIES_PER_LIST. date is an ISO string.
+// lists: [{ id, name, kind, newCount, problemCount, stories: [{ id, title, summary, source, date, documentKind }] }],
+// kind "news" or "documents", stories newest first, at most STORIES_PER_LIST (DOCUMENTS_PER_LIST). date is an ISO string.
 // profile: digest_time ("07:15:00") and time_zone, for the dates and the footer.
 export function buildDigest({ lists, profile, appUrl }) {
   const sections = lists.filter((list) => list.newCount > 0 || list.problemCount > 0);
-  const totalNew = sections.reduce((total, list) => total + list.newCount, 0);
+  const newOf = (kind) => sections.filter((list) => list.kind === kind).reduce((total, list) => total + list.newCount, 0);
   const listsWithNew = sections.filter((list) => list.newCount > 0).length;
   const dateFormat = new Intl.DateTimeFormat("en-GB", {
     timeZone: profile.time_zone,
@@ -41,7 +53,12 @@ export function buildDigest({ lists, profile, appUrl }) {
     // A PNG, not the app's SVG: most email apps don't show SVG. Made from src/app/components/BrandIcon.vue.
     icon: `${appUrl}/brand-icon.png`,
   };
-  const subject = `Wirescout: ${plural(totalNew, "new story", "new stories")} in ${plural(listsWithNew, "watch list", "watch lists")}`;
+  // "8 new stories", "3 new documents", or "8 new stories and 3 new documents".
+  const counts = [
+    newOf("news") > 0 && plural(newOf("news"), "new story", "new stories"),
+    newOf("documents") > 0 && plural(newOf("documents"), "new document", "new documents"),
+  ].filter(Boolean);
+  const subject = `Wirescout: ${counts.join(" and ")} in ${plural(listsWithNew, "watch list", "watch lists")}`;
   const footer = `Sent Monday to Friday at ${profile.digest_time.slice(0, 5)} (${profile.time_zone}).`;
 
   return {
@@ -58,7 +75,7 @@ function buildText({ sections, links, footer, dateFormat }) {
       lines.push(`${WARNING} ${problems(list)}: ${links.sources(list)}`);
     }
     for (const story of list.stories) {
-      lines.push("", story.title, `${story.source} · ${dateFormat.format(new Date(story.date))}`, links.story(list, story));
+      lines.push("", story.title, storyMeta(list, story, dateFormat), links.story(list, story));
     }
     if (list.newCount > 0) {
       lines.push("", `${seeAll(list)}: ${links.list(list)}`);
@@ -79,7 +96,7 @@ function buildHtml({ sections, links, footer, dateFormat, subject }) {
       .map(
         (story) => `
           <tr><td style="padding: 12px 0; border-bottom: 1px solid ${LINE};">
-            <div style="font-size: 13px; color: ${MUTED};">${escape(story.source)} · ${dateFormat.format(new Date(story.date))}</div>
+            <div style="font-size: 13px; color: ${MUTED};">${escape(storyMeta(list, story, dateFormat))}</div>
             <a href="${links.story(list, story)}" style="display: block; margin-top: 4px; font-size: 16px; font-weight: 600; color: ${BLUE}; text-decoration: none;">${escape(story.title)}</a>
             ${story.summary ? `<div style="margin-top: 4px; font-size: 14px; color: ${TEXT};">${escape(shorten(story.summary))}</div>` : ""}
           </td></tr>`,
@@ -141,11 +158,18 @@ function buildHtml({ sections, links, footer, dateFormat, subject }) {
 }
 
 function newStories(list) {
-  return list.newCount > 0 ? plural(list.newCount, "new story", "new stories") : "No new stories";
+  const [one, many] = list.kind === "documents" ? ["new document", "new documents"] : ["new story", "new stories"];
+  return list.newCount > 0 ? plural(list.newCount, one, many) : `No ${many}`;
 }
 
 function seeAll(list) {
-  return `See all new ${list.name} stories on Wirescout`;
+  return `See all new ${list.name} ${list.kind === "documents" ? "documents" : "stories"} on Wirescout`;
+}
+
+// "kbn.com · 5 Nov, 15:18"; a document starts with its label: "Impact report · kbn.com · 5 Nov, 15:18".
+function storyMeta(list, story, dateFormat) {
+  const label = list.kind === "documents" ? (DOCUMENT_KIND_LABELS[story.documentKind] ?? "Not labelled yet") : null;
+  return [label, story.source, dateFormat.format(new Date(story.date))].filter(Boolean).join(" · ");
 }
 
 function problems(list) {

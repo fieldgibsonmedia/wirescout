@@ -5,7 +5,7 @@ import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
 import nodemailer from "nodemailer";
 import { isDue, safeTimeZone, since } from "./due.js";
-import { buildDigest, STORIES_PER_LIST } from "./email.js";
+import { buildDigest, DOCUMENTS_PER_LIST, STORIES_PER_LIST } from "./email.js";
 
 const CONFIG = {
   supabaseUrl: process.env.SUPABASE_URL,
@@ -30,11 +30,12 @@ const transporter = nodemailer.createTransport({
   auth: CONFIG.emailUser ? { user: CONFIG.emailUser, pass: CONFIG.emailPass } : undefined,
 });
 
-// The user's watch lists, each with its new stories (since → now) and its failing sources.
+// The user's watch lists, each with its new stories (since → now) and its failing sources. A documents list's
+// new stories are its new bond documents (counts_as_new: not what was on the page at the first check, not "other").
 async function loadLists(profile, from, now) {
   const { data: lists, error } = await supabase
     .from("watch_lists")
-    .select("id, name, watch_list_sources (sources (id, url, name, last_checked_at, stories_found))")
+    .select("id, name, kind, watch_list_sources (sources (id, url, name, last_checked_at, stories_found))")
     .eq("user_id", profile.id)
     .order("created_at");
   if (error) throw error;
@@ -44,18 +45,20 @@ async function loadLists(profile, from, now) {
       const sources = list.watch_list_sources.map((link) => link.sources);
       const stories = await supabase
         .from("watch_list_articles")
-        .select("id, title, summary, published_at, first_seen_at, source_id", { count: "exact" })
+        .select("id, title, summary, published_at, first_seen_at, source_id, document_kind", { count: "exact" })
         .eq("watch_list_id", list.id)
+        .eq("counts_as_new", true)
         .gt("first_seen_at", from.toISOString())
         .lte("first_seen_at", now.toISOString())
         .order("first_seen_at", { ascending: false })
         .order("id", { ascending: false })
-        .limit(STORIES_PER_LIST);
+        .limit(list.kind === "documents" ? DOCUMENTS_PER_LIST : STORIES_PER_LIST);
       if (stories.error) throw stories.error;
 
       return {
         id: list.id,
         name: list.name,
+        kind: list.kind,
         newCount: stories.count,
         // Failing as in the app's Sources tab: checked, and no stories found.
         problemCount: sources.filter((source) => source.last_checked_at && !source.stories_found).length,
@@ -64,6 +67,7 @@ async function loadLists(profile, from, now) {
           title: story.title,
           summary: story.summary,
           source: sourceLabel(sources.find((source) => source.id === story.source_id)),
+          documentKind: story.document_kind,
           date: story.published_at ?? story.first_seen_at,
         })),
       };

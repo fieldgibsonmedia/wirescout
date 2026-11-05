@@ -441,7 +441,7 @@ What they want alerts for (Rishi, 2026-11-05): allocation reports, impact report
     - Each PDF is labelled by Claude Haiku 5.5 from its title, file name and section (`articles.document_kind`): `allocation_report`, `impact_report`, `framework`, `spo`, `new_issue`, `other`. Empty = not checked yet: shown, so nothing is missed. The hourly scanner labels what's still empty, a few hundred at most per run, so a failed call is retried next hour. No `ANTHROPIC_API_KEY`: nothing is labelled.
     - New counts of a documents list leave out `other`.
 2. Job 2, app (v0.7.0): create a list as News or Documents; a documents list shows title, label, section, date found and the PDF link, with a "Bond documents · All" switch; the bulk upload also reads links hidden behind cell text.
-3. Job 3, digest (v0.7.1): a documents list's digest has every new bond document, not 5.
+3. Job 3, digest (v0.7.1): a documents list's digest has every new bond document (up to 50, with "See all"), not 5, each with its label.
 
 - Release the 3 jobs together: nobody can make a documents list before job 2, and the digest needs job 3.
 - Cost: under $1 a month (Haiku 5.5, $0.10 per million input tokens; the first labelling of a full list of 11,000 PDFs is about $0.10).
