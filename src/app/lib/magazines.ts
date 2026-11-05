@@ -5,6 +5,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import { ref } from 'vue';
 import { track } from '@/lib/analytics';
 import { supabase } from '@/lib/supabase';
+import type { ListKind } from '@/lib/watchLists';
 
 export type Magazine = {
     id: number;
@@ -102,6 +103,7 @@ export async function sendDraft(draft: {
     title: string;
     content: string;
     aiAssisted: boolean;
+    listKind: ListKind;
 }) {
     const result = await call<{ id: number; edit_url: string }>('post-draft', {
         article_id: draft.articleId,
@@ -111,7 +113,12 @@ export async function sendDraft(draft: {
         ai_assisted: draft.aiAssisted,
     });
     if (result.ok) {
-        track('draft_sent', { article_id: draft.articleId, publication_id: draft.publicationId, ai_assisted: draft.aiAssisted });
+        track('draft_sent', {
+            article_id: draft.articleId,
+            publication_id: draft.publicationId,
+            ai_assisted: draft.aiAssisted,
+            list_kind: draft.listKind,
+        });
     }
     if (!result.ok && result.needsSignIn) {
         await loadMagazines();

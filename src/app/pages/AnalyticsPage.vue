@@ -10,7 +10,7 @@ import AnalyticsSection from '@/components/AnalyticsSection.vue';
 import Alert from '@/components/ui/Alert.vue';
 import Button from '@/components/ui/Button.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
-import { dateFormat, FEATURE_LABELS, pageLabel, PERIODS, type Period, type Report } from '@/lib/analyticsReport';
+import { dateFormat, featureLabel, pageLabel, PERIODS, type Period, type Report } from '@/lib/analyticsReport';
 import { supabase } from '@/lib/supabase';
 
 const period = ref<Period>('month');
@@ -120,8 +120,8 @@ watch(period, load, { immediate: true });
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="feature in report.topFeatures" :key="feature.event">
-                        <td>{{ FEATURE_LABELS[feature.event] ?? feature.event }}</td>
+                    <tr v-for="feature in report.topFeatures" :key="feature.event + feature.listKind">
+                        <td>{{ featureLabel(feature) }}</td>
                         <td class="text-right">{{ feature.times }}</td>
                         <td class="text-right">{{ feature.people }}</td>
                     </tr>

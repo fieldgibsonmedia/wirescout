@@ -108,8 +108,14 @@ router.afterEach(async (to) => {
     }
     trackPage(String(to.name), Boolean(to.meta.superAdmin));
     if (to.query.from === 'digest') {
-        track('digest_link_opened', to.name === 'story' ? { article_id: Number(to.params.storyId) } : undefined);
         const { from: _from, ...query } = to.query;
+        // The list's kind, so Analytics shows news and documents lists apart. The dashboard link has no list.
+        const list =
+            typeof to.params.id === 'string' ? await supabase.from('watch_lists').select('kind').eq('id', to.params.id).maybeSingle() : null;
+        track('digest_link_opened', {
+            ...(to.name === 'story' && { article_id: Number(to.params.storyId) }),
+            ...(list?.data && { list_kind: list.data.kind }),
+        });
         router.replace({ ...to, query });
     }
 });

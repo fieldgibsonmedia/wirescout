@@ -6,6 +6,7 @@ import { BookmarkIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import { track } from '@/lib/analytics';
 import { supabase } from '@/lib/supabase';
+import { listKind } from '@/lib/watchLists';
 
 const props = defineProps<{
     watchListId: string;
@@ -34,7 +35,7 @@ async function toggle() {
     const nowSaved = !saved.value;
     saved.value = nowSaved;
     if (nowSaved) {
-        track('story_saved', { article_id: props.articleId });
+        track('story_saved', { article_id: props.articleId, list_kind: listKind(props.watchListId) });
     }
 }
 </script>

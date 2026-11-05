@@ -16,10 +16,12 @@ import Dialog from '@/components/ui/Dialog.vue';
 import TextAreaField from '@/components/ui/TextAreaField.vue';
 import TextField from '@/components/ui/TextField.vue';
 import { connectMagazine, loadStorySends, magazines, sendDraft, storySends, suggestDraft } from '@/lib/magazines';
+import { listKind } from '@/lib/watchLists';
 
 const props = defineProps<{
     magazineId: number;
     articleId: number;
+    watchListId: string;
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
@@ -150,6 +152,7 @@ async function send() {
         title: title.value,
         content: content.value,
         aiAssisted: aiAssisted.value,
+        listKind: listKind(props.watchListId),
     });
     busy.value = false;
 

@@ -49,7 +49,7 @@ const sentTo = computed(() => magazines.value.filter((magazine) => storySends.va
         </h3>
         <p v-if="summary" class="max-w-prose">{{ summary }}</p>
         <div class="flex flex-wrap items-center gap-2">
-            <ShareMenu :article-id="articleId" :title="title" :url="url" />
+            <ShareMenu :article-id="articleId" :watch-list-id="watchListId" :title="title" :url="url" />
             <SaveButton v-model:saved="saved" :watch-list-id="watchListId" :article-id="articleId" :title="title" />
         </div>
     </Card>
