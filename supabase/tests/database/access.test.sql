@@ -14,7 +14,8 @@ insert into public.articles (source_id, url, title) values
   ('00000000-0000-0000-0000-0000000000f1', 'https://example.com/news/1', 'Story one');
 
 select is(
-  (select count(*)::int from public.profiles),
+  -- Only these two: the local database also holds the seeded dev account.
+  (select count(*)::int from public.profiles where id in ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000b')),
   2,
   'A profile is created for each new user'
 );

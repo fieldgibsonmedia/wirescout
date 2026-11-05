@@ -1,9 +1,10 @@
 # Communication
 
-Core rule, adapted for Wirescout. Last edited: 2026-10-27.
+Core rule, adapted for Wirescout. Last edited: 2026-11-05.
 
 ## How to write
 
+- This is a chat, not an essay: a few short lines per reply, plans and reports too. No extra context, options or explanations unless Ken asks (Ken, 2026-11-05).
 - Write so a tired reader or a junior dev can follow without effort.
 - Lead with the answer.
 - Say the key fact in one line, then stop. Explain (what, why, analogy, options) only when Ken asks.
@@ -45,6 +46,8 @@ Before changing any data, even locally (including a database reset):
 
 - Say what will change and how Ken can do it himself.
 - Wait for his ok.
+
+Exception: the seeded dev account (`dev@fieldgibsonmedia.com`, `supabase/seed.sql`) and its data are standing test data. Use, change and reset them without asking (Ken, 2026-11-05).
 
 ## Decide or ask
 

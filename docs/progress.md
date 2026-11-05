@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: A permanent local dev account
+
+- Ken's point: making a test account for every local check wastes his time. `supabase/seed.sql` now creates `dev@fieldgibsonmedia.com` (password `wirescout-dev`, local only), confirmed, super admin, with "Regulators" (2 new, 2 saved) and "Wire" (120 new, 1 failing source). Back after every reset.
+- 2 database tests no longer assume an empty user table (`access.test.sql` counts its own 2 users; `system_admins.test.sql` takes the dev account's super admin off inside the test). Same checks.
+- Rules (`communication.md`, Ken's ask): the dev account's data is standing test data, used without asking; and chat replies stay a few short lines.
+- Checked: db reset, 15 database test files pass, db lint, the account signs in (password grant on the local API).
+- No version change: local dev only.
+
 ## 2026-11-05: Sign-in screens: titles and descriptions centred, v0.5.10
 
 - Ken's point: centre the title and description under the centred robot; fields and labels stay as they are. One change in `FormLayout.vue` covers Sign in, Sign up, Forgot password, Request access, Set password and Confirm; Confirm's own "Click … to continue." line is centred too. Version 0.5.10 with its "What's new".

@@ -111,11 +111,8 @@ npm ci
 
 1. Start the local Supabase (below).
 2. `npm run dev`, then open http://127.0.0.1:3000.
-3. To get a local test user:
-    - Create an account on the sign-up page with a made-up address at an allowed domain (e.g. `test@fieldgibsonmedia.com`).
-    - Open the email in Mailpit and click Confirm.
+3. Sign in as the local dev account: `dev@fieldgibsonmedia.com`, password `wirescout-dev` (from `supabase/seed.sql`, back after every `npx supabase db reset`; local only). It's a super admin, with ready-made data: "Regulators" (2 new stories, 2 saved) and "Wire" (120 new stories, 1 failing source).
     - Optional, to send a draft: start the magazine's local copy (`docs/modx-staging-test.md`) and the functions (below), then Settings → Channels → Add magazine with its `wirescout-test` account.
-4. Add `https://news.example.com/press` or `https://regulator.example.org/updates` to a watch list to see the seed articles.
 
 ## Admin tasks (in Studio, or the cloud dashboard)
 
@@ -145,6 +142,6 @@ npm run type-check
 npm run build
 ```
 
-- Run `npx supabase db reset` first: the tests expect an empty user table.
+- Run `npx supabase db reset` first: the tests expect only the seeded dev account.
 - Web app changes: click through the changed screens with `npm run dev`.
 - Scanner changes: run `npm run scan` against the local Supabase, with email going to Mailpit.
