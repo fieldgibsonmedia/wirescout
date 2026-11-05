@@ -6,6 +6,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['Your daily digest now arrives on time, a few minutes after the time you chose.'],
+    },
+    {
+        version: '0.6.2',
         notes: ["Security: you can change your email only to one that's allowed on Wirescout, like when signing up."],
     },
     {

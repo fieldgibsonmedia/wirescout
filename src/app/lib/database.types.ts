@@ -446,6 +446,9 @@ isOneToOne: false
 "remove_super_admin":
 { Args: { "admin_id": string }; Returns: undefined
                            },
+"start_digest":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
 "story_sends":
 { Args: { "article_ids": (number)[] }; Returns: {
               "article_id": number,"edit_url": string,"publication_id": number,"sent_at": string,"sent_by": string,"sent_by_me": boolean
