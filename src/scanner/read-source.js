@@ -8,6 +8,11 @@ const TIMEOUT_MS = 20_000;
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36";
 
+// A bot check shown instead of the page, though the site answered 200: Radware (CDP), F5 (TAQA's /TSPD/),
+// Cloudflare, Imperva, DataDome. Only looked for when a page shows nothing: F5 also adds /TSPD/ to pages that work.
+const BOT_CHECK =
+  /validate\.perfdrive\.com|<title>\s*(Radware Bot Manager|Just a moment\.\.\.|Attention Required! \| Cloudflare)|\/TSPD\/|_Incapsula_Resource|captcha-delivery\.com/i;
+
 // Common feed addresses, tried only when the page itself shows no stories (e.g. it's built with JavaScript).
 const GUESSED_FEEDS = ["feed", "rss", "/feed", "/rss"];
 
@@ -18,7 +23,9 @@ export async function readSource(source, signal) {
   // A documents list's source: the PDFs on the page, never a feed.
   if (source.kind === "documents") {
     const page = await fetchText(source.url, signal);
-    return { stories: readDocuments(page.text, page.url), readFrom: "page", feedUrl: null };
+    const stories = readDocuments(page.text, page.url);
+    if (!stories.length) throwIfBotCheck(page);
+    return { stories, readFrom: "page", feedUrl: null };
   }
 
   // The address is itself a feed: nothing to compare it with.
@@ -50,7 +57,16 @@ export async function readSource(source, signal) {
     if (stories) return { stories, readFrom: "feed", feedUrl };
   }
 
+  throwIfBotCheck(page);
   return { stories: [], readFrom: null, feedUrl: null };
+}
+
+// A page that's a bot check counts as the site turning Wirescout away (readProblem: "blocked"), not as a page without
+// stories.
+function throwIfBotCheck(page) {
+  if (BOT_CHECK.test(page.url) || BOT_CHECK.test(page.text)) {
+    throw Object.assign(new Error("Bot check"), { status: 403 });
+  }
 }
 
 // A feed matches the page when at least half of the page's top stories are in it.
