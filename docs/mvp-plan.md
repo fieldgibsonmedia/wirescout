@@ -379,6 +379,19 @@ Ken's 9 points from testing live, grouped into 3 jobs (one branch each, from `or
 - How to undo: revert the PR (back to `eu.i.posthog.com`). The DNS record and the proxy can stay.
 - Live impact: the web app (every user's analytics), and Ken's DNS record and PostHog setting. Ken's "approve" before coding.
 
+### Pages built with JavaScript (proposed 2026-11-05, not approved yet)
+
+Why: some sources show no stories, because their page is empty until a browser runs its JavaScript (`docs/known-issues.md`, "10 of the 23 old sources"). Ken picked this as the next fix (2026-11-05); to be done in a new session.
+
+1. Measure first: Ken runs one read-only query on live that counts failing sources by reason (numbers only, no names or addresses). Claude prepares it.
+2. When a page shows no stories, the scanner opens it in a hidden real browser (headless Chromium, e.g. Playwright, in the scanner's GitHub Actions run), waits for the stories to load, then reads the page as today. Free; a few seconds more per such source.
+3. Sites that turn away robots (403, bot checks): not worked around. They stay "blocked", as today.
+4. No AI fallback needed for this: the pages aren't hard to read, only empty without a browser.
+
+- Catch: `scan-new-sources` (an Edge Function) can't run a browser, so a new JavaScript page shows its stories after the next hourly scan.
+- Live impact: the scanner (`scanner.yml` installs the browser: a CI change, Ken's ok) and longer hourly runs.
+- Open before coding: the numbers from step 1, then Ken's "approve".
+
 ## Branches
 
 - Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.

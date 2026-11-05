@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: End of session, where things stand
+
+- In `mvp`, not released yet: v0.5.9 tab icon, v0.5.10 centred sign-in titles, v0.6.0 new stories badges, security upgrades (nodemailer 10, undici 7.30), v0.6.1 feed must match the page. Also the local dev account (dev only).
+- Release steps (Ken, when he chooses): merge `origin/main` into `mvp`, then the release PR; before merging it, redeploy `check-links` and `scan-new-sources` (they use the changed `read-source.js`). Then check on live: the tab icon, the badges, and the next digest still sending (new nodemailer).
+- Still to check on live from the v0.5.8 release: the sign-in screens, and the access request email's wording at the next request.
+- Next (Ken, new session): pages built with JavaScript, plan in `docs/mvp-plan.md` ("Pages built with JavaScript", not approved). Step 1 is a count of failing sources on live, which Ken runs.
+- Other open known issues: an email change skips the allowed list; GitHub starts scheduled runs late.
+
 ## 2026-11-05: A feed must match the page (fix), v0.6.1
 
 - From `docs/known-issues.md`: a page could name a site-wide feed (blog posts next to press releases), and the scanner read it instead of the page. Now a feed the page names is used only if at least half of the page's top 10 stories are in it (links compared without http/https, `www.`, a trailing slash or the `?` part); otherwise the page is read. Re-checked every scan: the feed found last time is reused only when the address is itself a feed, or when the page shows no stories.
