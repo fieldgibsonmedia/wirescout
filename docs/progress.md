@@ -2,6 +2,16 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Document lists, job A (re-uploads, Rishi's list, usage by kind), v0.7.3
+
+- `working-links` (v0.7.2) committed and merged into `mvp`, `mvp` pushed (Ken's "approve").
+- Done on branch `document-repeats`: a new PDF with the same title, section (Ken, 2026-11-05) and file name, apart from its numbers, as one already saved from that source is a re-upload (`articles.is_reupload`, migration `20261105164307_document_reuploads.sql`): shown under All PDFs, never new or in the digest. Saves, shares, drafts and digest clicks send `list_kind`; Analytics → Features used shows documents lists' use as its own rows (also in the PDF). What's new, version 0.7.3.
+- Rishi's file: `~/Downloads/EF Data - links not added.xlsx` (not committed): 156 of 484 links, each checked twice: 97 no PDFs found, 35 blocked, 15 unreachable, 9 not found.
+- Checked locally: unit tests (83, 1 new), pgTAP (157, 1 new), lint, type-check, build; a real page (Covivio) scanned, then 2 saved PDFs faked as older uploads: the re-upload marked, the other not. With the section: the same notice title under 2 bonds is not a re-upload. In the browser (dev account): a documents list from a digest link, Save, Share → Copy link, All PDFs; no console errors.
+- Not checked: the events reaching PostHog and the Analytics rows with real data (no PostHog locally).
+- Local test data: "Re-upload test" (Covivio) on the dev account.
+- Release: push the migration with the others, redeploy `analytics` too.
+
 ## 2026-11-05: End of session, where things stand
 
 - `mvp` holds document lists jobs 1 to 3 (v0.7.1), on GitHub. Locally `mvp` is 2 commits ahead: the merge of `origin/main` before the release; pushing it failed 3 times (GitHub "Internal Server Error"), not retried since Ken wants to test first.
