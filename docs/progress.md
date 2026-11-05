@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Sign-in screens: titles and descriptions centred, v0.5.10
+
+- Ken's point: centre the title and description under the centred robot; fields and labels stay as they are. One change in `FormLayout.vue` covers Sign in, Sign up, Forgot password, Request access, Set password and Confirm; Confirm's own "Click … to continue." line is centred too. Version 0.5.10 with its "What's new".
+- Checked: type-check, build; in the browser, Forgot password, Sign up, Request access and Confirm (its expired-link state).
+- Not checked: Set password and Confirm's normal state (need an email link; same layout); dark mode and phone width.
+- Release: web app only, with v0.5.9 in the next release.
+
 ## 2026-11-05: The robot as the browser tab icon, v0.5.9
 
 - The robot from `BrandIcon.vue` in white on a brand blue rounded square (Ken approved the plan with the square), lines a little thicker to stay clear at 16 px: `public/favicon.svg`, plus `favicon-32.png` for browsers without SVG icons and `apple-touch-icon.png` (180 px, square corners: iPhone rounds them itself). `index.html` points to the 3. Version 0.5.9 with its "What's new"; the Brand decision in `docs/mvp-plan.md` adds the tab icon.

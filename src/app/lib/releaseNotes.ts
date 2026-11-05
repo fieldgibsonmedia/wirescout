@@ -5,6 +5,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['The sign-in screens have their titles and descriptions centred, under the Wirescout robot.'],
+    },
+    {
+        version: '0.5.9',
         notes: ["The Wirescout robot now shows in your browser tab and bookmarks, and on your phone's home screen if you add Wirescout there."],
     },
     {

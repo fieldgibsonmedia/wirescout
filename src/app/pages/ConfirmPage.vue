@@ -60,7 +60,7 @@ async function confirm() {
             <Alert v-else-if="otherAddressNext" type="success">
                 Done. Now open the link we sent to your other email address to finish the change.
             </Alert>
-            <p v-else class="text-base-content/70">Click {{ action.submitLabel }} to continue.</p>
+            <p v-else class="text-center text-base-content/70">Click {{ action.submitLabel }} to continue.</p>
         </template>
     </FormLayout>
 </template>

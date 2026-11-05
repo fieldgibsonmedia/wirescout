@@ -54,8 +54,8 @@ watch(
                             <BrandIcon class="size-7 text-primary" />
                             Wirescout
                         </p>
-                        <h1 class="text-2xl font-bold">{{ title }}</h1>
-                        <p v-if="description" class="text-base-content/70">{{ description }}</p>
+                        <h1 class="text-center text-2xl font-bold">{{ title }}</h1>
+                        <p v-if="description" class="text-center text-base-content/70">{{ description }}</p>
                     </header>
 
                     <slot name="message" />
