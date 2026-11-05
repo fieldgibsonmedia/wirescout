@@ -121,6 +121,7 @@ npm ci
 - **Access requests:** emailed to `ADMIN_EMAIL`, listed in Table Editor → `access_requests`. Add the address in Manager → System settings → Platform access, reply by email, then set `handled_at` to now.
 - **A magazine for a user:** nothing to do. Every magazine is offered to everyone; the journalist adds it with their own MODX account (Settings → Channels).
 - **A leaver:** they can delete their own account (Account settings → Delete account). Otherwise it stays until you delete it: Authentication → Users → the user → Delete. Their watch lists go with it (their MODX sessions then simply expire).
+- **Leave a developer out of analytics:** `update auth.users set raw_app_meta_data = raw_app_meta_data || '{"exclude_from_analytics": true}' where email = '<address>';` (SQL Editor). The app then sends nothing to PostHog for them, from their next sign-in. Their past data: PostHog → Persons → their user id → Delete person, with its events and recordings.
 
 ## Local Supabase
 
