@@ -2,6 +2,27 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Email changes must pass the allowed list (v0.6.2)
+
+- Done on branch `email-change-allowed-list`: a trigger on `auth.users` refuses an email change to an address not on the allowed list; Account settings asks `email_allowed` first and says why. What's new note, version 0.6.2.
+- Checked locally: pgTAP (5 new tests), lint, unit tests, type-check, build; the local Auth API refuses a not-allowed change (500) and accepts an allowed one; Account settings shows the message, and an allowed change sends both links.
+- Next: Ken's review and "approve", then the release. Production steps (Ken), in order: `npx supabase db push`, then merge the release PR (the app calls `email_allowed`).
+
+## 2026-11-05: Plan for email changes and the allowed list, end of session
+
+- Plan written in `docs/mvp-plan.md` ("Email change must pass the allowed list", not approved). Ken wants it done in a new session.
+- Next (new session): read that plan, show it to Ken, start coding only after his "approve".
+- Also in `mvp` since the last release: the rule in `communication.md` to send a PR link only once every step before the merge is done (docs only).
+- Still to check when they happen: a digest email arriving on nodemailer 10, and the next access request email's wording.
+- Other open known issue: GitHub starts scheduled runs late.
+
+## 2026-11-05: Developers left out of analytics, release notes order (PR #31)
+
+- Done: accounts marked `exclude_from_analytics` (in `app_metadata`) send nothing to PostHog. v0.6.1's What's new lists its security update, and notes go most important first (`docs/mvp-plan.md`, Decisions, "Release notes").
+- Ken merged PR #31 into `main` (11:43 UTC); the app deploy succeeded.
+- Ken marked his own account in the cloud project (SQL, checked: `true`) and deleted his person, with its events, in PostHog. PostHog removes the events in a background job, so they may show in Analytics for a few days.
+- Next: plan the fix for an email change skipping the allowed list (`docs/known-issues.md`).
+
 ## 2026-11-05: Released v0.6.1 (PR #30)
 
 - Ken redeployed `check-links` and `scan-new-sources`, then merged PR #30 into `main` (11:07 UTC). The app deploy run succeeded.
