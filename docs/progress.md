@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: New stories badge on each watch list, v0.6.0
+
+- Ken's point: a small red rounded badge with the list's new stories in the side nav; over 99, "99+". Same count as the dashboard's big number (since the list was last opened, through its keywords), now shared in `lib/watchLists.ts` (`newCounts`, `loadNewCounts`): the nav and the dashboard always agree. Updates on app load, every page change, coming back to the tab, a keywords edit, and opening the list (which clears it). Screen readers hear "12 new stories". Version 0.6.0 with its "What's new".
+- Checked: type-check, build; in the browser with the dev account: "2" and "99+", the "⋯" on hover beside the badge, opening Wire clears its badge (dashboard says "No new stories" too), dark mode; no console errors.
+- Not checked: phone width (the window couldn't be resized; same nav in the drawer).
+- Release: web app only.
+
 ## 2026-11-05: A permanent local dev account
 
 - Ken's point: making a test account for every local check wastes his time. `supabase/seed.sql` now creates `dev@fieldgibsonmedia.com` (password `wirescout-dev`, local only), confirmed, super admin, with "Regulators" (2 new, 2 saved) and "Wire" (120 new, 1 failing source). Back after every reset.

@@ -18,7 +18,7 @@ import UserMenu from '@/components/ui/UserMenu.vue';
 import { loadMagazines } from '@/lib/magazines';
 import { loadProfile, profile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
-import { creatingWatchList, loadWatchLists, watchLists } from '@/lib/watchLists';
+import { creatingWatchList, loadNewCounts, loadWatchLists, newCounts, watchLists } from '@/lib/watchLists';
 
 const route = useRoute();
 const router = useRouter();
@@ -36,7 +36,9 @@ const version = __APP_VERSION__;
 
 // The side nav lists the watch lists A–Z (Ken, 2026-11-03); "New watch list" stays last.
 const sortedWatchLists = computed(() =>
-    [...watchLists.value].sort((first, second) => first.name.localeCompare(second.name, 'en-GB', { sensitivity: 'base' })),
+    [...watchLists.value]
+        .sort((first, second) => first.name.localeCompare(second.name, 'en-GB', { sensitivity: 'base' }))
+        .map((list) => ({ ...list, newCount: newCounts.value.get(list.id) ?? 0 })),
 );
 
 const search = ref('');
@@ -116,20 +118,37 @@ function closeOnEscape(event: KeyboardEvent) {
     }
 }
 
+// The scanner finds stories every hour: the badges update on each page change and when the tab is back in view.
+function reloadCountsWhenVisible() {
+    if (document.visibilityState === 'visible') {
+        loadNewCounts();
+    }
+}
+
+// Keywords decide which stories count, so an edit from a list's menu updates the badges.
+watch(
+    () => watchLists.value.map((list) => list.keywords.join(',')).join('|'),
+    () => loadNewCounts(),
+);
+
 // Going to another page closes the drawer on phones.
 const stopListening = router.afterEach(() => {
     open.value = false;
+    loadNewCounts();
 });
 
 onMounted(() => {
     document.addEventListener('keydown', closeOnEscape);
+    document.addEventListener('visibilitychange', reloadCountsWhenVisible);
     loadProfile();
     loadWatchLists();
+    loadNewCounts();
     loadMagazines();
 });
 
 onUnmounted(() => {
     document.removeEventListener('keydown', closeOnEscape);
+    document.removeEventListener('visibilitychange', reloadCountsWhenVisible);
     stopListening();
 });
 </script>
@@ -165,6 +184,13 @@ onUnmounted(() => {
                         :label="list.name"
                         :icon="ListBulletIcon"
                     >
+                        <!-- Red, like an unread count; over 99 shows 99+. -->
+                        <template v-if="list.newCount > 0" #badge>
+                            <span class="badge badge-sm badge-error rounded-full">
+                                <span aria-hidden="true">{{ list.newCount > 99 ? '99+' : list.newCount }}</span>
+                                <span class="sr-only">{{ list.newCount }} new {{ list.newCount === 1 ? 'story' : 'stories' }}</span>
+                            </span>
+                        </template>
                         <!-- Shown on hover and focus, while open, and always where the nav is a drawer (phones and tablets). -->
                         <!-- On the open list, white on the blue highlight. -->
                         <template #end>
