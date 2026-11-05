@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Security upgrades: nodemailer and undici
+
+- `nodemailer` 6.10.1 → 10.3.1 (major): fixes 2 high-severity issues (email to an unintended domain, SMTP command injection). Its breaking changes (Node 20+, SES, remote-content TLS checks, error code names) don't touch our plain SMTP use. `undici` 7.18.2 → 7.30.2 (through `cheerio`, lockfile only). `npm audit`: 0 vulnerabilities. Both entries left `docs/known-issues.md`, with the access test one (fixed by the dev account).
+- Checked: 66 unit tests; locally into Mailpit: `npm run digest` (1 sent), `npm run scan` (the health email), `npm run admin` (ran; no access requests, so nothing sent). All from `no-reply@wirescout.app`. Dev data reset afterwards.
+- Not checked: a real send through Brevo (only after the release).
+- No version change: users get nothing new. Release: the 3 workflows install it from `main` at their next run (`npm ci --omit=dev`).
+
 ## 2026-11-05: New stories badge on each watch list, v0.6.0
 
 - Ken's point: a small red rounded badge with the list's new stories in the side nav; over 99, "99+". Same count as the dashboard's big number (since the list was last opened, through its keywords), now shared in `lib/watchLists.ts` (`newCounts`, `loadNewCounts`): the nav and the dashboard always agree. Updates on app load, every page change, coming back to the tab, a keywords edit, and opening the list (which clears it). Screen readers hear "12 new stories". Version 0.6.0 with its "What's new".
