@@ -19,6 +19,7 @@ import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import SearchField from '@/components/ui/SearchField.vue';
+import { track } from '@/lib/analytics';
 import { SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
 import { documentKindLabel, loadNewCounts, watchLists, type ListKind } from '@/lib/watchLists';
@@ -155,6 +156,8 @@ async function loadArticles() {
 }
 
 async function loadMore() {
+    // Whether anyone reads past the first page: decides the postponed date headings (docs/ideas.md).
+    track('load_more', { list_kind: kind.value, shown: articles.value.length });
     moreFailed.value = false;
     loadingMore.value = true;
     const current = request;

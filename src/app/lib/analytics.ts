@@ -19,7 +19,8 @@ export type AnalyticsEvent =
     | 'search'
     | 'story_saved'
     | 'digest_link_opened'
-    | 'settings_changed';
+    | 'settings_changed'
+    | 'load_more';
 
 // The signed-in user, or '' while signed out: nothing is sent then, not even errors or replays.
 let userId = '';
