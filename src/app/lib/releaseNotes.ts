@@ -7,6 +7,13 @@ export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
         notes: [
+            "Bond documents lists find PDFs on more issuers' pages, including pages built with JavaScript.",
+            'A site that shows Wirescout a robot check now says "the site blocks Wirescout", not "no stories found".',
+        ],
+    },
+    {
+        version: '0.7.4',
+        notes: [
             'Uploading a spreadsheet of issuers to a bond documents list names each source after the issuer in its first column (e.g. "Covivio", not covivio.eu).',
         ],
     },
