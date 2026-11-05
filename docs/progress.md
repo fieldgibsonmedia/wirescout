@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Released bond document lists, v0.7.5 (PR #33)
+
+- Done by Ken on 2026-11-05, in this order: the 3 migrations pushed (`20261105143948_document_lists`, `20261105150652_document_lists_app`, `20261105164307_document_reuploads`), `check-links`, `scan-new-sources` and `analytics` deployed, then PR #33 merged at 18:08 UTC.
+- Checked: the web app deploy passed, and `wirescout.app` serves v0.7.5 (checked in its code). The admin emails run at 18:19 UTC passed.
+- Still to check: the first scanner run on the new code (19:17 UTC) and the next digest; the bond team's first list (their email domain on the allowed list, Manager → Platform access, if not there yet); `list_kind` and `load_more` in Analytics.
+- Next: send Rishi `~/Downloads/EF Data - links not added.xlsx`. Postponed: job C (`docs/ideas.md`), the digest on time.
+
 ## 2026-11-05: Document lists, job D (more pages read), v0.7.5; job C postponed
 
 - Job B committed, merged into `mvp` and pushed (Ken's "approve"). Job C (stories grouped by date) postponed by Ken after the data: 10,940 of the 10,943 PDFs in Rishi's list are found on day one, so dates found don't help. Kept in the new `docs/ideas.md`, with a `load_more` event to measure it.
