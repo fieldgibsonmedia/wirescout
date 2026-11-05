@@ -25,7 +25,7 @@ The MVP stack is decided in `docs/mvp-plan.md`. Built so far:
 All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner/`, the daily digest in `src/digest/`, the admin emails in `src/admin/`.
 
 - `index.html`, `vite.config.ts`, `tsconfig.json`: the web app's entry page and build settings.
-- `public/`: files the web app publishes as they are. `brand-icon.png` is the robot for emails (`docs/mvp-plan.md`, Decisions, "Brand").
+- `public/`: files the web app publishes as they are. `brand-icon.png` is the robot for emails, `favicon.svg`, `favicon-32.png` and `apple-touch-icon.png` the browser tab and home screen icon (`docs/mvp-plan.md`, Decisions, "Brand").
 - `src/app/`: the web app. `pages/` (one file per screen), `components/` (`ui/` holds the shared building blocks, copied from hub), `layouts/`, `lib/supabase.ts` (the connection), `router.ts`.
 - `src/app/lib/database.types.ts`: generated from the local database with `npm run types`. Regenerate after a schema change.
 - `.env.development`: the web app's connection to the local Supabase (public demo values, safe to commit).
@@ -111,11 +111,8 @@ npm ci
 
 1. Start the local Supabase (below).
 2. `npm run dev`, then open http://127.0.0.1:3000.
-3. To get a local test user:
-    - Create an account on the sign-up page with a made-up address at an allowed domain (e.g. `test@fieldgibsonmedia.com`).
-    - Open the email in Mailpit and click Confirm.
+3. Sign in as the local dev account: `dev@fieldgibsonmedia.com`, password `wirescout-dev` (from `supabase/seed.sql`, back after every `npx supabase db reset`; local only). It's a super admin, with ready-made data: "Regulators" (2 new stories, 2 saved) and "Wire" (120 new stories, 1 failing source).
     - Optional, to send a draft: start the magazine's local copy (`docs/modx-staging-test.md`) and the functions (below), then Settings → Channels → Add magazine with its `wirescout-test` account.
-4. Add `https://news.example.com/press` or `https://regulator.example.org/updates` to a watch list to see the seed articles.
 
 ## Admin tasks (in Studio, or the cloud dashboard)
 
@@ -145,6 +142,6 @@ npm run type-check
 npm run build
 ```
 
-- Run `npx supabase db reset` first: the tests expect an empty user table.
+- Run `npx supabase db reset` first: the tests expect only the seeded dev account.
 - Web app changes: click through the changed screens with `npm run dev`.
 - Scanner changes: run `npm run scan` against the local Supabase, with email going to Mailpit.

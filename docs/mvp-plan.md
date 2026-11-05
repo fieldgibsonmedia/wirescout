@@ -23,7 +23,7 @@ Agreed with Ken on 2026-10-27. Turns the prototype into an internal MVP for more
 | Posting | A Supabase Edge Function posts straight to the magazine's MODX connector, signed in as the journalist's own MODX account (decided 2026-11-02, `docs/post-to-modx-plan.md`) | No endpoint to write on 4 sites; MODX enforces who may post where; the session stays server-side, encrypted |
 | Sharing | LinkedIn and email through share links: LinkedIn's share window and the user's own email app | No setup, no logins to expire, free; the journalist posts or sends as themselves |
 | Look | Apple's web blue (`#0071E3`) as the primary colour until Wirescout has a brand | Apple's system blue `#007AFF` is too light for white button text (4.0:1) |
-| Brand | The robot icon always goes with the name "Wirescout", right before it: the app's screens (side nav, phone top bar, sign-in screens) and every HTML email (digest, account emails). The app draws it (`BrandIcon.vue`); emails use the PNG made from the same drawing, `public/brand-icon.png` (`wirescout.app/brand-icon.png`). Plain-text emails can't show it (Ken, 2026-11-04) | One look everywhere journalists see Wirescout. Most email apps don't show SVG |
+| Brand | The robot icon always goes with the name "Wirescout", right before it: the app's screens (side nav, phone top bar, sign-in screens) and every HTML email (digest, account emails). The app draws it (`BrandIcon.vue`); emails use the PNG made from the same drawing, `public/brand-icon.png` (`wirescout.app/brand-icon.png`). Plain-text emails can't show it (Ken, 2026-11-04). The browser tab icon is the robot alone, in white on a brand blue square (`public/favicon.svg`, with PNGs for older browsers and iPhone; Ken, 2026-11-05) | One look everywhere journalists see Wirescout. Most email apps don't show SVG |
 | Bulk sources | File upload (`.xlsx`, `.csv`, `.txt`) with `read-excel-file`, loaded only for `.xlsx` | People expect to upload a file; paste-only was rejected. Keeps the app small for everyone else |
 | Analytics | PostHog, read in Wirescout's own Analytics screen (Ken, 2026-11-04, "After the first journalist", job 3). Before: our own usage report | Journalists use it now: Ken needs more than days and shares, without learning PostHog's UI |
 | Version | Every job that changes what users get (app, digest, emails) raises it, with a "What's new" entry (Ken, 2026-11-04): a fix or small tweak the last number (0.1.0 → 0.1.1), a new feature the middle one (0.1.0 → 0.2.0). Docs-only jobs don't. Every place that shows it reads `package.json`. Before: 0.1.0 until real users were invited | Journalists use it now: the version tells them what changed |
@@ -378,6 +378,21 @@ Ken's 9 points from testing live, grouped into 3 jobs (one branch each, from `or
 - Not possible to test before the release: the proxy itself (testing it from here would send data to the real PostHog). Locally: type-check, build, and the built app has the new host.
 - How to undo: revert the PR (back to `eu.i.posthog.com`). The DNS record and the proxy can stay.
 - Live impact: the web app (every user's analytics), and Ken's DNS record and PostHog setting. Ken's "approve" before coding.
+
+### Pages built with JavaScript (proposed 2026-11-05, shelved the same day)
+
+Shelved (Ken, 2026-11-05): on live, 0 sources showed "No stories found" (63 read, 8 blocked). Pick it up again if such sources show up.
+
+Why: some sources show no stories, because their page is empty until a browser runs its JavaScript (`docs/known-issues.md`, "10 of the 23 old sources"). Ken picked this as the next fix (2026-11-05); to be done in a new session.
+
+1. Measure first: Ken runs one read-only query on live that counts failing sources by reason (numbers only, no names or addresses). Claude prepares it.
+2. When a page shows no stories, the scanner opens it in a hidden real browser (headless Chromium, e.g. Playwright, in the scanner's GitHub Actions run), waits for the stories to load, then reads the page as today. Free; a few seconds more per such source.
+3. Sites that turn away robots (403, bot checks): not worked around. They stay "blocked", as today.
+4. No AI fallback needed for this: the pages aren't hard to read, only empty without a browser.
+
+- Catch: `scan-new-sources` (an Edge Function) can't run a browser, so a new JavaScript page shows its stories after the next hourly scan.
+- Live impact: the scanner (`scanner.yml` installs the browser: a CI change, Ken's ok) and longer hourly runs.
+- Open before coding: the numbers from step 1, then Ken's "approve".
 
 ## Branches
 

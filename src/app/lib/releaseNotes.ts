@@ -5,6 +5,22 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['Fixed: a source could show stories from the whole website (e.g. blog posts) instead of only those on the page you added.'],
+    },
+    {
+        version: '0.6.0',
+        notes: ['A red number next to each watch list in the side menu shows its new stories since you last opened it. Opening the list clears it.'],
+    },
+    {
+        version: '0.5.10',
+        notes: ['The sign-in screens have their titles and descriptions centred, under the Wirescout robot.'],
+    },
+    {
+        version: '0.5.9',
+        notes: ["The Wirescout robot now shows in your browser tab and bookmarks, and on your phone's home screen if you add Wirescout there."],
+    },
+    {
+        version: '0.5.8',
         notes: ['For super admins: if you are the only one, Delete account opens a message with a button to System admins, to assign another first.'],
     },
     {

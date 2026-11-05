@@ -2,6 +2,75 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Pages built with JavaScript shelved
+
+- Ken ran step 1 on live (count of sources in a watch list, by status): 63 read, 8 blocked, 0 "No stories found". A hidden browser would fix none of them, and blocked sites aren't worked around, so the job is shelved (Ken, 2026-11-05).
+- Next: the release of what's in `mvp` (steps in the entry below). Come back to the JavaScript plan if "No stories found" sources show up on live.
+
+## 2026-11-05: End of session, where things stand
+
+- In `mvp`, not released yet: v0.5.9 tab icon, v0.5.10 centred sign-in titles, v0.6.0 new stories badges, security upgrades (nodemailer 10, undici 7.30), v0.6.1 feed must match the page. Also the local dev account (dev only).
+- Release steps (Ken, when he chooses): merge `origin/main` into `mvp`, then the release PR; before merging it, redeploy `check-links` and `scan-new-sources` (they use the changed `read-source.js`). Then check on live: the tab icon, the badges, and the next digest still sending (new nodemailer).
+- Still to check on live from the v0.5.8 release: the sign-in screens, and the access request email's wording at the next request.
+- Next (Ken, new session): pages built with JavaScript, plan in `docs/mvp-plan.md` ("Pages built with JavaScript", not approved). Step 1 is a count of failing sources on live, which Ken runs.
+- Other open known issues: an email change skips the allowed list; GitHub starts scheduled runs late.
+
+## 2026-11-05: A feed must match the page (fix), v0.6.1
+
+- From `docs/known-issues.md`: a page could name a site-wide feed (blog posts next to press releases), and the scanner read it instead of the page. Now a feed the page names is used only if at least half of the page's top 10 stories are in it (links compared without http/https, `www.`, a trailing slash or the `?` part); otherwise the page is read. Re-checked every scan: the feed found last time is reused only when the address is itself a feed, or when the page shows no stories.
+- Also removed 4 stale entries from `docs/known-issues.md` (Gmail sender ×2, seed sources, `http`/`https` duplicates).
+- Checked: 69 unit tests (2 new readSource tests; the site-wide feed one fails on the old code). Old against new on 10 public pages: the same result on all (AXA XL now has its own press feed; BBC first switched, fixed by ignoring the `?` part). Capgemini still reads its site-wide feed: the scanner can't read its page's own stories, it seems (not checked further).
+- Not checked: the local functions (`check-links`, `scan-new-sources`) with the change; the seed sources are made-up addresses.
+- Release: the scanner picks it up from `main`. Ken redeploys `check-links` and `scan-new-sources` (they use the same code) before merging. Sources that switch from a feed to their page save the page's stories as new, once.
+
+## 2026-11-05: Security upgrades: nodemailer and undici
+
+- `nodemailer` 6.10.1 → 10.3.1 (major): fixes 2 high-severity issues (email to an unintended domain, SMTP command injection). Its breaking changes (Node 20+, SES, remote-content TLS checks, error code names) don't touch our plain SMTP use. `undici` 7.18.2 → 7.30.2 (through `cheerio`, lockfile only). `npm audit`: 0 vulnerabilities. Both entries left `docs/known-issues.md`, with the access test one (fixed by the dev account).
+- Checked: 66 unit tests; locally into Mailpit: `npm run digest` (1 sent), `npm run scan` (the health email), `npm run admin` (ran; no access requests, so nothing sent). All from `no-reply@wirescout.app`. Dev data reset afterwards.
+- Not checked: a real send through Brevo (only after the release).
+- No version change: users get nothing new. Release: the 3 workflows install it from `main` at their next run (`npm ci --omit=dev`).
+
+## 2026-11-05: New stories badge on each watch list, v0.6.0
+
+- Ken's point: a small red rounded badge with the list's new stories in the side nav; over 99, "99+". Same count as the dashboard's big number (since the list was last opened, through its keywords), now shared in `lib/watchLists.ts` (`newCounts`, `loadNewCounts`): the nav and the dashboard always agree. Updates on app load, every page change, coming back to the tab, a keywords edit, and opening the list (which clears it). Screen readers hear "12 new stories". Version 0.6.0 with its "What's new".
+- Checked: type-check, build; in the browser with the dev account: "2" and "99+", the "⋯" on hover beside the badge, opening Wire clears its badge (dashboard says "No new stories" too), dark mode; no console errors.
+- Not checked: phone width (the window couldn't be resized; same nav in the drawer).
+- Release: web app only.
+
+## 2026-11-05: A permanent local dev account
+
+- Ken's point: making a test account for every local check wastes his time. `supabase/seed.sql` now creates `dev@fieldgibsonmedia.com` (password `wirescout-dev`, local only), confirmed, super admin, with "Regulators" (2 new, 2 saved) and "Wire" (120 new, 1 failing source). Back after every reset.
+- 2 database tests no longer assume an empty user table (`access.test.sql` counts its own 2 users; `system_admins.test.sql` takes the dev account's super admin off inside the test). Same checks.
+- Rules (`communication.md`, Ken's ask): the dev account's data is standing test data, used without asking; and chat replies stay a few short lines.
+- Checked: db reset, 15 database test files pass, db lint, the account signs in (password grant on the local API).
+- No version change: local dev only.
+
+## 2026-11-05: Sign-in screens: titles and descriptions centred, v0.5.10
+
+- Ken's point: centre the title and description under the centred robot; fields and labels stay as they are. One change in `FormLayout.vue` covers Sign in, Sign up, Forgot password, Request access, Set password and Confirm; Confirm's own "Click … to continue." line is centred too. Version 0.5.10 with its "What's new".
+- Checked: type-check, build; in the browser, Forgot password, Sign up, Request access and Confirm (its expired-link state).
+- Not checked: Set password and Confirm's normal state (need an email link; same layout); dark mode and phone width.
+- Release: web app only, with v0.5.9 in the next release.
+
+## 2026-11-05: The robot as the browser tab icon, v0.5.9
+
+- The robot from `BrandIcon.vue` in white on a brand blue rounded square (Ken approved the plan with the square), lines a little thicker to stay clear at 16 px: `public/favicon.svg`, plus `favicon-32.png` for browsers without SVG icons and `apple-touch-icon.png` (180 px, square corners: iPhone rounds them itself). `index.html` points to the 3. Version 0.5.9 with its "What's new"; the Brand decision in `docs/mvp-plan.md` adds the tab icon.
+- PNGs made from the SVG with headless Chrome (no new dependency).
+- Checked: type-check, build (the 3 icons and their links in `dist/`); `npm run dev` serves all 3 with the right types; the icon at 16 px on light and dark tab-bar colours (a mock-up, not a real tab bar).
+- Not checked: a real browser tab, Safari, and an iPhone home screen.
+- Release: web app only. Browsers cache tab icons, so some people see it a day or so late.
+
+## 2026-11-04: Release of v0.5.5 to v0.5.8 (PR #29)
+
+- Tested locally by Ken before the release (all 5 jobs, the digest and access request emails in Mailpit). His changes while testing: the robot and name centred on the sign-in cards, the cards a little wider, "Manager", not "Settings → Manager", in the access request email.
+- Done by Ken on 2026-11-04: `scan-new-sources` redeployed (before the merge), then PR #29 merged at 16:12 UTC (`9c3571c`).
+- The web app deploy waited about 22 minutes in GitHub's queue (GitHub Actions partial outage, Pages degraded on githubstatus.com), then started. Checked on 2026-11-05: it passed, `wirescout.app` serves v0.5.8 (checked in its code) and `wirescout.app/brand-icon.png` answers (200, PNG). The digest and admin emails run from `main`, so they had the new code from the merge on (the admin run at 16:28 UTC passed).
+- Done by Ken on 2026-11-05: the 3 templates from `supabase/templates/` pasted into Supabase → Authentication → Emails (confirm signup, reset password, change email address), subjects unchanged.
+- Checked on live by Ken (2026-11-05): a reset password email shows the robot in Outlook once he allowed external images (Outlook blocks them by default).
+- Checked on live by Ken (2026-11-05): the daily digest shows the robot without allowing images first.
+- Still to check on live: the sign-in screens, and the access request email's wording at the next request.
+- Next: Ken's pick. Offered, not agreed: the robot as the browser tab icon (favicon).
+
 ## 2026-11-04: Only super admin: a dialog instead of a message, v0.5.8
 
 - Ken's point: the "only super admin" message showed under Delete account, at the bottom of the page, easy to miss. Delete account now opens a dialog: "Assign another super admin first", the same text, Cancel and Go to System admins (System settings → System admins). Version 0.5.8 with its "What's new".
