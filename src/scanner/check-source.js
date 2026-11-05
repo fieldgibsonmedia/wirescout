@@ -1,7 +1,10 @@
 // Checks one source and saves what it found: its new stories and its status. The hourly scanner runs it
 // for every followed source, and the scan-new-sources function for a source just added, so the first
 // stories show right away. supabase must use the secret key: only the scanner writes stories and status.
-import { readProblem, readSource } from "./read-source.js";
+import { readProblem, readSource, withoutBrokenLinks } from "./read-source.js";
+
+// Links looked up per query: they travel in the request's address, which has a size limit.
+const LOOKUP_BATCH = 25;
 
 // Returns its counts, for the totals and the health check.
 export async function checkSource(supabase, source) {
@@ -20,14 +23,18 @@ export async function checkSource(supabase, source) {
   // A documents source's first check finds what was already on the page: kept, but not news.
   const firstCheck = source.kind === "documents" && !source.last_checked_at;
 
-  // Stories already saved are skipped, so only new ones are returned.
+  // Each new link is opened once before it's saved: one the site says doesn't exist waits for the next scan,
+  // so nobody gets a broken link.
+  const newStories = await unsavedStories(supabase, source.id, result.stories);
+  const working = await withoutBrokenLinks(newStories);
+
   // Saved oldest first: stories found in the same check show newest first in the app, which breaks ties by id.
   let saved = 0;
-  if (result.stories.length) {
+  if (working.length) {
     const inserted = await supabase
       .from("articles")
       .upsert(
-        result.stories.toReversed().map((story) => ({ source_id: source.id, ...story, found_on_first_check: firstCheck })),
+        working.toReversed().map((story) => ({ source_id: source.id, ...story, found_on_first_check: firstCheck })),
         { onConflict: "source_id,url", ignoreDuplicates: true },
       )
       .select("id");
@@ -53,6 +60,19 @@ export async function checkSource(supabase, source) {
     url: source.url,
     storiesBefore: source.stories_found,
     storiesNow: result.stories.length,
+    broken: newStories.length - working.length,
     error,
   };
+}
+
+// The stories whose link this source hasn't saved yet.
+async function unsavedStories(supabase, sourceId, stories) {
+  const saved = new Set();
+  for (let start = 0; start < stories.length; start += LOOKUP_BATCH) {
+    const urls = stories.slice(start, start + LOOKUP_BATCH).map((story) => story.url);
+    const { data, error } = await supabase.from("articles").select("url").eq("source_id", sourceId).in("url", urls);
+    if (error) throw error;
+    for (const article of data) saved.add(article.url);
+  }
+  return stories.filter((story) => !saved.has(story.url));
 }

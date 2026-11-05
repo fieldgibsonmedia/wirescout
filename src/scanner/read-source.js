@@ -71,6 +71,36 @@ function sameLink(url) {
   return url.replace(/^https?:\/\/(www\.)?/, "").replace(/[?#].*$/, "").replace(/\/$/, "");
 }
 
+// Links opened at the same time while checking a source's new stories, and how long each may take.
+const LINK_CHECKS_PARALLEL = 8;
+const LINK_TIMEOUT_MS = 5_000;
+
+// The stories whose link opens, in the same order: a link the site says doesn't exist (404, 410) is left out.
+// A site that blocks the check or is slow still counts: the page itself links to it.
+export async function withoutBrokenLinks(stories) {
+  const opens = [];
+  let next = 0;
+  async function worker() {
+    while (next < stories.length) {
+      const index = next++;
+      opens[index] = await linkOpens(stories[index].url);
+    }
+  }
+  await Promise.all(Array.from({ length: LINK_CHECKS_PARALLEL }, worker));
+  return stories.filter((_, index) => opens[index]);
+}
+
+async function linkOpens(url) {
+  try {
+    const response = await fetch(url, { headers: { "User-Agent": USER_AGENT }, signal: AbortSignal.timeout(LINK_TIMEOUT_MS) });
+    // Only the answer matters: a PDF isn't downloaded.
+    await response.body?.cancel();
+    return ![404, 410].includes(response.status);
+  } catch {
+    return true;
+  }
+}
+
 // Why a source couldn't be read, from the error readSource threw, for the app to show:
 // "not_found", "blocked", "unreachable", or null for anything else.
 export function readProblem(error) {
