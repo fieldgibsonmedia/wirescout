@@ -75,3 +75,17 @@ test("a feed matches when at least half of the page's top stories are in it", ()
   // A page with no stories of its own takes any feed.
   assert.equal(feedMatchesPage(stories(["/a"]), []), true);
 });
+
+test("a documents source reads the PDFs on the page, never the feed it names", () =>
+  withSites(
+    {
+      [PAGE_URL]: PRESS_PAGE.replace("</main>", '<a href="/files/green-bond-report-2025.pdf">Green bond report 2025</a></main>'),
+      "https://www.example.com/feed": feedOf(["/press/1", "/press/2", "/press/3"]),
+    },
+    async () => {
+      const result = await readSource({ url: PAGE_URL, kind: "documents", feed_url: null });
+      assert.equal(result.readFrom, "page");
+      assert.equal(result.feedUrl, null);
+      assert.deepEqual(result.stories.map((story) => story.url), ["https://www.example.com/files/green-bond-report-2025.pdf"]);
+    },
+  ));

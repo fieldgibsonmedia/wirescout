@@ -54,7 +54,7 @@ function averageTitleLength(stories) {
 }
 
 // Links in the site's menus, sidebars, header and footer aren't stories.
-function isSiteMenu($anchor) {
+export function isSiteMenu($anchor) {
   if ($anchor.closest("nav, [role=navigation], aside").length) return true;
   const headerOrFooter = $anchor.closest("header, footer");
   return headerOrFooter.length > 0 && headerOrFooter.closest("main, article").length === 0;

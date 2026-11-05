@@ -1,3 +1,4 @@
+import { readDocuments } from "./documents.js";
 import { findFeedLinks, readFeed } from "./feed.js";
 import { readPage } from "./page.js";
 
@@ -14,6 +15,12 @@ const GUESSED_FEEDS = ["feed", "rss", "/feed", "/rss"];
 // Returns { stories, readFrom: "feed" | "page" | null, feedUrl }. Throws if the page can't be fetched.
 // signal (optional) stops every fetch at once, e.g. when a link check runs out of time.
 export async function readSource(source, signal) {
+  // A documents list's source: the PDFs on the page, never a feed.
+  if (source.kind === "documents") {
+    const page = await fetchText(source.url, signal);
+    return { stories: readDocuments(page.text, page.url), readFrom: "page", feedUrl: null };
+  }
+
   // The address is itself a feed: nothing to compare it with.
   if (source.feed_url === source.url) {
     const stories = await tryFeed(source.feed_url, signal);

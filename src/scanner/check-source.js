@@ -17,6 +17,9 @@ export async function checkSource(supabase, source) {
     result = { stories: [], readFrom: source.read_from, feedUrl: source.feed_url };
   }
 
+  // A documents source's first check finds what was already on the page: kept, but not news.
+  const firstCheck = source.kind === "documents" && !source.last_checked_at;
+
   // Stories already saved are skipped, so only new ones are returned.
   // Saved oldest first: stories found in the same check show newest first in the app, which breaks ties by id.
   let saved = 0;
@@ -24,7 +27,7 @@ export async function checkSource(supabase, source) {
     const inserted = await supabase
       .from("articles")
       .upsert(
-        result.stories.toReversed().map((story) => ({ source_id: source.id, ...story })),
+        result.stories.toReversed().map((story) => ({ source_id: source.id, ...story, found_on_first_check: firstCheck })),
         { onConflict: "source_id,url", ignoreDuplicates: true },
       )
       .select("id");

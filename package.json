@@ -17,6 +17,7 @@
   "author": "Kenneth Zuniga and Martin Assman, Field Gibson Media",
   "license": "MIT",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
     "@heroicons/vue": "^2.2.0",
     "@supabase/supabase-js": "^2.118.0",
     "@tanstack/vue-table": "^9.3.1",

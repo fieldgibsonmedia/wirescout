@@ -200,7 +200,7 @@ const LOOKUP_BATCH = 20;
 export async function addSources(watchListId: string, urls: string[]): Promise<Source[] | null> {
     const created = await supabase.from('sources').upsert(
         urls.map((url) => ({ url })),
-        { onConflict: 'url', ignoreDuplicates: true },
+        { onConflict: 'url,kind', ignoreDuplicates: true },
     );
     if (created.error) {
         return null;
@@ -211,6 +211,7 @@ export async function addSources(watchListId: string, urls: string[]): Promise<S
         const { data, error } = await supabase
             .from('sources')
             .select(SOURCE_COLUMNS)
+            .eq('kind', 'news')
             .in('url', urls.slice(start, start + LOOKUP_BATCH));
         if (error) {
             return null;
@@ -232,12 +233,12 @@ export async function addSources(watchListId: string, urls: string[]): Promise<S
 // Swaps a source for the one at url, in this watch list only: other lists following the old source keep it.
 // The new source keeps the old one's place in the list. Returns it, or null if it couldn't be swapped.
 export async function replaceSource(watchListId: string, sourceId: string, url: string): Promise<Source | null> {
-    const created = await supabase.from('sources').upsert({ url }, { onConflict: 'url', ignoreDuplicates: true });
+    const created = await supabase.from('sources').upsert({ url }, { onConflict: 'url,kind', ignoreDuplicates: true });
     if (created.error) {
         return null;
     }
 
-    const { data, error } = await supabase.from('sources').select(SOURCE_COLUMNS).eq('url', url).single();
+    const { data, error } = await supabase.from('sources').select(SOURCE_COLUMNS).eq('kind', 'news').eq('url', url).single();
     if (error) {
         return null;
     }
