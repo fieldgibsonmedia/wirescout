@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: A feed must match the page (fix), v0.6.1
+
+- From `docs/known-issues.md`: a page could name a site-wide feed (blog posts next to press releases), and the scanner read it instead of the page. Now a feed the page names is used only if at least half of the page's top 10 stories are in it (links compared without http/https, `www.`, a trailing slash or the `?` part); otherwise the page is read. Re-checked every scan: the feed found last time is reused only when the address is itself a feed, or when the page shows no stories.
+- Also removed 4 stale entries from `docs/known-issues.md` (Gmail sender ×2, seed sources, `http`/`https` duplicates).
+- Checked: 69 unit tests (2 new readSource tests; the site-wide feed one fails on the old code). Old against new on 10 public pages: the same result on all (AXA XL now has its own press feed; BBC first switched, fixed by ignoring the `?` part). Capgemini still reads its site-wide feed: the scanner can't read its page's own stories, it seems (not checked further).
+- Not checked: the local functions (`check-links`, `scan-new-sources`) with the change; the seed sources are made-up addresses.
+- Release: the scanner picks it up from `main`. Ken redeploys `check-links` and `scan-new-sources` (they use the same code) before merging. Sources that switch from a feed to their page save the page's stories as new, once.
+
 ## 2026-11-05: Security upgrades: nodemailer and undici
 
 - `nodemailer` 6.10.1 → 10.3.1 (major): fixes 2 high-severity issues (email to an unintended domain, SMTP command injection). Its breaking changes (Node 20+, SES, remote-content TLS checks, error code names) don't touch our plain SMTP use. `undici` 7.18.2 → 7.30.2 (through `cheerio`, lockfile only). `npm audit`: 0 vulnerabilities. Both entries left `docs/known-issues.md`, with the access test one (fixed by the dev account).

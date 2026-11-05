@@ -5,6 +5,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['Fixed: a source could show stories from the whole website (e.g. blog posts) instead of only those on the page you added.'],
+    },
+    {
+        version: '0.6.0',
         notes: ['A red number next to each watch list in the side menu shows its new stories since you last opened it. Opening the list clears it.'],
     },
     {

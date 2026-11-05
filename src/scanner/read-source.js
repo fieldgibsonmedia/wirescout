@@ -10,38 +10,58 @@ const USER_AGENT =
 // Common feed addresses, tried only when the page itself shows no stories (e.g. it's built with JavaScript).
 const GUESSED_FEEDS = ["feed", "rss", "/feed", "/rss"];
 
-// Reads a source's stories: from its feed when it has one, else from the page itself.
+// Reads a source's stories: from its feed when it has one that matches the page, else from the page itself.
 // Returns { stories, readFrom: "feed" | "page" | null, feedUrl }. Throws if the page can't be fetched.
 // signal (optional) stops every fetch at once, e.g. when a link check runs out of time.
 export async function readSource(source, signal) {
-  if (source.feed_url) {
+  // The address is itself a feed: nothing to compare it with.
+  if (source.feed_url === source.url) {
     const stories = await tryFeed(source.feed_url, signal);
     if (stories) return { stories, readFrom: "feed", feedUrl: source.feed_url };
   }
 
   const page = await fetchText(source.url, signal);
 
-  // The address is itself a feed.
   const ownFeed = readFeed(page.text, page.url);
   if (ownFeed?.length) return { stories: ownFeed, readFrom: "feed", feedUrl: source.url };
 
+  // A feed the page names can be the whole site's (blog posts next to press releases): checked every time.
+  const pageStories = readPage(page.text, page.url);
   for (const feedUrl of findFeedLinks(page.text, page.url)) {
     const stories = await tryFeed(feedUrl, signal);
-    if (stories) return { stories, readFrom: "feed", feedUrl };
+    if (stories && feedMatchesPage(stories, pageStories)) return { stories, readFrom: "feed", feedUrl };
   }
 
-  const pageStories = readPage(page.text, page.url);
   if (pageStories.length) return { stories: pageStories, readFrom: "page", feedUrl: null };
 
+  // The page shows no stories (e.g. it's built with JavaScript): the feed found last time, then a guess.
   // "feed" is next to the page (news/feed), "/feed" at the site's root. A trailing slash makes the first kind work.
   const base = page.url.endsWith("/") ? page.url : page.url + "/";
-  for (const guess of GUESSED_FEEDS) {
-    const feedUrl = new URL(guess, base).toString();
+  const guesses = GUESSED_FEEDS.map((guess) => new URL(guess, base).toString());
+  for (const feedUrl of [...new Set([source.feed_url, ...guesses].filter(Boolean))]) {
     const stories = await tryFeed(feedUrl, signal);
     if (stories) return { stories, readFrom: "feed", feedUrl };
   }
 
   return { stories: [], readFrom: null, feedUrl: null };
+}
+
+// A feed matches the page when at least half of the page's top stories are in it.
+// A page with no stories of its own has nothing to compare: any feed it names will do.
+const STORIES_COMPARED = 10;
+
+export function feedMatchesPage(feedStories, pageStories) {
+  if (pageStories.length === 0) return true;
+  const inFeed = new Set(feedStories.map((story) => sameLink(story.url)));
+  const compared = pageStories.slice(0, STORIES_COMPARED);
+  return compared.filter((story) => inFeed.has(sameLink(story.url))).length * 2 >= compared.length;
+}
+
+// Feeds and pages often write the same link differently: http or https, www. or not, a trailing slash,
+// tracking after the "?" (BBC's feed adds ?at_medium=RSS). On a site that tells stories apart only by
+// the "?" part, every link looks alike and the feed is kept, as before.
+function sameLink(url) {
+  return url.replace(/^https?:\/\/(www\.)?/, "").replace(/[?#].*$/, "").replace(/\/$/, "");
 }
 
 // Why a source couldn't be read, from the error readSource threw, for the app to show:
