@@ -77,6 +77,13 @@ async function changeEmail() {
         return;
     }
     emailBusy.value = true;
+    // Like a sign-up, the new email must be on the allowed list (the database refuses it too).
+    const allowed = await supabase.rpc('email_allowed', { address: newEmail.value.trim() });
+    if (allowed.data === false) {
+        emailBusy.value = false;
+        emailError.value = "This email isn't allowed on Wirescout. Ask a super admin to add it in Platform access.";
+        return;
+    }
     const { error } = await supabase.auth.updateUser({ email: newEmail.value.trim() });
     emailBusy.value = false;
 
