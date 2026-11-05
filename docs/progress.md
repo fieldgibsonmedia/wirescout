@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Digest late and in Junk, plan for the next session
+
+- Ken's 11:30 digest arrived at 12:29, in Outlook's Junk folder.
+- Late: GitHub skipped 4 digest runs (11:20, then 12:29 UTC). Plan written in `docs/mvp-plan.md` ("Daily digest on time", not approved): the database starts the digest every 15 minutes.
+- Junk: SPF, DKIM and DMARC all pass; most likely the new domain's low reputation. Ken marks it "Not junk" for now (`docs/known-issues.md`).
+- Next (new session): read that plan, show it to Ken, start coding only after his "approve". Then ask Ken who runs the company's Microsoft 365 (to allow `wirescout.app` for everyone).
+- Still to check when it happens: the next access request email's wording. A digest on nodemailer 10 arrived (2026-11-05, 12:29 UTC).
+
 ## 2026-11-05: Email changes must pass the allowed list (v0.6.2)
 
 - Done on branch `email-change-allowed-list`: a trigger on `auth.users` refuses an email change to an address not on the allowed list; Account settings asks `email_allowed` first and says why. What's new note, version 0.6.2.
