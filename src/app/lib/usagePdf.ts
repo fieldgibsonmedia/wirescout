@@ -1,7 +1,7 @@
 // "Download report" on the Analytics screen: the usage numbers as a PDF for management, without errors or
 // replays. Made in the browser with jsPDF; the screen loads this file only when the button is clicked.
 import { jsPDF } from 'jspdf';
-import { FEATURE_LABELS, pageLabel, type Report } from '@/lib/analyticsReport';
+import { featureLabel, pageLabel, type Report } from '@/lib/analyticsReport';
 
 // A4 in millimetres.
 const PAGE_HEIGHT = 297;
@@ -96,7 +96,7 @@ export function downloadUsagePdf(report: Report, periodDescription: string) {
             { title: 'Times', width: 25, align: 'right' },
             { title: 'People', width: 25, align: 'right' },
         ],
-        report.topFeatures?.map((feature) => [FEATURE_LABELS[feature.event] ?? feature.event, String(feature.times), String(feature.people)]) ?? null,
+        report.topFeatures?.map((feature) => [featureLabel(feature), String(feature.times), String(feature.people)]) ?? null,
     );
     section(
         'Most shared stories',

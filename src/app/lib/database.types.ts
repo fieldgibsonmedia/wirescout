@@ -73,14 +73,14 @@ isOneToOne: false
                   ]
                 },"articles": {
                   Row: {
-                    "document_kind": string | null,"first_seen_at": string,"found_on_first_check": boolean,"id": number,"published_at": string | null,"section": string | null,"source_id": string,"summary": string | null,"title": string,"url": string
+                    "document_kind": string | null,"first_seen_at": string,"found_on_first_check": boolean,"id": number,"is_reupload": boolean,"published_at": string | null,"section": string | null,"source_id": string,"summary": string | null,"title": string,"url": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "document_kind"?: string | null,"first_seen_at"?: string,"found_on_first_check"?: boolean,"id"?: never,"published_at"?: string | null,"section"?: string | null,"source_id": string,"summary"?: string | null,"title": string,"url": string
+                    "document_kind"?: string | null,"first_seen_at"?: string,"found_on_first_check"?: boolean,"id"?: never,"is_reupload"?: boolean,"published_at"?: string | null,"section"?: string | null,"source_id": string,"summary"?: string | null,"title": string,"url": string
                   }
                   Update: {
-                    "document_kind"?: string | null,"first_seen_at"?: string,"found_on_first_check"?: boolean,"id"?: never,"published_at"?: string | null,"section"?: string | null,"source_id"?: string,"summary"?: string | null,"title"?: string,"url"?: string
+                    "document_kind"?: string | null,"first_seen_at"?: string,"found_on_first_check"?: boolean,"id"?: never,"is_reupload"?: boolean,"published_at"?: string | null,"section"?: string | null,"source_id"?: string,"summary"?: string | null,"title"?: string,"url"?: string
                   }
                   Relationships: [
                     {

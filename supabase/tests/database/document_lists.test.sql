@@ -1,6 +1,6 @@
 -- Checks documents lists: one page as two sources, and which PDFs count as new. Run: npx supabase test db
 begin;
-select plan(9);
+select plan(10);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000b1', 'bea@example.com');
@@ -25,7 +25,11 @@ insert into public.articles (source_id, url, title, section, document_kind, foun
   ('00000000-0000-0000-0000-0000000000b4', 'https://issuer.example/q3.pdf', 'Quarterly report', 'Financial reports', 'other', false, '2026-01-03'),
   -- Not labelled yet: shown, so nothing is missed.
   ('00000000-0000-0000-0000-0000000000b4', 'https://issuer.example/ft-121.pdf', 'Loan 121', 'Final terms', null, false, '2026-01-03'),
+  -- The same report put up again under a new file name: shown, but not new.
+  ('00000000-0000-0000-0000-0000000000b4', 'https://issuer.example/1763545120-report.pdf', 'Green bond report 2025', 'Reporting', 'allocation_report', false, '2026-01-03'),
   ('00000000-0000-0000-0000-0000000000b5', 'https://issuer.example/news/1', 'Issuer prices a new bond', null, null, false, '2026-01-03');
+-- The scanner marks a re-upload.
+update public.articles set is_reupload = true where url = 'https://issuer.example/1763545120-report.pdf';
 
 select is(
   (select kind from public.sources where id = '00000000-0000-0000-0000-0000000000b5'),
@@ -70,8 +74,14 @@ select is(
 
 select is(
   (select count(*)::int from public.watch_list_articles where watch_list_id = '00000000-0000-0000-0000-0000000000b2'),
-  4,
+  5,
   'A documents list still shows every PDF'
+);
+
+select is(
+  (select counts_as_new from public.watch_list_articles where url = 'https://issuer.example/1763545120-report.pdf'),
+  false,
+  'A re-uploaded PDF isn''t new'
 );
 
 select is(

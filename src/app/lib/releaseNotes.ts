@@ -6,6 +6,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['A PDF an issuer puts up again under a new file name no longer shows as new: you see it once.'],
+    },
+    {
+        version: '0.7.2',
         notes: [
             "Wirescout now opens each new story's and document's link before showing it: a link the site says doesn't exist is left out, and tried again later.",
             'Fixed: some PDF links (e.g. Gothenburg\'s) opened "page not found".',
