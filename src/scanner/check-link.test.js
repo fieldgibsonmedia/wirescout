@@ -7,12 +7,13 @@ const FEED = `<?xml version="1.0"?><rss version="2.0"><channel><title>News</titl
   <item><title>A story</title><link>https://example.com/story</link></item>
 </channel></rss>`;
 
-// A made-up site: a feed that works, a page that turns visitors away, one without stories, and a slow one.
-// Every other page is missing.
+// A made-up site: a feed that works, a page that turns visitors away, one without stories, one with a PDF,
+// and a slow one. Every other page is missing.
 const server = createServer((request, response) => {
   if (request.url === "/news.xml") return response.end(FEED);
   if (request.url === "/blocked") return response.writeHead(403).end();
   if (request.url === "/empty") return response.end("<html><body><p>Nothing here</p></body></html>");
+  if (request.url === "/reports") return response.end('<html><body><a href="/impact-report-2025.pdf">Impact report 2025</a></body></html>');
   // /slow never answers.
   if (request.url !== "/slow") return response.writeHead(404).end();
 });
@@ -32,6 +33,11 @@ test("a link without stories says why", async () => {
   assert.equal((await readLink(`${site}/missing`, 2000)).problem, "not_found");
   assert.equal((await readLink(`${site}/blocked`, 2000)).problem, "blocked");
   assert.equal((await readLink(`${site}/empty`, 2000)).problem, "no_stories");
+});
+
+test("a documents list's link must show PDFs", async () => {
+  assert.equal((await readLink(`${site}/reports`, 2000, "documents")).problem, null);
+  assert.equal((await readLink(`${site}/news.xml`, 2000, "documents")).problem, "no_stories");
 });
 
 test("a site that doesn't answer in time can't be reached", async () => {

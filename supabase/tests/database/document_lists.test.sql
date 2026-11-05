@@ -1,6 +1,6 @@
 -- Checks documents lists: one page as two sources, and which PDFs count as new. Run: npx supabase test db
 begin;
-select plan(7);
+select plan(9);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000b1', 'bea@example.com');
@@ -19,7 +19,7 @@ insert into public.watch_list_sources (watch_list_id, source_id) values
 
 insert into public.articles (source_id, url, title, section, document_kind, found_on_first_check, first_seen_at) values
   -- On the page at the first check: not new.
-  ('00000000-0000-0000-0000-0000000000b4', 'https://issuer.example/old-report.pdf', 'Green bond report 2024', 'Reporting', 'allocation_report', true, '2026-01-03'),
+  ('00000000-0000-0000-0000-0000000000b4', 'https://issuer.example/old-report.pdf', 'Green bond report 2024', 'Reporting', 'allocation_report', true, '2026-01-04'),
   -- Added later: new, unless the model says it's something else.
   ('00000000-0000-0000-0000-0000000000b4', 'https://issuer.example/report.pdf', 'Green bond report 2025', 'Reporting', 'allocation_report', false, '2026-01-03'),
   ('00000000-0000-0000-0000-0000000000b4', 'https://issuer.example/q3.pdf', 'Quarterly report', 'Financial reports', 'other', false, '2026-01-03'),
@@ -51,6 +51,11 @@ select throws_ok(
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-0000000000b1", "role": "authenticated"}', true);
 
+select lives_ok(
+  $$insert into public.sources (url, kind) values ('https://issuer.example/green-finance', 'documents')$$,
+  'A user adds a documents source'
+);
+
 select is(
   (select new_count from public.watch_list_new_counts where watch_list_id = '00000000-0000-0000-0000-0000000000b2'),
   2,
@@ -67,6 +72,12 @@ select is(
   (select count(*)::int from public.watch_list_articles where watch_list_id = '00000000-0000-0000-0000-0000000000b2'),
   4,
   'A documents list still shows every PDF'
+);
+
+select is(
+  (select latest_story_at from public.watch_list_stats where watch_list_id = '00000000-0000-0000-0000-0000000000b2'),
+  '2026-01-03'::timestamptz,
+  'The dashboard''s latest document leaves out what was on the page at the first check'
 );
 
 update public.watch_lists set keywords = '{final terms}' where id = '00000000-0000-0000-0000-0000000000b2';

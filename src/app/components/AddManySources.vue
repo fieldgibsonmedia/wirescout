@@ -3,10 +3,11 @@
 // - Paste links: one per line, text around them is fine, and a bare domain on its own line counts.
 //   Lines without a link are listed while typing, so they can be fixed before adding.
 // - Upload a file: drop or choose an .xlsx, .csv or .txt file, and every web address in it is found
-//   (no column to pick). The user sees the list, then adds it with one button.
+//   (no column to pick), in Excel also the links behind cell text ("Green finance | Issuer").
+//   The user sees the list, then adds it with one button.
 // Each link is checked first: the ones that fail aren't added, and the user sees why. The same address
 // written differently (http or https, www., a trailing slash) counts once.
-// Sources the scanner hasn't checked yet are read once right away, so their first stories show now.
+// Sources the scanner hasn't checked yet are read once right away, so their first stories (or PDFs) show now.
 // The Excel reader is only downloaded when an .xlsx file is used.
 import { ArrowUpTrayIcon, PlusIcon } from '@heroicons/vue/20/solid';
 import { TabsContent, TabsIndicator, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
@@ -25,6 +26,7 @@ import {
     type LinkCheck,
     type Source,
 } from '@/lib/sources';
+import { listKind } from '@/lib/watchLists';
 
 const props = defineProps<{
     watchListId: string;
@@ -35,7 +37,9 @@ const emit = defineEmits<{
     added: [sources: Source[]];
 }>();
 
-const MAX_ADDRESSES = 100;
+// EF Data's issuer list has about 500 links: one upload. Checking and reading that many takes 5 to 10 minutes,
+// so the status line counts them.
+const MAX_ADDRESSES = 500;
 const MAX_FILE_SIZE = 1024 * 1024;
 
 // Starts at http://, https:// or www. and runs to the next space, quote or bracket.
@@ -45,6 +49,7 @@ const ADDRESS_PATTERN = /\b(?:https?:\/\/|www\.)[^\s"'<>()[\]{}]+/gi;
 const BARE_DOMAIN_PATTERN = /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(\/\S*)?$/i;
 
 const tab = ref('paste');
+const kind = computed(() => listKind(props.watchListId));
 
 const pasted = ref('');
 const pasteError = ref('');
@@ -55,6 +60,9 @@ const reading = ref(false);
 const fileError = ref('');
 const found = ref<string[]>([]);
 const adding = ref(false);
+// While adding: how many links are checked (or sources read) so far, out of how many.
+const progress = ref({ done: 0, total: 0 });
+const progressText = computed(() => (progress.value.total > 1 ? ` ${progress.value.done} of ${progress.value.total}` : ''));
 // After adding: reading the new sources for their first stories.
 const scanning = ref(false);
 const addFailed = ref(false);
@@ -185,10 +193,23 @@ async function fileText(file: File, extension: string) {
         }
         const { default: readXlsxFile } = await import('read-excel-file/browser');
         const sheets = await readXlsxFile(file);
-        return sheets.flatMap((sheet) => sheet.data.flat()).filter((cell) => typeof cell === 'string').join('\n');
+        const cells = sheets.flatMap((sheet) => sheet.data.flat()).filter((cell) => typeof cell === 'string');
+        return [...cells, ...(await hiddenLinks(file))].join('\n');
     } catch {
         return null;
     }
+}
+
+// The addresses of an Excel file's links behind cell text: the cell shows "Green finance | Issuer", the address is
+// kept in the sheet's links file (xl/worksheets/_rels/sheet1.xml.rels).
+async function hiddenLinks(file: File) {
+    const { unzipSync, strFromU8 } = await import('fflate');
+    const files = unzipSync(new Uint8Array(await file.arrayBuffer()), {
+        filter: (entry) => /^xl\/worksheets\/_rels\/[^/]+\.rels$/.test(entry.name),
+    });
+    return Object.values(files).flatMap((content) =>
+        [...strFromU8(content).matchAll(/Target="(https?:\/\/[^"]+)"/g)].map((match) => match[1].replace(/&amp;/g, '&')),
+    );
 }
 
 // Every web address in the text, once each (however it's written), in the order they appear.
@@ -214,7 +235,8 @@ async function add(urls: string[]) {
     let failed: LinkCheck[] = [];
     if (toCheck.length > 0) {
         adding.value = true;
-        const checks = await checkLinks(toCheck);
+        progress.value = { done: 0, total: toCheck.length };
+        const checks = await checkLinks(toCheck, kind.value, () => progress.value.done++);
         failed = checks.filter((check) => check.problem);
         const working = checks.filter((check) => !check.problem).map((check) => check.url);
         const response = working.length > 0 ? await addSources(props.watchListId, working) : [];
@@ -225,7 +247,8 @@ async function add(urls: string[]) {
             return false;
         }
         scanning.value = true;
-        added = await scanNewSources(response);
+        progress.value = { done: 0, total: 0 };
+        added = await scanNewSources(response, (total) => (progress.value = { done: progress.value.done + 1, total }));
         scanning.value = false;
         adding.value = false;
     }
@@ -239,7 +262,7 @@ async function add(urls: string[]) {
     ]
         .filter(Boolean)
         .join(', ');
-    notAdded.value = checkMessages(failed);
+    notAdded.value = checkMessages(failed, kind.value);
     emit('added', added);
     return true;
 }
@@ -272,9 +295,9 @@ async function add(urls: string[]) {
                         {{ line }}
                     </li>
                 </ul>
-                <p v-if="scanning" role="status" class="text-sm">Finding their first stories…</p>
+                <p v-if="scanning" role="status" class="text-sm">{{ kind === 'documents' ? 'Finding their PDFs' : 'Finding their first stories' }}{{ progressText }}…</p>
                 <p v-else-if="adding" role="status" class="text-sm">
-                    Validating {{ pastedLinks.length === 1 ? 'source' : `${pastedLinks.length} sources` }}…
+                    Validating {{ pastedLinks.length === 1 ? 'source' : 'sources' }}{{ progressText }}…
                 </p>
                 <Alert v-if="addFailed" type="error">The sources couldn't be added. Please try again.</Alert>
                 <div>
@@ -314,8 +337,8 @@ async function add(urls: string[]) {
                     <ul class="max-h-64 overflow-y-auto rounded-box border border-base-300 text-sm">
                         <li v-for="url in found" :key="url" class="border-b border-base-300 px-3 py-2 break-words last:border-b-0">{{ url }}</li>
                     </ul>
-                    <p v-if="scanning" role="status" class="text-sm">Finding their first stories…</p>
-                    <p v-else-if="adding" role="status" class="text-sm">Validating {{ found.length === 1 ? 'source' : `${found.length} sources` }}…</p>
+                    <p v-if="scanning" role="status" class="text-sm">{{ kind === 'documents' ? 'Finding their PDFs' : 'Finding their first stories' }}{{ progressText }}…</p>
+                    <p v-else-if="adding" role="status" class="text-sm">Validating {{ found.length === 1 ? 'source' : 'sources' }}{{ progressText }}…</p>
                     <Alert v-if="addFailed" type="error">The sources couldn't be added. Please try again.</Alert>
                     <div class="flex flex-wrap gap-3">
                         <Button variant="outline" :busy="adding" @click="addFound">

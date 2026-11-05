@@ -10,6 +10,7 @@ import StoryCard from '@/components/StoryCard.vue';
 import Alert from '@/components/ui/Alert.vue';
 import { sourceLabel } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
+import { documentKindLabel } from '@/lib/watchLists';
 
 const props = defineProps<{
     id: string;
@@ -22,6 +23,8 @@ type Story = {
     summary: string | null;
     source: string;
     date: string;
+    label?: string;
+    section: string | null;
 };
 
 const listName = ref('');
@@ -44,11 +47,11 @@ async function load() {
 
     // Row-level security already limits stories to the user's sources; the list's sources narrow it to this list.
     const [list, listSources, article, savedStory] = await Promise.all([
-        supabase.from('watch_lists').select('name').eq('id', props.id).maybeSingle(),
+        supabase.from('watch_lists').select('name, kind').eq('id', props.id).maybeSingle(),
         supabase.from('watch_list_sources').select('source_id').eq('watch_list_id', props.id),
         supabase
             .from('articles')
-            .select('url, title, summary, published_at, first_seen_at, source_id, sources (url, name)')
+            .select('url, title, summary, published_at, first_seen_at, source_id, section, document_kind, sources (url, name)')
             .eq('id', Number(props.storyId))
             .maybeSingle(),
         supabase.from('saved_stories').select('article_id').eq('watch_list_id', props.id).eq('article_id', Number(props.storyId)).maybeSingle(),
@@ -73,6 +76,8 @@ async function load() {
         summary: article.data.summary,
         source: sourceLabel(article.data.sources),
         date: dateFormat.format(new Date(article.data.published_at ?? article.data.first_seen_at)),
+        label: list.data.kind === 'documents' ? documentKindLabel(article.data.document_kind) : undefined,
+        section: article.data.section,
     };
 }
 

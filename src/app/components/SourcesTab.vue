@@ -52,7 +52,7 @@ import {
     type Source,
 } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
-import { loadWatchLists, watchLists } from '@/lib/watchLists';
+import { listKind, loadWatchLists, watchLists } from '@/lib/watchLists';
 
 const props = defineProps<{
     watchListId: string;
@@ -161,8 +161,12 @@ const moveErrors = ref<Record<string, string>>({});
 const moveBusy = ref(false);
 const moved = ref('');
 
+// A documents list's sources follow PDFs: they only move to another documents list, and news sources to news lists.
+const kind = computed(() => listKind(props.watchListId));
 const otherLists = computed(() =>
-    watchLists.value.filter((list) => list.id !== props.watchListId).map((list) => ({ value: list.id, label: list.name })),
+    watchLists.value
+        .filter((list) => list.id !== props.watchListId && list.kind === kind.value)
+        .map((list) => ({ value: list.id, label: list.name })),
 );
 const moveOptions = computed(() => [...otherLists.value, { value: NEW_LIST, label: 'New watch list…' }]);
 
@@ -193,7 +197,7 @@ async function saveEdit() {
         return;
     }
     if (!isWebAddress(url)) {
-        editErrors.value = { url: 'Enter the full web address of a news page, starting with https://' };
+        editErrors.value = { url: 'Enter the full web address of the page, starting with https://' };
         return;
     }
     if (sources.value.some((other) => other.id !== source.id && addressKey(other.url) === addressKey(url))) {
@@ -224,8 +228,8 @@ async function saveEdit() {
 
 // Checks one link with the scanner's code: why it can't be used, or null if it works.
 async function checkLink(url: string) {
-    const checks = await checkLinks([url]);
-    return checks[0].problem ? checkMessages(checks, ['This link'])[0] : null;
+    const checks = await checkLinks([url], kind.value);
+    return checks[0].problem ? checkMessages(checks, kind.value, ['This link'])[0] : null;
 }
 
 async function removeSource(sourceId: string) {
@@ -294,7 +298,11 @@ async function move() {
 
     moveBusy.value = true;
     if (moveTarget.value === NEW_LIST) {
-        const { data, error } = await supabase.from('watch_lists').insert({ name: newListName.value.trim() }).select('id').single();
+        const { data, error } = await supabase
+            .from('watch_lists')
+            .insert({ name: newListName.value.trim(), kind: kind.value })
+            .select('id')
+            .single();
         if (error) {
             moveBusy.value = false;
             moveErrors.value = { name: "The watch list couldn't be created. Please try again." };
@@ -344,7 +352,7 @@ async function move() {
         </div>
 
         <Card v-if="sources.length === 0">
-            <p class="max-w-prose">No sources yet. Add one to start seeing its stories.</p>
+            <p class="max-w-prose">No sources yet. Add one to start seeing its {{ kind === 'documents' ? 'PDFs' : 'stories' }}.</p>
         </Card>
         <p v-else-if="rows.length === 0" class="text-base-content/70">No sources match “{{ search }}”.</p>
 
@@ -481,7 +489,7 @@ async function move() {
         <TextField
             v-model="editUrl"
             name="url"
-            label="News page address"
+            :label="kind === 'documents' ? 'Page address' : 'News page address'"
             type="url"
             inputmode="url"
             autocomplete="url"

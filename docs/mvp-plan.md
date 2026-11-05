@@ -446,7 +446,7 @@ What they want alerts for (Rishi, 2026-11-05): allocation reports, impact report
 - Release the 3 jobs together: nobody can make a documents list before job 2, and the digest needs job 3.
 - Cost: under $1 a month (Haiku 5.5, $0.10 per million input tokens; the first labelling of a full list of 11,000 PDFs is about $0.10).
 - Live impact: the scanner, the app's source adding and the digest are live for journalists; their news lists must work exactly as now. The migration changes the sources' unique key: push it just before merging, as source adding fails in between.
-- Production steps (Ken): `ANTHROPIC_API_KEY` in GitHub secrets (done 2026-11-05); push each migration; their email domain on the allowed list.
+- Production steps (Ken): `ANTHROPIC_API_KEY` in GitHub secrets (done 2026-11-05); push the migrations; deploy the `check-links` and `scan-new-sources` functions (they run the scanner's code, which reads PDFs now); their email domain on the allowed list.
 
 ## Branches
 
