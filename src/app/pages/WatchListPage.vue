@@ -19,7 +19,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import SearchField from '@/components/ui/SearchField.vue';
 import { SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
-import { watchLists } from '@/lib/watchLists';
+import { loadNewCounts, watchLists } from '@/lib/watchLists';
 
 const props = defineProps<{
     id: string;
@@ -131,6 +131,7 @@ async function loadArticles() {
     const newest = data[0]?.first_seen_at;
     if (!term && newest && new Date(newest) > new Date(lastViewedAt.value)) {
         await supabase.from('watch_lists').update({ last_viewed_at: newest }).eq('id', props.id);
+        loadNewCounts();
     }
 }
 

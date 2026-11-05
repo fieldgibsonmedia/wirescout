@@ -12,7 +12,7 @@ import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import { supabase } from '@/lib/supabase';
-import { creatingWatchList, loadWatchLists, watchLists } from '@/lib/watchLists';
+import { creatingWatchList, loadNewCounts, loadWatchLists, newCounts, watchLists } from '@/lib/watchLists';
 
 type Stats = {
     sourceCount: number;
@@ -24,7 +24,6 @@ type Stats = {
 
 const router = useRouter();
 
-const newCounts = ref(new Map<string, number>());
 const stats = ref(new Map<string, Stats>());
 const loading = ref(true);
 const failed = ref(false);
@@ -44,15 +43,14 @@ async function load() {
 }
 
 async function loadNumbers() {
-    const [counts, listStats] = await Promise.all([
-        supabase.from('watch_list_new_counts').select('watch_list_id, new_count'),
+    const [countsLoaded, listStats] = await Promise.all([
+        loadNewCounts(),
         supabase.from('watch_list_stats').select('watch_list_id, source_count, failing_count, saved_count, latest_story_at, daily_counts'),
     ]);
-    if (counts.error || listStats.error) {
+    if (!countsLoaded || listStats.error) {
         return false;
     }
 
-    newCounts.value = new Map(counts.data.map((count) => [count.watch_list_id ?? '', count.new_count ?? 0]));
     stats.value = new Map(
         listStats.data.map((row) => [
             row.watch_list_id ?? '',

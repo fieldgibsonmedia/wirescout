@@ -5,6 +5,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['A red number next to each watch list in the side menu shows its new stories since you last opened it. Opening the list clears it.'],
+    },
+    {
+        version: '0.5.10',
         notes: ['The sign-in screens have their titles and descriptions centred, under the Wirescout robot.'],
     },
     {
