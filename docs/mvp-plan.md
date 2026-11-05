@@ -395,6 +395,19 @@ Why: some sources show no stories, because their page is empty until a browser r
 - Live impact: the scanner (`scanner.yml` installs the browser: a CI change, Ken's ok) and longer hourly runs.
 - Open before coding: the numbers from step 1, then Ken's "approve".
 
+### Email change must pass the allowed list (proposed 2026-11-05, not approved yet)
+
+Why: the sign-up check (`hook_before_user_created`) runs only when an account is created. A signed-in user can change their email in Account settings to any address, after confirming from both (`docs/known-issues.md`). Ken picked this as the next job (2026-11-05); to be done in a new session.
+
+1. The database refuses it: a trigger on `auth.users`, before update of `email_change` (the address waiting for confirmation), raises an error when the new address isn't in `allowed_email_domains` (same match as the sign-up check: the full address or its domain). Supabase has no hook for email changes, and this is the one place every change goes through.
+2. A clear message in the app: an `email_allowed(address)` function (security definer, signed-in users only, returns true or false) that Account settings calls before `updateUser`. Not allowed: "This email isn't allowed on Wirescout. Ask a super admin to add it in Platform access." The trigger still stops anyone who skips the app.
+3. pgTAP tests: an allowed and a refused change, and that signed-out users can't call `email_allowed`.
+4. Version 0.6.2 (a fix), with a What's new note, security first (Decisions, "Release notes").
+
+- Live impact: Account settings → change email, for everyone. Existing accounts and their emails are untouched. 1 migration (schema and security: Ken's ok, `workflow.md`).
+- Production steps (Ken), in this order: push the migration (`npx supabase db push`), then merge the release PR. The app calls `email_allowed`, so it must exist before the app deploys.
+- Open before coding: Ken's "approve".
+
 ## Branches
 
 - Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.
