@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Developers left out of analytics, release notes order (PR #31)
+
+- Done: accounts marked `exclude_from_analytics` (in `app_metadata`) send nothing to PostHog. v0.6.1's What's new lists its security update, and notes go most important first (`docs/mvp-plan.md`, Decisions, "Release notes").
+- Ken merged PR #31 into `main` (11:43 UTC); the app deploy succeeded.
+- Ken marked his own account in the cloud project (SQL, checked: `true`) and deleted his person, with its events, in PostHog. PostHog removes the events in a background job, so they may show in Analytics for a few days.
+- Next: plan the fix for an email change skipping the allowed list (`docs/known-issues.md`).
+
 ## 2026-11-05: Released v0.6.1 (PR #30)
 
 - Ken redeployed `check-links` and `scan-new-sources`, then merged PR #30 into `main` (11:07 UTC). The app deploy run succeeded.
