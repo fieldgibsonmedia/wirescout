@@ -24,7 +24,7 @@
     "chrono-node": "^2.9.0",
     "dotenv": "^16.0.3",
     "jspdf": "^4.2.1",
-    "nodemailer": "^6.9.9",
+    "nodemailer": "^10.3.1",
     "posthog-js": "^1.438.13",
     "read-excel-file": "^9.3.12",
     "reka-ui": "^2.11.0",
