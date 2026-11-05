@@ -22,7 +22,7 @@ export default {
 
     const { data: source } = await ctx.supabaseAdmin
       .from("sources")
-      .select("id, url, feed_url, read_from, stories_found, last_checked_at")
+      .select("id, url, kind, feed_url, read_from, stories_found, last_checked_at")
       .eq("id", source_id)
       .single();
     // Working already: the hourly scan keeps it up to date. A source that failed its last check is read again:

@@ -10,6 +10,7 @@ An internal Field Gibson Media tool for journalists, in production since 2026-11
     - `cheerio` reads feeds and pages, `chrono-node` reads dates written on pages.
     - `@supabase/supabase-js` saves stories and source status with the secret key (`SUPABASE_*` variables). In the cloud it's the key named `wirescout_scanner` (Project Settings → API Keys), saved in the GitHub secret `SUPABASE_SECRET_KEY`.
     - `nodemailer` sends the health email to a developer over SMTP (`EMAIL_*`, `ADMIN_EMAIL`).
+    - `@anthropic-ai/sdk` labels the PDFs of documents lists with Claude Haiku 5.5 (`ANTHROPIC_API_KEY`).
     - GitHub Actions runs it every hour (`.github/workflows/scanner.yml`), installing only the runtime packages (`npm ci --omit=dev`).
 - Daily digest: Node.js 22, same packages as the scanner. GitHub Actions runs it every 15 minutes (`.github/workflows/digest.yml`).
 - Admin emails: the same again, every hour (`.github/workflows/admin.yml`).
@@ -39,7 +40,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `src/app/lib/magazines.ts`: the magazines, the user's connections and who already sent which story (`story_sends`), for Settings → Channels, the Share menu and the Send dialog (`components/SendDraftDialog.vue`).
 - `src/app/lib/releaseNotes.ts`: the dashboard's "What's new". Add notes with each release. Its newest entry and the side nav take the version from `package.json`. Every job that changes what users get raises the version (`docs/mvp-plan.md`, Decisions).
 - `src/digest/index.js`: the digest (below). `due.js` decides who gets one, `email.js` writes it. Tests next to them.
-- `src/scanner/index.js`: the scan (below). `check-source.js` checks one source and saves its stories and status, `read-source.js` picks feed or page, `feed.js` and `page.js` read them, `health.js` decides whether the scanner looks broken and writes the health email. Tests next to them (`*.test.js`).
+- `src/scanner/index.js`: the scan (below). `check-source.js` checks one source and saves its stories and status, `read-source.js` picks feed or page, `feed.js` and `page.js` read them, `documents.js` reads a documents source's PDFs and `label-documents.js` labels them, `health.js` decides whether the scanner looks broken and writes the health email. Tests next to them (`*.test.js`).
 - `supabase/config.toml`: local Supabase settings (sign-ups on for allowed emails, the sign-up check, email templates).
 - `supabase/templates/`: the account emails (confirm account, new password, email change). The cloud project needs the same templates pasted into its dashboard.
 - `supabase/migrations/`: the database schema and access rules, one SQL file per change.
@@ -54,7 +55,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 ## How a scan works
 
 1. Take every source that at least one watch list follows.
-2. Read its stories (the newest 50), first match wins:
+2. Read its stories (the newest 50), first match wins (a documents source: every PDF on the page instead, with its section heading, step 6):
     1. The feed found last time.
     2. The address itself, if it's a feed.
     3. A feed the page names in its `<head>`.
@@ -63,6 +64,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 3. Save the stories whose link is new for that source. Stories are never deleted.
 4. Record the source's status: last checked, stories found, feed or page.
 5. If the scanner itself looks broken (at least half of the sources that found stories last time find none, and at least 3), email `ADMIN_EMAIL`. Once per break, not every hour. One failing source emails nobody: the journalist sees it in the digest and the Sources tab.
+6. Documents lists (`docs/mvp-plan.md`, "Document lists for bond alerts"): the PDFs on a source's page at its first check are kept but aren't new (`articles.found_on_first_check`). Claude Haiku 5.5 labels each PDF (`articles.document_kind`: allocation report, impact report, framework, SPO, new bond issue, or other), up to 2,000 a run; what's left, or failed, is labelled next run. Unlabelled PDFs are shown. Only bond documents count as new (`watch_list_articles.counts_as_new`).
 
 The logs show only totals: the repo is public, and which sources people follow is theirs.
 
@@ -93,6 +95,7 @@ npm ci
 - Start the local Supabase (below) and follow some sources in a local watch list.
 - Copy `.env.example` to `.env`, with the local secret key from `npx supabase status`.
 - Point `EMAIL_*` at Mailpit (host `127.0.0.1`, port `54325`, no user or password) and `ADMIN_EMAIL` at a made-up address.
+- Optional: `ANTHROPIC_API_KEY`, to label documents lists' PDFs. Without it they stay unlabelled.
 - `npm run scan`, then see the stories in the app and any health email in Mailpit.
 - `npm test`: the scanner's, the digest's and the admin emails' tests.
 

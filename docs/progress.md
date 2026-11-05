@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Document lists for bond alerts, job 1 (scanner and database)
+
+- Plan approved (`docs/mvp-plan.md`, "Document lists for bond alerts"), from EF Data's issuer list (523 links tested). Rishi wants alerts for allocation and impact reports, frameworks, SPOs and new bond issues; not prospectuses or general sustainability reports.
+- Ken added the GitHub secret `ANTHROPIC_API_KEY` (2026-11-05).
+- Done on branch `document-lists`: migration `20261105143948_document_lists.sql` (`kind` on watch lists and sources, a page can be both; `section`, `document_kind`, `found_on_first_check` on articles; `counts_as_new` in `watch_list_articles`). Scanner: `documents.js` reads a page's PDFs, `label-documents.js` labels them with Claude Haiku 5.5. `scanner.yml` passes the key. The app's source adding uses the new unique key (news only, as before).
+- Checked locally: unit tests (78), pgTAP (154), lint, type-check, build; a scan of 12 real issuer pages from the list (398 PDFs, all with sections, all kept as already there); deleted PDFs came back as new; the news lists' counts unchanged; the app's source-adding calls as the dev account.
+- Next: job 2, the app.
+
 ## 2026-11-05: Digest on time, built and postponed
 
 - Built on branch `digest-on-time` (pushed, not merged): a `pg_cron` job starts `digest.yml` through GitHub's "run now", with a Vault token, at :05, :20, :35, :50. Version 0.6.3.

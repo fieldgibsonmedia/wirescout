@@ -428,6 +428,26 @@ Why: GitHub starts scheduled runs when it has capacity. On 2026-11-05 the digest
     4. Merge the release PR. Then check the next run in GitHub → Actions → Daily digest: its event is `workflow_dispatch`, a few seconds after :05, :20, :35 or :50.
 - Postponed by Ken (2026-11-05): a digest late now and then is fine for now. Built and checked locally on branch `digest-on-time` (pushed, not merged). To pick it up: merge `origin/mvp` into that branch, run the checks again, then Ken's production steps above.
 
+### Document lists for bond alerts (approved 2026-11-05)
+
+Why: EF Data's team checks issuers' websites by hand for new bond PDFs. Their spreadsheet (402 issuers, 523 links, tested 2026-11-05): 456 links readable, 36 block the scanner, 9 dead, a few built with JavaScript. About 4 in 5 readable pages list their PDFs in plain HTML (11,000 PDFs in all, median 11 to 17 per page), mixed with other files and in many languages: a keyword list misses about 1 in 7 bond PDFs, so a model labels them.
+
+What they want alerts for (Rishi, 2026-11-05): allocation reports, impact reports, frameworks, SPOs (second-party opinions), and new bond issues (final terms, pricing supplements). Not prospectuses, not general sustainability reports, nothing else.
+
+1. Job 1, scanner and database (1 migration, no version: users see nothing new until job 2):
+    - A watch list is "news" or "documents" (`watch_lists.kind`); so is a source (`sources.kind`, unique with its address, so one page can be both). News lists don't change.
+    - A documents source: every PDF link on the page (outside menus), no 50 limit, with the section heading above it (`articles.section`). No feeds.
+    - PDFs on the page at its first check are saved but aren't new (`articles.found_on_first_check`): not in the new counts, never in a digest.
+    - Each PDF is labelled by Claude Haiku 5.5 from its title, file name and section (`articles.document_kind`): `allocation_report`, `impact_report`, `framework`, `spo`, `new_issue`, `other`. Empty = not checked yet: shown, so nothing is missed. The hourly scanner labels what's still empty, a few hundred at most per run, so a failed call is retried next hour. No `ANTHROPIC_API_KEY`: nothing is labelled.
+    - New counts of a documents list leave out `other`.
+2. Job 2, app (v0.7.0): create a list as News or Documents; a documents list shows title, label, section, date found and the PDF link, with a "Bond documents · All" switch; the bulk upload also reads links hidden behind cell text.
+3. Job 3, digest (v0.7.1): a documents list's digest has every new bond document, not 5.
+
+- Release the 3 jobs together: nobody can make a documents list before job 2, and the digest needs job 3.
+- Cost: under $1 a month (Haiku 5.5, $0.10 per million input tokens; the first labelling of a full list of 11,000 PDFs is about $0.10).
+- Live impact: the scanner, the app's source adding and the digest are live for journalists; their news lists must work exactly as now. The migration changes the sources' unique key: push it just before merging, as source adding fails in between.
+- Production steps (Ken): `ANTHROPIC_API_KEY` in GitHub secrets (done 2026-11-05); push each migration; their email domain on the allowed list.
+
 ## Branches
 
 - Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.
