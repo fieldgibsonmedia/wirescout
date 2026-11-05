@@ -2,6 +2,12 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Document lists for bond alerts, job 3 (digest), v0.7.1
+
+- Done on branch `document-lists-digest`: the digest takes only what counts as new (`counts_as_new`); a documents list shows up to 50 new bond documents, each with its label; the subject counts stories and documents apart ("8 new stories and 2 new documents in 3 watch lists"). What's new, version 0.7.1.
+- Checked locally: unit tests (81, 2 new), type-check, build; a real digest to Mailpit for the dev account: 2 new documents with their labels, the "other" PDF and the thousands already on the pages left out.
+- Next: the release of jobs 1 to 3 (`docs/mvp-plan.md`, "Document lists for bond alerts", production steps).
+
 ## 2026-11-05: Document lists for bond alerts, job 2 (app), v0.7.0
 
 - Done on branch `document-lists-app`: New watch list asks News stories or Bond documents; a documents list has a Documents tab with Bond documents · All PDFs · Saved, each PDF with its label and section (also on its story page); "No PDFs found" for sources and link checks (`check-links` takes `kind`); moving sources only between lists of the same kind; the Excel upload also reads links behind cell text (`fflate`); the dashboard says documents and leaves first-check PDFs out of its chart. Migration `20261105150652_document_lists_app.sql`: users may set a source's kind; dashboard numbers use `counts_as_new`. What's new, version 0.7.0.

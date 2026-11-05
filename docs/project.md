@@ -72,7 +72,7 @@ The logs show only totals: the repo is public, and which sources people follow i
 
 1. Take every user whose digest is due: Monday to Friday in their time zone, their time has passed, and none yet today. A skipped run is caught up later the same day.
 2. For each watch list: the stories found since their last digest (at most 7 days back), through the keywords (`watch_list_articles`), and the failing sources.
-3. Email up to 5 stories per list, each linking to its page in the app (`/lists/<list>/stories/<story>`), never to the source site. Failing sources link to the list's Sources tab.
+3. Email up to 5 stories per list, each linking to its page in the app (`/lists/<list>/stories/<story>`), never to the source site. Failing sources link to the list's Sources tab. A documents list: its new bond documents (`counts_as_new`), up to 50, each with its label.
 4. No new stories in any list: no email. Either way, `profiles.last_digest_at` records that today's digest is done.
 
 ## Usage analytics and admin emails

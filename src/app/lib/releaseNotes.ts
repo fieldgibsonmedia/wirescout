@@ -6,6 +6,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['Your daily digest lists every new bond document in your bond document lists, each with its label.'],
+    },
+    {
+        version: '0.7.0',
         notes: [
             "New: bond document lists. Choose Bond documents when you create a watch list, add issuers' pages, and Wirescout shows each new PDF on them, labelled: allocation report, impact report, framework, second-party opinion or new bond issue.",
             'Uploading an Excel file of sources also finds the links behind cell text.',
