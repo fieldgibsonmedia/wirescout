@@ -17,6 +17,12 @@ const SIZE_NOTE = /\s*[[(]\s*(pdf[^\])]*|[\d.,]+\s*[kmg]i?b)\s*[\])]/gi;
 
 // Returns { url, title, summary, published_at, section } for each PDF, in page order.
 export function readDocuments(html, pageUrl) {
+  const linked = linkedDocuments(html, pageUrl);
+  return linked.length ? linked : documentsInPageData(html, pageUrl);
+}
+
+// The PDF links on the page.
+function linkedDocuments(html, pageUrl) {
   const $ = cheerio.load(html);
   const documents = [];
   const seen = new Set();
@@ -52,6 +58,43 @@ export function readDocuments(html, pageUrl) {
     });
   });
   return documents;
+}
+
+// A page without PDF links may still carry them in its own data: sites built with JavaScript (Next.js and the like)
+// keep the page's content in scripts, as escaped HTML (HDB) or as plain addresses (Elopak, Singapore's MOF), and some
+// open their files from a script (Woori's window.open). In EF Data's list, about 1 in 4 of the pages with no PDF links.
+// No sections here: the data seldom says which heading a file sits under.
+function documentsInPageData(html, pageUrl) {
+  const $ = cheerio.load(html);
+  const scripts = $("script")
+    .map((_, script) => unescapeData($(script).text()))
+    .get()
+    .join("\n");
+  const linked = linkedDocuments(`<html><body>${scripts}</body></html>`, pageUrl);
+  if (linked.length) return linked;
+
+  const documents = [];
+  const seen = new Set();
+  // Quoted addresses ending in .pdf (maybe with a "?…"), anywhere in the page: scripts, data- attributes, onclick.
+  for (const match of unescapeData(html).matchAll(/["'(]([^"'<>()\s][^"'<>()]{0,500}?\.pdf(?:\?[^"'<>()\s]*)?)["')]/gi)) {
+    const address = match[1];
+    if (!/[/=]/.test(address) || !URL.canParse(address, pageUrl)) continue;
+    const url = new URL(address, pageUrl);
+    if (!["http:", "https:"].includes(url.protocol) || seen.has(url.href) || documents.length >= MAX_DOCUMENTS) continue;
+    seen.add(url.href);
+    // The file's name, which may sit in the address's query (Woori: "…&fileName=ENG_2023_Woori_Bank_Framework.pdf").
+    const fileName = (/\.pdf$/i.test(address) ? address : address.split("?")[0]).split(/[/=]/).pop();
+    documents.push({ url: url.href, title: documentTitle("", `https://file.invalid/${fileName}`), summary: null, published_at: null, section: null });
+  }
+  return documents;
+}
+
+// Script text as the page would show it: \u003c → <, \" → ", \/ → /.
+function unescapeData(text) {
+  return text
+    .replace(/\\u([0-9a-f]{4})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/\\(["'/])/g, "$1")
+    .replace(/\\n/g, "\n");
 }
 
 // Text only screen readers get ("Opens a PDF file in a new window").
