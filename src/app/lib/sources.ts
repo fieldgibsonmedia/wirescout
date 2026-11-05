@@ -208,11 +208,12 @@ export function checkMessages(failed: LinkCheck[], kind: ListKind, names = faile
 const LOOKUP_BATCH = 20;
 
 // Adds the URLs to the watch list, reusing a source of the list's kind if someone added its URL before.
+// names: a name for a new source, by addressKey (a source added before keeps its own).
 // Returns the added sources, or null if they couldn't be added.
-export async function addSources(watchListId: string, urls: string[]): Promise<Source[] | null> {
+export async function addSources(watchListId: string, urls: string[], names = new Map<string, string>()): Promise<Source[] | null> {
     const kind = listKind(watchListId);
     const created = await supabase.from('sources').upsert(
-        urls.map((url) => ({ url, kind })),
+        urls.map((url) => ({ url, kind, name: names.get(addressKey(url)) ?? null })),
         { onConflict: 'url,kind', ignoreDuplicates: true },
     );
     if (created.error) {
