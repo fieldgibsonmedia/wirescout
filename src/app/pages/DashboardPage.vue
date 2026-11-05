@@ -12,7 +12,7 @@ import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import { supabase } from '@/lib/supabase';
-import { creatingWatchList, loadNewCounts, loadWatchLists, newCounts, watchLists } from '@/lib/watchLists';
+import { creatingWatchList, loadNewCounts, loadWatchLists, newCounts, watchLists, type ListKind } from '@/lib/watchLists';
 
 type Stats = {
     sourceCount: number;
@@ -84,11 +84,20 @@ function sourcesText(count: number) {
     return count === 0 ? 'No sources yet' : plural(count, 'source');
 }
 
-// "3 saved · Latest story 2 h ago"; no saved part without saved stories.
-function storiesText(listStats: Stats) {
+// "3 saved · Latest story 2 h ago"; no saved part without saved stories. A documents list counts bond documents.
+function storiesText(listStats: Stats, kind: ListKind) {
+    const [one, many] = kind === 'documents' ? ['document', 'documents'] : ['story', 'stories'];
     const parts = listStats.savedCount > 0 ? [`${listStats.savedCount} saved`] : [];
-    parts.push(listStats.latestStoryAt ? `Latest story ${timeAgo(listStats.latestStoryAt)}` : 'No stories yet');
+    parts.push(listStats.latestStoryAt ? `Latest ${one} ${timeAgo(listStats.latestStoryAt)}` : `No ${many} yet`);
     return parts.join(' · ');
+}
+
+// "new story", "new stories", "new documents".
+function newText(count: number, kind: ListKind) {
+    if (kind === 'documents') {
+        return count === 1 ? 'new document' : 'new documents';
+    }
+    return count === 1 ? 'new story' : 'new stories';
 }
 
 // "just now", "5 min ago", "2 h ago", "yesterday", "3 days ago".
@@ -161,14 +170,15 @@ onMounted(load);
                 <div class="flex items-end justify-between gap-4">
                     <p v-if="list.newCount > 0" class="flex flex-col">
                         <span class="text-4xl font-bold">{{ list.newCount }}</span>
-                        <span class="text-base-content/70">new {{ list.newCount === 1 ? 'story' : 'stories' }}</span>
+                        <span class="text-base-content/70">{{ newText(list.newCount, list.kind) }}</span>
                     </p>
-                    <p v-else class="text-lg text-base-content/70">No new stories</p>
+                    <p v-else class="text-lg text-base-content/70">No {{ newText(0, list.kind) }}</p>
 
                     <!-- Above the card's link so hovering a day shows its count; a click still opens the list. -->
                     <StoriesChart
                         v-if="list.stats"
                         :counts="list.stats.dailyCounts"
+                        :documents="list.kind === 'documents'"
                         class="relative z-10 cursor-pointer"
                         @click="router.push({ name: 'watch-list', params: { id: list.id } })"
                     />
@@ -189,7 +199,7 @@ onMounted(load);
                             </RouterLink>
                         </template>
                     </p>
-                    <p>{{ storiesText(list.stats) }}</p>
+                    <p>{{ storiesText(list.stats, list.kind) }}</p>
                 </div>
             </div>
         </li>

@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Document lists for bond alerts, job 2 (app), v0.7.0
+
+- Done on branch `document-lists-app`: New watch list asks News stories or Bond documents; a documents list has a Documents tab with Bond documents · All PDFs · Saved, each PDF with its label and section (also on its story page); "No PDFs found" for sources and link checks (`check-links` takes `kind`); moving sources only between lists of the same kind; the Excel upload also reads links behind cell text (`fflate`); the dashboard says documents and leaves first-check PDFs out of its chart. Migration `20261105150652_document_lists_app.sql`: users may set a source's kind; dashboard numbers use `counts_as_new`. What's new, version 0.7.0.
+- Checked locally: unit tests (79), pgTAP (156), lint, type-check, build, on a fresh database; in the browser as the dev account (phone width): created a Bond documents list, pasted 7 issuer links (6 added, example.com refused with "no PDFs found"), labels and sections shown, the switch, a re-added PDF shown as New on the list, dashboard and story page; a news list unchanged. Rishi's whole spreadsheet in one upload (limit raised from 100 to 500, with a progress count): 491 links found behind cell text, done in about 3 minutes; 350 added, 104 "no PDFs found", 37 blocked, unreachable or not found.
+- Found along the way: the local functions only see files that existed when Supabase started (restart after adding scanner files), and the release must deploy `check-links` and `scan-new-sources` (added to the plan's production steps).
+- Next: job 3, the digest.
+
 ## 2026-11-05: Document lists for bond alerts, job 1 (scanner and database)
 
 - Plan approved (`docs/mvp-plan.md`, "Document lists for bond alerts"), from EF Data's issuer list (523 links tested). Rishi wants alerts for allocation and impact reports, frameworks, SPOs and new bond issues; not prospectuses or general sustainability reports.

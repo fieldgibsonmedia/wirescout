@@ -6,6 +6,13 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: [
+            "New: bond document lists. Choose Bond documents when you create a watch list, add issuers' pages, and Wirescout shows each new PDF on them, labelled: allocation report, impact report, framework, second-party opinion or new bond issue.",
+            'Uploading an Excel file of sources also finds the links behind cell text.',
+        ],
+    },
+    {
+        version: '0.6.2',
         notes: ["Security: you can change your email only to one that's allowed on Wirescout, like when signing up."],
     },
     {
