@@ -2,6 +2,11 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Pages built with JavaScript shelved
+
+- Ken ran step 1 on live (count of sources in a watch list, by status): 63 read, 8 blocked, 0 "No stories found". A hidden browser would fix none of them, and blocked sites aren't worked around, so the job is shelved (Ken, 2026-11-05).
+- Next: the release of what's in `mvp` (steps in the entry below). Come back to the JavaScript plan if "No stories found" sources show up on live.
+
 ## 2026-11-05: End of session, where things stand
 
 - In `mvp`, not released yet: v0.5.9 tab icon, v0.5.10 centred sign-in titles, v0.6.0 new stories badges, security upgrades (nodemailer 10, undici 7.30), v0.6.1 feed must match the page. Also the local dev account (dev only).
