@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Document lists, job D (more pages read), v0.7.5; job C postponed
+
+- Job B committed, merged into `mvp` and pushed (Ken's "approve"). Job C (stories grouped by date) postponed by Ken after the data: 10,940 of the 10,943 PDFs in Rishi's list are found on day one, so dates found don't help. Kept in the new `docs/ideas.md`, with a `load_more` event to measure it.
+- Job D research: 20 of the 97 "no PDFs found" pages: 10 overview pages, 5 with the PDFs in their own data, 2 bot checks, 2 disclaimers, 1 without ".pdf" (`docs/mvp-plan.md`).
+- Done on branch `more-documents`: a page without PDF links is searched for PDF addresses in its own data (escaped HTML, plain addresses, `window.open`); a bot check page (Radware, F5, Cloudflare, Imperva, DataDome) counts as "blocked", for news and documents; `load_more` event with `list_kind` (Analytics → Features used). What's new, version 0.7.5.
+- Checked: unit tests (86, 3 new), type-check; Elopak, HDB, Woori and Singapore's MOF now show their PDFs. All 484 links re-checked: 125 fail (were 156): 62 no PDFs found (were 97), 40 blocked (were 35), 14 unreachable, 9 not found. Rishi's file updated with a "What to do" column (`~/Downloads/EF Data - links not added.xlsx`, not committed).
+- Not checked: `load_more` reaching PostHog (no PostHog locally).
+
 ## 2026-11-05: Document lists, job B (issuer names), v0.7.4
 
 - Job A committed, merged into `mvp` and pushed (Ken's "approve"). Ken's call: jobs B, C and D all go in the next release; failed links stay out of lists (refused at upload, listed in Rishi's file).

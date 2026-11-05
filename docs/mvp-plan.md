@@ -467,8 +467,21 @@ Next jobs (agreed with Ken 2026-11-05, for a new session; each needs its own pla
     4. A source someone added before keeps its name (or none). On live nobody has documents sources yet.
     5. A test with a made-up spreadsheet; then Rishi's whole file in the browser on the dev account.
     - Live impact: the bulk upload (all users; news lists unchanged). No migration.
-- Job C (Ken's idea): a list's stories (news and documents) grouped by when they were found, under headings Today, This week, Last month, Last 6 months, Last year, older; all shown by default. A filter icon next to the view switch opens a dialog with a time range (Today | This week | Last month | Last 6 months | Last year | All) that narrows the list.
+- Job C: stories grouped and filtered by when they were found. Postponed (Ken, 2026-11-05): idea and reasons in `docs/ideas.md`. Instead, a `load_more` event measures whether anyone reads past the first 50 stories.
 - Job D: research the 104 "no PDFs found" pages (a sample of 20): documents linked without ".pdf" (`/download?id=…`), built with JavaScript, or listed on another page. Then a plan.
+    - Research (2026-11-05): 20 of the 97 "no PDFs found" pages (every 5th of Rishi's not-added list), read as the scanner reads them:
+        - 10 (50%) are overview pages: the documents sit on other pages (Bank of China, Brazil, MuniFin, NRW.BANK, Swedbank…). 3 of them (Oslo, Swedbank, Flanders) may load their list with JavaScript; can't tell without a browser.
+        - 5 (25%) have the PDFs inside the page's own data, not as links (Elopak, HDB, Singapore MOF, Luxembourg, Woori): readable without a browser.
+        - 2 are bot checks (Radware at CDP, TAQA): really "blocked", wrongly called "no PDFs found".
+        - 2 are disclaimer pages to accept first (LBBW, Credito Sportivo).
+        - 1 links its PDFs without ".pdf" (AOFM `/media/1427`).
+    - Plan (approved 2026-11-05, built), v0.7.5, branch `more-documents`:
+        1. Documents reader: when a page has no PDF links, it also takes PDF addresses written in the page's own data (scripts, `data-` attributes, `onclick`), named from the file name and labelled as usual. Unit tests with the 5 pages' shapes; then the 5 pages read for real.
+        2. Bot checks (Radware, Cloudflare's "Just a moment", Akamai) count as "blocked", not "no PDFs found", so the message says what happened. News and documents.
+        3. Overview and disclaimer pages: no code. After 1 and 2, all 156 links are checked again, and Rishi's file gets a column "What to do": for "no PDFs found", "Send the page that lists the PDFs"; for blocked, unreachable and not found, the reason as now. Not committed.
+        4. Not doing: accepting disclaimers for the user (they're legal notices meant for a person), links without ".pdf" (1 in 20), a hidden browser (shelved before; at most 3 in 20).
+        5. A `load_more` event on "Load more" (with `list_kind`), for the postponed job C (`docs/ideas.md`).
+        - Live impact: the scanner (documents sources only for 1; all sources for 2: a bot check page was "no stories" and becomes "blocked", nothing else changes), `check-links` and `scan-new-sources` (same code, already redeployed in this release). No migration.
 
 - Release the 3 jobs together: nobody can make a documents list before job 2, and the digest needs job 3.
 - Cost: under $1 a month (Haiku 5.5, $0.10 per million input tokens; the first labelling of a full list of 11,000 PDFs is about $0.10).

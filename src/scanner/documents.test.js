@@ -113,3 +113,34 @@ test("a PDF put up again under a new file name is a re-upload; a new title or se
   const accents = { title: "Rapport", url: "https://issuer.example/files/rapport-d%C3%A9taill%C3%A9-2024.pdf", section: null };
   assert.equal(reuploadKey(accents), "rapport\n\nrapport-détaillé-pdf");
 });
+
+test("a page without PDF links: the PDFs in its own data", () => {
+  // Escaped HTML in a script (HDB): read like links, with their text and headings.
+  const escapedHtml = `<html><body><div id="app"></div><script>self.__next_f.push([1,"\\u003ch2\\u003eGreen Finance Framework\\u003c/h2\\u003e\\u003ca href=\\"/media/hdb-green-finance-framework.pdf\\"\\u003eGreen Finance Framework dated 6 June 2025\\u003c/a\\u003e"])</script></body></html>`;
+  assert.deepEqual(
+    readDocuments(escapedHtml, PAGE_URL).map(({ url, title, section }) => ({ url, title, section })),
+    [{ url: "https://www.issuer.example/media/hdb-green-finance-framework.pdf", title: "Green Finance Framework dated 6 June 2025", section: "Green Finance Framework" }],
+  );
+
+  // Plain addresses in page data (Elopak, Singapore's MOF) and a file opened by a script (Woori): named from the file.
+  const pageData = `<html><body><div id="root"></div>
+    <script>window.data = {"link":{"text":"Report","href":"/globalassets/green-bond-investor-report-2024.pdf"},
+      "referenceLinkHref":"https://files.example/153/Singapore Green Bond Report for FY2025.pdf"}</script>
+    <button onclick='window.open("/pot/jcc?sdiv=SD_FILES&fileName=ENG_2023_Woori_Bank_SPO.pdf")'>Download</button>
+    <script>var types = "doc, pdf, txt";</script>
+  </body></html>`;
+  assert.deepEqual(
+    readDocuments(pageData, PAGE_URL).map(({ url, title }) => ({ url, title })),
+    [
+      { url: "https://www.issuer.example/globalassets/green-bond-investor-report-2024.pdf", title: "green bond investor report 2024" },
+      { url: "https://files.example/153/Singapore%20Green%20Bond%20Report%20for%20FY2025.pdf", title: "Singapore Green Bond Report for FY2025" },
+      { url: "https://www.issuer.example/pot/jcc?sdiv=SD_FILES&fileName=ENG_2023_Woori_Bank_SPO.pdf", title: "ENG 2023 Woori Bank SPO" },
+    ],
+  );
+});
+
+test("a page with PDF links isn't searched further", () => {
+  const html = `<html><body><main><a href="/files/impact-report-2025.pdf">Impact report 2025</a></main>
+    <script>window.data = {"href":"/files/cookie-policy.pdf"}</script></body></html>`;
+  assert.deepEqual(readDocuments(html, PAGE_URL).map((document) => document.title), ["Impact report 2025"]);
+});

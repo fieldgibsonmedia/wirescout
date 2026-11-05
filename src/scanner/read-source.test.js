@@ -90,6 +90,26 @@ test("a documents source reads the PDFs on the page, never the feed it names", (
     },
   ));
 
+test("a bot check instead of the page counts as blocked, for news and documents", async () => {
+  const radware = `<html><head><title>Radware Bot Manager Captcha</title></head><body>Please verify</body></html>`;
+  const f5 = `<html><head><script>window["bobcmn"] = "1";</script><script src="/TSPD/08628e3686?type=10"></script></head><body></body></html>`;
+  await withSites({ [PAGE_URL]: radware }, async () => {
+    for (const kind of ["news", "documents"]) {
+      const error = await readSource({ url: PAGE_URL, kind, feed_url: null }).catch((thrown) => thrown);
+      assert.equal(readProblem(error), "blocked");
+    }
+  });
+  await withSites({ [PAGE_URL]: f5 }, async () => {
+    const error = await readSource({ url: PAGE_URL, kind: "documents" }).catch((thrown) => thrown);
+    assert.equal(readProblem(error), "blocked");
+  });
+  // A page that works may carry the same script: its stories are read as usual.
+  await withSites({ [PAGE_URL]: PRESS_PAGE.replace("</head>", '<script src="/TSPD/08628e3686?type=10"></script></head>') }, async () => {
+    const result = await readSource({ url: PAGE_URL, feed_url: null });
+    assert.equal(result.stories.length, 4);
+  });
+});
+
 test("a new link the site says doesn't exist is left out; blocked or slow ones stay", async () => {
   const realFetch = globalThis.fetch;
   const answers = {

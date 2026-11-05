@@ -32,6 +32,7 @@ export const FEATURE_LABELS: Record<AnalyticsEvent, string> = {
     story_saved: 'Stories saved',
     digest_link_opened: 'Digest links opened',
     settings_changed: 'Settings changed',
+    load_more: 'Load more (past the first 50 stories)',
 };
 
 // A feature's row: use in documents lists is its own row.
