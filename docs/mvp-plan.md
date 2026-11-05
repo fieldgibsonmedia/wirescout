@@ -407,6 +407,27 @@ Why: the sign-up check (`hook_before_user_created`) runs only when an account is
 - Live impact: Account settings → change email, for everyone. Existing accounts and their emails are untouched. 1 migration (schema and security: Ken's ok, `workflow.md`).
 - Production steps (Ken), in this order: push the migration (`npx supabase db push`), then merge the release PR. The app calls `email_allowed`, so it must exist before the app deploys.
 
+### Daily digest on time (proposed 2026-11-05, not approved yet)
+
+Why: GitHub starts scheduled runs when it has capacity. On 2026-11-05 the digest ran at 11:20 and then 12:29 UTC (4 runs skipped), so Ken's 11:30 digest arrived at 12:29 (`docs/known-issues.md`, "GitHub starts scheduled runs late"). To be done in a new session.
+
+1. One migration: turn on `pg_cron` and `pg_net` (built into Supabase, free plan included). A function `public.start_digest()` (security definer, no execute for `public`, `anon`, `authenticated`) reads the secret `github_digest_token` from Vault (`vault.decrypted_secrets`) and, with `net.http_post`, calls GitHub's "run now" for the digest: `POST https://api.github.com/repos/fieldgibsonmedia/wirescout/actions/workflows/digest.yml/dispatches`, body `{"ref":"main"}`, headers `Authorization: Bearer <token>`, `Accept: application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28`, `User-Agent: wirescout`. No secret: it does nothing. A `pg_cron` job runs it at :05, :20, :35, :50 (same times as `digest.yml`).
+2. The local database has no secret, so it never contacts GitHub. Never put the token in the repo, a migration or the seed.
+3. `digest.yml` stays as it is: it already has `workflow_dispatch`, and its own schedule stays as a backup. Both starting at once is safe: `concurrency: digest` runs one at a time, and `profiles.last_digest_at` stops a second digest the same day.
+4. pgTAP tests: without the secret `start_digest()` queues no request (`net.http_request_queue` stays empty), signed-in users and visitors can't run it, the cron job exists with its schedule.
+5. Version 0.6.3, What's new: "Your daily digest now arrives on time, a few minutes after the time you chose." (Decisions, "Release notes").
+6. Docs: `docs/project.md` ("How the daily digest works", Layout's `digest.yml` line: started by the database every 15 minutes, GitHub's own schedule as backup), and the known issue updated.
+
+- The scanner and admin emails keep GitHub's timer: an hour late doesn't matter for them.
+- How to see a failed call: `select * from net._http_response order by created desc limit 5;` (SQL Editor). GitHub answers 204 when the run starts. A failed call costs nothing: GitHub's own schedule still sends the digest, late.
+- Live impact: when digests arrive, for everyone. Their content and who gets them don't change. 1 migration (schema: Ken's ok, `workflow.md`).
+- Production steps (Ken), in this order:
+    1. Create a fine-grained GitHub token (account `fieldgibsonmedia`): Settings → Developer settings → Fine-grained tokens. Resource owner `fieldgibsonmedia`, only the `wirescout` repository, permission Actions: Read and write, nothing else. Expiry: the longest allowed; record the date in `docs/progress.md`. When it expires, digests fall back to GitHub's late timer until Ken saves a new one.
+    2. Save it in the cloud project (SQL Editor): `select vault.create_secret('<token>', 'github_digest_token');`. A new token later: `select vault.update_secret((select id from vault.secrets where name = 'github_digest_token'), '<new token>');`.
+    3. Push the migration (`npx supabase db push --linked`).
+    4. Merge the release PR. Then check the next run in GitHub → Actions → Daily digest: its event is `workflow_dispatch`, a few seconds after :05, :20, :35 or :50.
+- Open before coding: Ken's "approve".
+
 ## Branches
 
 - Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.
