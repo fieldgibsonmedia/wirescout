@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { readDocuments } from "./documents.js";
+import { readDocuments, reuploadKey } from "./documents.js";
 
 const PAGE_URL = "https://www.issuer.example/investors/green-finance";
 
@@ -83,4 +83,33 @@ test("leaves out screen-reader text, and takes the table row around a link alone
   assert.equal(document.title, "Release");
   assert.equal(document.summary, "9th Sustainability Bond 2021/12/16 JPY 10.0 billion Release [PDF:98KB]");
   assert.equal(document.section, "History of sustainability bonds");
+});
+
+test("a PDF put up again under a new file name is a re-upload; a new title or section isn't", () => {
+  const saved = reuploadKey({
+    title: "Green Financing Framework",
+    url: "https://issuer.example/files/green-financing-framework.pdf",
+    section: "Green finance",
+  });
+
+  const renamed = {
+    title: "Green financing  framework",
+    url: "https://issuer.example/media/1763545120-green-financing-framework.pdf?v=2",
+    section: "Green  Finance",
+  };
+  assert.equal(reuploadKey(renamed), saved);
+
+  const nextYear = { title: "Impact report 2025", url: "https://issuer.example/files/impact-report-2025.pdf" };
+  assert.notEqual(reuploadKey(nextYear), reuploadKey({ title: "Impact report 2024", url: "https://issuer.example/files/impact-report-2024.pdf" }));
+
+  const otherFile = { title: "Green Financing Framework", url: "https://issuer.example/files/press-release.pdf", section: "Green finance" };
+  assert.notEqual(reuploadKey(otherFile), saved);
+
+  // The same notice for two different bonds.
+  const bond2027 = { title: "Result notice", url: "https://issuer.example/files/result-notice.pdf", section: "2027 Bonds" };
+  const bond2030 = { title: "Result notice", url: "https://issuer.example/files/result-notice-1.pdf", section: "2030 Bonds" };
+  assert.notEqual(reuploadKey(bond2030), reuploadKey(bond2027));
+
+  const accents = { title: "Rapport", url: "https://issuer.example/files/rapport-d%C3%A9taill%C3%A9-2024.pdf", section: null };
+  assert.equal(reuploadKey(accents), "rapport\n\nrapport-détaillé-pdf");
 });

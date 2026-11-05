@@ -91,3 +91,18 @@ function documentTitle(label, url) {
   }
   return cleanText(fileName.replace(/\.pdf$/i, "").replace(/[-_+]+/g, " ")) || text || url;
 }
+
+// What a re-uploaded PDF shares with the one already saved: its title and section (capitals and spaces ignored), and
+// its file name without the numbers sites add to it (1763545120-green-financing-framework.pdf). The "?…" part is
+// ignored. The section keeps apart different bonds' documents with the same title ("Result notice" under each bond).
+export function reuploadKey({ title, url, section }) {
+  let fileName = new URL(url).pathname.split("/").pop() ?? "";
+  try {
+    fileName = decodeURIComponent(fileName);
+  } catch {
+    // A stray "%" in the name: keep it as it is.
+  }
+  const name = fileName.toLowerCase().replace(/\d+/g, "").replace(/[^\p{L}]+/gu, "-").replace(/^-|-$/g, "");
+  const plain = (text) => (text ?? "").toLowerCase().replace(/\s+/g, " ").trim();
+  return `${plain(title)}\n${plain(section)}\n${name}`;
+}
