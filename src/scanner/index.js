@@ -52,9 +52,10 @@ await Promise.all(Array.from({ length: PARALLEL }, worker));
 
 const working = results.filter((result) => result.found > 0).length;
 const newStories = results.reduce((total, result) => total + result.saved, 0);
+const brokenLinks = results.reduce((total, result) => total + result.broken, 0);
 console.log(
   `Checked ${sources.length} sources: ${working} working, ${results.length - working} with no stories, ` +
-    `${failed} not saved. ${newStories} new stories.`,
+    `${failed} not saved. ${newStories} new stories, ${brokenLinks} broken links left out.`,
 );
 
 const scannerBreak = findScannerBreak(results);

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// A watch list's sources as a table (TanStack Table): search, sort by any column (failing sources first by
-// default), tick boxes to move or remove many at once, and a "⋯" menu on each row (Edit, Move to…, Remove),
+// A watch list's sources as a table (TanStack Table): the total, search, sort by any column (failing sources first by
+// default), 25 per page (or 50, 100), tick boxes to move or remove many at once, and a "⋯" menu on each row (Edit, Move to…, Remove),
 // plus Fix on failing sources. Each source's name opens its page on the site, failing or not, to see what's there. "Add sources" opens a dialog to paste links or upload a file.
 // On a phone each row stacks into a small card. Emits changed when the sources change, so the page reloads
 // its stories.
@@ -15,20 +15,23 @@ import {
 import {
     columnFilteringFeature,
     createFilteredRowModel,
+    createPaginatedRowModel,
     createSortedRowModel,
     filterFn_includesString,
     globalFilteringFeature,
+    rowPaginationFeature,
     rowSelectionFeature,
     rowSortingFeature,
     sortFn_text,
     tableFeatures,
     useTable,
     type ColumnDef,
+    type PaginationState,
     type RowSelectionState,
     type SortingState,
     type Updater,
 } from '@tanstack/vue-table';
-import { computed, ref, type Ref } from 'vue';
+import { computed, ref, watch, type Ref } from 'vue';
 import AddManySources from '@/components/AddManySources.vue';
 import SourceMenu from '@/components/SourceMenu.vue';
 import Alert from '@/components/ui/Alert.vue';
@@ -73,6 +76,8 @@ const features = tableFeatures({
     filteredRowModel: createFilteredRowModel(),
     filterFns: { includesString: filterFn_includesString },
     rowSelectionFeature,
+    rowPaginationFeature,
+    paginatedRowModel: createPaginatedRowModel(),
 });
 
 // Failing sources first, then the ones not checked yet, then the working ones.
@@ -102,6 +107,8 @@ const columns: ColumnDef<typeof features, Source, unknown>[] = [
 const search = ref('');
 const sorting = ref<SortingState>([{ id: 'status', desc: false }]);
 const rowSelection = ref<RowSelectionState>({});
+const PAGE_SIZES = [25, 50, 100];
+const pagination = ref<PaginationState>({ pageIndex: 0, pageSize: PAGE_SIZES[0] });
 
 // The table changes its state through these, so the refs stay the one place it lives.
 function updates<T>(target: Ref<T>) {
@@ -114,8 +121,16 @@ const table = useTable<typeof features, Source>({
     features,
     columns,
     data: sources,
-    state: computed(() => ({ sorting: sorting.value, globalFilter: search.value, rowSelection: rowSelection.value })),
+    state: computed(() => ({
+        sorting: sorting.value,
+        globalFilter: search.value,
+        rowSelection: rowSelection.value,
+        pagination: pagination.value,
+    })),
     onSortingChange: updates(sorting),
+    onPaginationChange: updates(pagination),
+    // Removing a source keeps the page; a search starts again from the first (below).
+    autoResetPageIndex: false,
     onGlobalFilterChange: updates(search),
     onRowSelectionChange: updates(rowSelection),
     getRowId: (source) => source.id,
@@ -124,11 +139,34 @@ const table = useTable<typeof features, Source>({
     enableSortingRemoval: false,
 });
 
+// The sources on the page shown, and how many match the search on all pages.
 const rows = computed(() => table.getRowModel().rows);
+const matchCount = computed(() => table.getPrePaginatedRowModel().rows.length);
+const pageCount = computed(() => table.getPageCount());
+
+// "350 sources", or while searching "12 of 350 sources".
+const totalText = computed(() => {
+    const total = sources.value.length === 1 ? '1 source' : `${sources.value.length} sources`;
+    return search.value ? `${matchCount.value} of ${total}` : total;
+});
+
+watch(search, () => {
+    pagination.value = { ...pagination.value, pageIndex: 0 };
+});
+// After removing or moving sources, the last page may be gone: show the one before.
+watch(pageCount, (count) => {
+    if (pagination.value.pageIndex >= count && count > 0) {
+        pagination.value = { ...pagination.value, pageIndex: count - 1 };
+    }
+});
+
+function setPageSize(event: Event) {
+    pagination.value = { pageIndex: 0, pageSize: Number((event.target as HTMLSelectElement).value) };
+}
 const selected = computed(() => Object.keys(rowSelection.value).filter((id) => rowSelection.value[id]));
 const allShownSelected = computed(() => rows.value.length > 0 && rows.value.every((row) => rowSelection.value[row.id]));
 
-// The header tick box ticks or clears the sources shown (after the search), not hidden ones.
+// The header tick box ticks or clears the sources on the page shown (after the search), not hidden ones.
 function toggleAllShown() {
     const next = { ...rowSelection.value };
     const select = !allShownSelected.value;
@@ -351,6 +389,8 @@ async function move() {
             <Button variant="ghost" @click="rowSelection = {}">Clear</Button>
         </div>
 
+        <p v-if="sources.length > 0" role="status" class="text-sm text-base-content/70">{{ totalText }}</p>
+
         <Card v-if="sources.length === 0">
             <p class="max-w-prose">No sources yet. Add one to start seeing its {{ kind === 'documents' ? 'PDFs' : 'stories' }}.</p>
         </Card>
@@ -440,6 +480,20 @@ async function move() {
                 </tbody>
             </table>
         </div>
+
+        <nav v-if="matchCount > PAGE_SIZES[0]" aria-label="Sources pages" class="flex flex-wrap items-center justify-between gap-3">
+            <label class="flex items-center gap-2 text-sm">
+                Per page
+                <select class="select select-sm w-auto" :value="pagination.pageSize" @change="setPageSize">
+                    <option v-for="size in PAGE_SIZES" :key="size" :value="size">{{ size }}</option>
+                </select>
+            </label>
+            <div class="flex items-center gap-2">
+                <Button variant="outline" :disabled="!table.getCanPreviousPage()" @click="table.previousPage()">Previous</Button>
+                <span class="text-sm" aria-live="polite">Page {{ pagination.pageIndex + 1 }} of {{ pageCount }}</span>
+                <Button variant="outline" :disabled="!table.getCanNextPage()" @click="table.nextPage()">Next</Button>
+            </div>
+        </nav>
     </div>
 
     <Dialog v-model:open="addingSources" title="Add sources">

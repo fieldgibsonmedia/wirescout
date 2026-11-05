@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { feedMatchesPage, readProblem, readSource } from "./read-source.js";
+import { feedMatchesPage, readProblem, readSource, withoutBrokenLinks } from "./read-source.js";
 
 const httpError = (status) => Object.assign(new Error(`HTTP ${status}`), { status });
 
@@ -89,3 +89,27 @@ test("a documents source reads the PDFs on the page, never the feed it names", (
       assert.deepEqual(result.stories.map((story) => story.url), ["https://www.example.com/files/green-bond-report-2025.pdf"]);
     },
   ));
+
+test("a new link the site says doesn't exist is left out; blocked or slow ones stay", async () => {
+  const realFetch = globalThis.fetch;
+  const answers = {
+    // Gothenburg serves its PDFs only with the query after ".pdf".
+    "https://goteborg.example/pricing-supplement.pdf?MOD=AJPERES": 200,
+    "https://goteborg.example/pricing-supplement.pdf": 404,
+    "https://issuer.example/old-report.pdf": 410,
+    "https://issuer.example/members-only.pdf": 403,
+  };
+  globalThis.fetch = async (url) => {
+    if (!(url in answers)) throw new TypeError("fetch failed");
+    return new Response("%PDF", { status: answers[url] });
+  };
+  try {
+    const stories = [...Object.keys(answers), "https://slow.example/report.pdf"].map((url) => ({ url }));
+    assert.deepEqual(
+      (await withoutBrokenLinks(stories)).map((story) => story.url),
+      ["https://goteborg.example/pricing-supplement.pdf?MOD=AJPERES", "https://issuer.example/members-only.pdf", "https://slow.example/report.pdf"],
+    );
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

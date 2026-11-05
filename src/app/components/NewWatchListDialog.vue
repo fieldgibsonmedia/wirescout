@@ -57,7 +57,8 @@ async function create() {
 <template>
     <FormDialog v-model:open="open" title="New watch list" submit-label="Create" :busy="busy" :errors="errors" @submit="create">
         <TextField v-model="name" name="name" label="Name" :error="errors.name" autocomplete="off" required />
-        <fieldset>
+        <!-- mt-8: 32px between the name field and the choice, so they don't read as one block. -->
+        <fieldset class="mt-8">
             <legend class="font-medium">Follows</legend>
             <label v-for="option in kinds" :key="option.value" class="flex min-h-11 cursor-pointer items-center gap-4 py-2">
                 <input v-model="kind" type="radio" name="kind" :value="option.value" class="radio radio-primary" />

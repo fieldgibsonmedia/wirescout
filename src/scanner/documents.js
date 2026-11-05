@@ -69,17 +69,12 @@ function isHeading($element) {
   return $element.is("h1, h2, h3, h4, h5, h6, [role=heading], summary, button[aria-expanded]");
 }
 
-// The PDF's full address, or null if the link isn't a PDF. A query after ".pdf" is usually a cache key
-// (?modified=20260430), so it's left out: otherwise the same file would come back as new.
+// The PDF's full address, as the page writes it, or null if the link isn't a PDF. A query after ".pdf" stays:
+// some sites need it to serve the file (Gothenburg's ?MOD=AJPERES).
 function pdfLink(href, pageUrl, label, type) {
   const url = cleanLink(href, pageUrl);
   if (!url) return null;
-  const parsed = new URL(url);
-  if (/\.pdf$/i.test(parsed.pathname)) {
-    parsed.search = "";
-    return parsed.toString();
-  }
-  return /\bpdf\b/i.test(label) || /pdf/i.test(type ?? "") ? url : null;
+  return /\.pdf$/i.test(new URL(url).pathname) || /\bpdf\b/i.test(label) || /pdf/i.test(type ?? "") ? url : null;
 }
 
 // The link's text without size notes, or the file's name when the text says nothing ("Download", "120").

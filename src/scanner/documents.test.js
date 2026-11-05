@@ -14,7 +14,7 @@ test("finds every PDF with the section heading above it, and leaves out the menu
         <li><a href="/files/spo-2025.pdf">Second Party Opinion [PDF:652KB]</a></li>
       </ul>
       <h2>Reporting</h2>
-      <a href="/files/report-2025.pdf?modified=20260430">Green Financing Investor Report 2025</a>
+      <a href="/files/report-2025.pdf?MOD=AJPERES">Green Financing Investor Report 2025</a>
       <a href="/investors/annual-report">Annual report web page</a>
     </main>
     <footer><a href="/files/privacy.pdf">Privacy notice of the issuer</a></footer>
@@ -29,8 +29,8 @@ test("finds every PDF with the section heading above it, and leaves out the menu
         section: "Green Financing Framework",
       },
       { url: "https://www.issuer.example/files/spo-2025.pdf", title: "Second Party Opinion", section: "Green Financing Framework" },
-      // The query after ".pdf" is a cache key: the same file would otherwise come back as new.
-      { url: "https://www.issuer.example/files/report-2025.pdf", title: "Green Financing Investor Report 2025", section: "Reporting" },
+      // The query after ".pdf" stays: some sites need it to serve the file.
+      { url: "https://www.issuer.example/files/report-2025.pdf?MOD=AJPERES", title: "Green Financing Investor Report 2025", section: "Reporting" },
     ],
   );
 });
