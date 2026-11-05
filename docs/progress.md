@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Document lists, job B (issuer names), v0.7.4
+
+- Job A committed, merged into `mvp` and pushed (Ken's "approve"). Ken's call: jobs B, C and D all go in the next release; failed links stay out of lists (refused at upload, listed in Rishi's file).
+- Done on branch `issuer-names`: an Excel or CSV upload to a documents list names each new source after its row's first cell (links behind cell text too), unless that cell is empty, a number or a link. News lists and pasted links unchanged; a source added before keeps its name. No migration. What's new, version 0.7.4.
+- Checked locally: type-check, unit tests; in the browser (dev account): a made-up CSV (a quoted name with a comma saved, a number skipped, an existing source kept nameless), then Rishi's whole file: 491 found, 347 added, 345 named from column A (e.g. IBRD for the World Bank link), the 2 without a name already existed; no console errors.
+- Found along the way: the local functions container kept a stale copy of `documents.js` until restarted (`docker restart supabase_edge_runtime_wirescout`).
+- Local test data: "Names test" and "Bond issuers" (347 sources) on the dev account.
+
 ## 2026-11-05: Document lists, job A (re-uploads, Rishi's list, usage by kind), v0.7.3
 
 - `working-links` (v0.7.2) committed and merged into `mvp`, `mvp` pushed (Ken's "approve").

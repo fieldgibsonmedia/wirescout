@@ -6,6 +6,12 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: [
+            'Uploading a spreadsheet of issuers to a bond documents list names each source after the issuer in its first column (e.g. "Covivio", not covivio.eu).',
+        ],
+    },
+    {
+        version: '0.7.3',
         notes: ['A PDF an issuer puts up again under a new file name no longer shows as new: you see it once.'],
     },
     {
