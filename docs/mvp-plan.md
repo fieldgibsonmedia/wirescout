@@ -379,7 +379,9 @@ Ken's 9 points from testing live, grouped into 3 jobs (one branch each, from `or
 - How to undo: revert the PR (back to `eu.i.posthog.com`). The DNS record and the proxy can stay.
 - Live impact: the web app (every user's analytics), and Ken's DNS record and PostHog setting. Ken's "approve" before coding.
 
-### Pages built with JavaScript (proposed 2026-11-05, not approved yet)
+### Pages built with JavaScript (proposed 2026-11-05, shelved the same day)
+
+Shelved (Ken, 2026-11-05): on live, 0 sources showed "No stories found" (63 read, 8 blocked). Pick it up again if such sources show up.
 
 Why: some sources show no stories, because their page is empty until a browser runs its JavaScript (`docs/known-issues.md`, "10 of the 23 old sources"). Ken picked this as the next fix (2026-11-05); to be done in a new session.
 

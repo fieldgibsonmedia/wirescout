@@ -14,6 +14,7 @@ Bugs found while working on something else. One entry each: date, what, where, h
 - Munich Re, Lloyd's, Hannover Re, Bank of England, Gallagher Re, Zurich, AIG (global), Tokio Marine, BaFin, Geneva Association: their pages build the story list with JavaScript, or turn away anything that isn't a browser. (Count from 2026-10-29; BaFin and Munich Re have stories only in menus.)
 - The scanner shows them as "No stories found" and the health email lists them on their first check.
 - Waiting on the AI fallback decision (`docs/mvp-plan.md`, "Scanning without selectors"), once we know how many sources journalists add fail.
+- Count on live, 2026-11-05: none of the sources in watch lists shows "No stories found"; 8 of 71 are blocked. The browser fix is shelved (`docs/mvp-plan.md`, "Pages built with JavaScript").
 
 ## 2026-10-29: A guessed or linked feed can hold more than the page
 
