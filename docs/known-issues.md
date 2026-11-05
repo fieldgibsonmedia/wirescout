@@ -8,7 +8,7 @@ Bugs found while working on something else. One entry each: date, what, where, h
 - So a digest can arrive 30–60 minutes after the chosen time.
 - 2026-11-03: the digest, set for every 15 minutes, ran only about once an hour on 2–3 November (35 runs in 35 hours). If that's too late, a more punctual trigger (an outside scheduler starting the workflow) is an option.
 - 2026-11-05: the digest ran at 11:20 and then 12:29 UTC (4 runs skipped): Ken's 11:30 digest arrived an hour late.
-- Fix planned (2026-11-05): the database starts the digest itself (`docs/mvp-plan.md`, "Daily digest on time").
+- Fix built and postponed (2026-11-05): the database starts the digest itself, on branch `digest-on-time` (`docs/mvp-plan.md`, "Daily digest on time").
 - See it: GitHub → Actions → a workflow's runs, against its cron times.
 
 ## 2026-11-05: The daily digest lands in Outlook's Junk folder

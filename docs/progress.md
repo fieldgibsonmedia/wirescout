@@ -2,6 +2,13 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: Digest on time, built and postponed
+
+- Built on branch `digest-on-time` (pushed, not merged): a `pg_cron` job starts `digest.yml` through GitHub's "run now", with a Vault token, at :05, :20, :35, :50. Version 0.6.3.
+- Checked locally: pgTAP (6 new tests, 153 in all), lint, unit tests, type-check, build; the local job ran on time and sent nothing.
+- Postponed by Ken: a digest late now and then is fine for now. How to pick it up: `docs/mvp-plan.md`, "Daily digest on time".
+- Next: ask Ken who runs the company's Microsoft 365 (to allow `wirescout.app`, so the digest stops landing in Junk).
+
 ## 2026-11-05: Digest late and in Junk, plan for the next session
 
 - Ken's 11:30 digest arrived at 12:29, in Outlook's Junk folder.

@@ -407,7 +407,7 @@ Why: the sign-up check (`hook_before_user_created`) runs only when an account is
 - Live impact: Account settings → change email, for everyone. Existing accounts and their emails are untouched. 1 migration (schema and security: Ken's ok, `workflow.md`).
 - Production steps (Ken), in this order: push the migration (`npx supabase db push`), then merge the release PR. The app calls `email_allowed`, so it must exist before the app deploys.
 
-### Daily digest on time (proposed 2026-11-05, not approved yet)
+### Daily digest on time (postponed 2026-11-05)
 
 Why: GitHub starts scheduled runs when it has capacity. On 2026-11-05 the digest ran at 11:20 and then 12:29 UTC (4 runs skipped), so Ken's 11:30 digest arrived at 12:29 (`docs/known-issues.md`, "GitHub starts scheduled runs late"). To be done in a new session.
 
@@ -426,7 +426,7 @@ Why: GitHub starts scheduled runs when it has capacity. On 2026-11-05 the digest
     2. Save it in the cloud project (SQL Editor): `select vault.create_secret('<token>', 'github_digest_token');`. A new token later: `select vault.update_secret((select id from vault.secrets where name = 'github_digest_token'), '<new token>');`.
     3. Push the migration (`npx supabase db push --linked`).
     4. Merge the release PR. Then check the next run in GitHub → Actions → Daily digest: its event is `workflow_dispatch`, a few seconds after :05, :20, :35 or :50.
-- Open before coding: Ken's "approve".
+- Postponed by Ken (2026-11-05): a digest late now and then is fine for now. Built and checked locally on branch `digest-on-time` (pushed, not merged). To pick it up: merge `origin/mvp` into that branch, run the checks again, then Ken's production steps above.
 
 ## Branches
 
