@@ -27,6 +27,7 @@ Agreed with Ken on 2026-10-27. Turns the prototype into an internal MVP for more
 | Bulk sources | File upload (`.xlsx`, `.csv`, `.txt`) with `read-excel-file`, loaded only for `.xlsx` | People expect to upload a file; paste-only was rejected. Keeps the app small for everyone else |
 | Analytics | PostHog, read in Wirescout's own Analytics screen (Ken, 2026-11-04, "After the first journalist", job 3). Before: our own usage report | Journalists use it now: Ken needs more than days and shares, without learning PostHog's UI |
 | Version | Every job that changes what users get (app, digest, emails) raises it, with a "What's new" entry (Ken, 2026-11-04): a fix or small tweak the last number (0.1.0 → 0.1.1), a new feature the middle one (0.1.0 → 0.2.0). Docs-only jobs don't. Every place that shows it reads `package.json`. Before: 0.1.0 until real users were invited | Journalists use it now: the version tells them what changed |
+| Release notes | List every change users get, security and dependency updates included. Most important first: security, then system, then features and fixes, looks (screens, icons) last (Ken, 2026-11-05) | v0.6.1 left out its security updates; journalists should see what matters most first |
 
 ## Scanning without selectors
 
