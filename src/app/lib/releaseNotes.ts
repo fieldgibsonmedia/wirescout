@@ -1,11 +1,15 @@
 // What's new in each version, newest first, for the dashboard's "What's new" card, in words a journalist would use.
 // The newest entry takes package.json's version, so the app shows one version everywhere. When the version goes up,
 // type the old number into this entry and add a new one on top. Every job that changes what users get raises the version
-// (docs/mvp-plan.md, Decisions).
+// (docs/mvp-plan.md, Decisions). Every change users get, security updates included, most important first: security,
+// then system, then features and fixes, looks (screens, icons) last.
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
-        notes: ['Fixed: a source could show stories from the whole website (e.g. blog posts) instead of only those on the page you added.'],
+        notes: [
+            'Security and stability: updated the parts that send emails and fetch web pages, with their latest security fixes.',
+            'Fixed: a source could show stories from the whole website (e.g. blog posts) instead of only those on the page you added.',
+        ],
     },
     {
         version: '0.6.0',
