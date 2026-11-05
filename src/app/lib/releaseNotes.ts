@@ -5,6 +5,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ["The Wirescout robot now shows in your browser tab and bookmarks, and on your phone's home screen if you add Wirescout there."],
+    },
+    {
+        version: '0.5.8',
         notes: ['For super admins: if you are the only one, Delete account opens a message with a button to System admins, to assign another first.'],
     },
     {
