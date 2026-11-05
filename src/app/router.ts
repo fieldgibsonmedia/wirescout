@@ -4,7 +4,7 @@
 // Signed-in pages are children of the layout, so the side nav stays in place between them.
 import { createRouter, createWebHistory } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { startAnalytics, track, trackPage } from '@/lib/analytics';
+import { startAnalytics, stopAnalytics, track, trackPage } from '@/lib/analytics';
 import { emailLink, supabase } from '@/lib/supabase';
 import AccountSettingsPage from '@/pages/AccountSettingsPage.vue';
 import AnalyticsPage from '@/pages/AnalyticsPage.vue';
@@ -100,7 +100,12 @@ router.afterEach(async (to) => {
         return;
     }
 
-    startAnalytics(data.session.user.id);
+    // A developer's own use would mislead the figures: their account is marked in SQL (docs/project.md, Admin tasks).
+    if (data.session.user.app_metadata.exclude_from_analytics) {
+        stopAnalytics();
+    } else {
+        startAnalytics(data.session.user.id);
+    }
     trackPage(String(to.name), Boolean(to.meta.superAdmin));
     if (to.query.from === 'digest') {
         track('digest_link_opened', to.name === 'story' ? { article_id: Number(to.params.storyId) } : undefined);
