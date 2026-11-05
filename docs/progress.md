@@ -2,6 +2,25 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-05: The robot as the browser tab icon, v0.5.9
+
+- The robot from `BrandIcon.vue` in white on a brand blue rounded square (Ken approved the plan with the square), lines a little thicker to stay clear at 16 px: `public/favicon.svg`, plus `favicon-32.png` for browsers without SVG icons and `apple-touch-icon.png` (180 px, square corners: iPhone rounds them itself). `index.html` points to the 3. Version 0.5.9 with its "What's new"; the Brand decision in `docs/mvp-plan.md` adds the tab icon.
+- PNGs made from the SVG with headless Chrome (no new dependency).
+- Checked: type-check, build (the 3 icons and their links in `dist/`); `npm run dev` serves all 3 with the right types; the icon at 16 px on light and dark tab-bar colours (a mock-up, not a real tab bar).
+- Not checked: a real browser tab, Safari, and an iPhone home screen.
+- Release: web app only. Browsers cache tab icons, so some people see it a day or so late.
+
+## 2026-11-04: Release of v0.5.5 to v0.5.8 (PR #29)
+
+- Tested locally by Ken before the release (all 5 jobs, the digest and access request emails in Mailpit). His changes while testing: the robot and name centred on the sign-in cards, the cards a little wider, "Manager", not "Settings → Manager", in the access request email.
+- Done by Ken on 2026-11-04: `scan-new-sources` redeployed (before the merge), then PR #29 merged at 16:12 UTC (`9c3571c`).
+- The web app deploy waited about 22 minutes in GitHub's queue (GitHub Actions partial outage, Pages degraded on githubstatus.com), then started. Checked on 2026-11-05: it passed, `wirescout.app` serves v0.5.8 (checked in its code) and `wirescout.app/brand-icon.png` answers (200, PNG). The digest and admin emails run from `main`, so they had the new code from the merge on (the admin run at 16:28 UTC passed).
+- Done by Ken on 2026-11-05: the 3 templates from `supabase/templates/` pasted into Supabase → Authentication → Emails (confirm signup, reset password, change email address), subjects unchanged.
+- Checked on live by Ken (2026-11-05): a reset password email shows the robot in Outlook once he allowed external images (Outlook blocks them by default).
+- Checked on live by Ken (2026-11-05): the daily digest shows the robot without allowing images first.
+- Still to check on live: the sign-in screens, and the access request email's wording at the next request.
+- Next: Ken's pick. Offered, not agreed: the robot as the browser tab icon (favicon).
+
 ## 2026-11-04: Only super admin: a dialog instead of a message, v0.5.8
 
 - Ken's point: the "only super admin" message showed under Delete account, at the bottom of the page, easy to miss. Delete account now opens a dialog: "Assign another super admin first", the same text, Cancel and Go to System admins (System settings → System admins). Version 0.5.8 with its "What's new".
