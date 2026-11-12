@@ -2,10 +2,19 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-12: End of session (2), where things stand
+
+- v0.7.9 is live (PR #34): every uploaded link added, Sources filter, date headings, New until seen. No open branch of this update.
+- This note is on branch `next-update` (from `main`): the next update's jobs go there, or rename it when Ken names the update.
+- To check next session: the scanner run at 17:17 UTC on the new code (GitHub Actions, scanner.yml); `source_filter` and `mark_all_read` in Analytics → Features used.
+- Still open from before: `digest-on-time` (postponed, pushed, not merged; merge `origin/main` into it to pick it up); the bond team's first list.
+- Local: database reset at release (only the seeded dev account). Ken's test file `~/Downloads/wirescout-upload-test.csv`, not committed.
+
 ## 2026-11-12: Release of update `upload-feedback` (v0.7.6 to v0.7.9)
 
 - Done by Ken on 2026-11-12, before the merge: migration `20261112153954_seen_stories` pushed (`npx supabase db push --linked`), `scan-new-sources` and `analytics` redeployed.
-- Next: Ken merges the PR; then check the deploy run and `wirescout.app` serving v0.7.9.
+- Released: PR #34 merged by Ken at 16:09 UTC; the deploy passed and `wirescout.app` serves v0.7.9 (checked in its code). Branch `upload-feedback` deleted.
+- Still to check: the first scanner run on the new code (17:17 UTC); `source_filter` and `mark_all_read` in Analytics → Features used once journalists use them.
 
 ## 2026-11-12: New stays until seen, v0.7.9 (update `upload-feedback`, job 4)
 
