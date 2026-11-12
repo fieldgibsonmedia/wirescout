@@ -17,6 +17,7 @@ export const FEATURES = [
   "digest_link_opened",
   "settings_changed",
   "load_more",
+  "source_filter",
 ];
 
 // PostHog runs at most 3 queries at once per project.

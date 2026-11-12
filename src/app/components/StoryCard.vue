@@ -2,6 +2,7 @@
 // One story: "New" marker, source and date, "Sent to <magazine>" when someone already sent it there, for a documents
 // list's PDF its label ("Impact report") and the section it's in on the page,
 // the title (opens the story on its own site), summary, the Share menu and Save. Used in the watch list and on the story's own page. Bind the saved state with v-model:saved.
+// filterBySource: the source name is a button that emits source (the watch list then shows only that source's stories).
 import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/20/solid';
 import { computed, watch } from 'vue';
 import SaveButton from '@/components/SaveButton.vue';
@@ -21,6 +22,11 @@ const props = defineProps<{
     isNew?: boolean;
     label?: string;
     section?: string | null;
+    filterBySource?: boolean;
+}>();
+
+const emit = defineEmits<{
+    source: [];
 }>();
 
 const saved = defineModel<boolean>('saved', { required: true });
@@ -35,7 +41,10 @@ const sentTo = computed(() => magazines.value.filter((magazine) => storySends.va
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-base-content/70">
             <Badge v-if="isNew" variant="success" size="sm">New</Badge>
             <Badge v-if="label" size="sm">{{ label }}</Badge>
-            <span>{{ source }}</span>
+            <button v-if="filterBySource" type="button" class="link link-hover" @click="emit('source')">
+                {{ source }}<span class="sr-only">: show only its stories</span>
+            </button>
+            <span v-else>{{ source }}</span>
             <span v-if="section">{{ section }}</span>
             <span>{{ date }}</span>
             <Badge v-for="magazine in sentTo" :key="magazine.id" variant="outline" size="sm">Sent to {{ magazine.name }}</Badge>

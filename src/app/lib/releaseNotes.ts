@@ -7,6 +7,12 @@ export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
         notes: [
+            'A watch list can show only the stories of the sources you pick: use the Sources menu next to search, click a source\'s name on a story, or choose See its stories in the Sources tab. Each source shows how many new stories it has.',
+        ],
+    },
+    {
+        version: '0.7.6',
+        notes: [
             "Adding sources from a file or a pasted list now adds every link, even one that doesn't work yet. A short message says how many work, and the ones with a problem show at the top of the Sources tab, in red, each with a Fix button.",
         ],
     },

@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-12: Source filter, v0.7.7 (update `upload-feedback`, job 2)
+
+- Plan for jobs 2 to 4 approved by Ken (`docs/mvp-plan.md`, "Feedback from PostHog recordings").
+- Done: a "Sources" dropdown next to search (working sources only, Ken; several sources, its own search box, new stories per source, most new first); search and filter work together; a story's source name filters to it; Sources tab → "See its stories" / "See its PDFs". `source_filter` event, shown in Analytics → Features used. What's new, version 0.7.7.
+- Checked: unit tests (86), type-check, build; in the browser (dev account, Regulators): counts (1 and 1), picking a source, the dropdown's search, search + filter ("green" none in Example Regulator), Show all sources, the source name on a card, See its stories; no console errors.
+- Not checked: a documents list's dropdown, phone width, the event reaching PostHog (no PostHog locally).
+- Release: redeploy `analytics` too (its list of features).
+
 ## 2026-11-12: End of session, where things stand
 
 - Branch `upload-feedback` (from `main`, pushed): the first update of a batch Ken will add to. Job 1 (every uploaded link added, v0.7.6) done, tested by Ken and committed. No PR yet: it comes after the batch's last job.

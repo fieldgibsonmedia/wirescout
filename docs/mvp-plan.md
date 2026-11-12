@@ -488,6 +488,19 @@ Next jobs (agreed with Ken 2026-11-05, for a new session; each needs its own pla
 - Live impact: the scanner, the app's source adding and the digest are live for journalists; their news lists must work exactly as now. The migration changes the sources' unique key: push it just before merging, as source adding fails in between.
 - Production steps (Ken): `ANTHROPIC_API_KEY` in GitHub secrets (done 2026-11-05); push the migrations; deploy the `check-links` and `scan-new-sources` functions (they run the scanner's code, which reads PDFs now); their email domain on the allowed list.
 
+## Feedback from PostHog recordings (update `upload-feedback`, 2026-11-12)
+
+Ken watched journalists' recordings. One update, one branch from `main`, released together:
+
+1. Job 1 (v0.7.6, done): a file or pasted list adds every link, working or not; one short message with the counts; the failing ones show in the Sources tab with Fix. The red box only for a file that can't be added.
+2. Job 2 (v0.7.7, done): a journalist scrolled endlessly looking for one source's stories. A "Sources" dropdown next to search (working sources only; several sources, its own search box), each with its new stories ("BBC (8)"), most new first, then A to Z; the search looks only in the picked sources. A story's source name filters to it; Sources tab → "See its stories". Event `source_filter`.
+3. Job 3 (v0.7.8): date headings in news lists (Today, Yesterday, This week, Earlier), by date found, in the reader's time zone. Not in documents lists (nearly all PDFs are found on day one).
+4. Job 4 (v0.7.9): New stays until seen. Opening the list cleared every New mark, so an interrupted visit lost them. A story loses New once its headline has been on screen about a second, or it's opened; "Mark all as read" clears the rest. The dashboard count, side nav badge and dropdown counts follow the same marks. A "seen stories" table (migration, pgTAP tests); stories seen before stay seen. Event `mark_all_read`.
+    - Research behind it (Ken asked, 2026-11-12): notification screens clear the badge on open but keep each item unread (LinkedIn messaging); news readers mark read on open, "Mark all as read" or scroll (Feedly's "Auto-Mark As Read On Scroll", an option). Ken ruled out "read only when opened": journalists skim headlines and open few.
+
+- Live impact: the watch list page and the dashboard counts for every journalist. The scanner changes only for job 1 (documents' first check). The digest doesn't change.
+- Production steps (Ken), at release: push job 4's migration just before merging; redeploy `scan-new-sources` (job 1) and `analytics` (job 2's new event in Features used).
+
 ## Branches
 
 - Since 2026-11-12 (Ken): no `mvp` branch. Each update is a branch from `main`, holding the jobs Ken groups into it, and goes live through one PR that Ken merges.
