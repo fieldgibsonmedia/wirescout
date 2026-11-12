@@ -37,6 +37,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 - `.github/workflows/admin.yml`: emails `ADMIN_EMAIL` new access requests, every hour at :40.
 - `src/admin/index.js`: the access request emails (below). `emails.js` writes them. Tests next to it.
 - `src/app/lib/analytics.ts`: sends usage to PostHog (pages, main features, errors, replays). `pages/AnalyticsPage.vue` shows it; `lib/usagePdf.ts` makes its PDF.
+- `src/app/lib/seenStories.ts`: a story stays New until its card has been on screen for a second, or it's opened (`seen_stories`); "Mark all as read" moves `watch_lists.last_viewed_at` (`mark_all_read`). The view `watch_list_articles.is_new` is the one rule for the marks and every count.
 - `src/app/lib/magazines.ts`: the magazines, the user's connections and who already sent which story (`story_sends`), for Settings → Channels, the Share menu and the Send dialog (`components/SendDraftDialog.vue`).
 - `src/app/lib/releaseNotes.ts`: the dashboard's "What's new". Add notes with each release. Its newest entry and the side nav take the version from `package.json`. Every job that changes what users get raises the version (`docs/mvp-plan.md`, Decisions).
 - `src/digest/index.js`: the digest (below). `due.js` decides who gets one, `email.js` writes it. Tests next to them.
@@ -77,7 +78,7 @@ The logs show only totals: the repo is public, and which sources people follow i
 
 ## Usage analytics and admin emails
 
-- The app sends usage to PostHog (EU, project 334525), only while someone is signed in, tied to their user id: the screens they open, the main features (sources added, stories shared, drafts sent, searches, stories saved, digest links opened, settings changed, Load more, stories filtered by source), errors, and replays with typed text hidden. Nothing is kept in the browser (no cookies). Locally there's no key, so nothing is sent.
+- The app sends usage to PostHog (EU, project 334525), only while someone is signed in, tied to their user id: the screens they open, the main features (sources added, stories shared, drafts sent, searches, stories saved, digest links opened, settings changed, Load more, stories filtered by source, Mark all as read), errors, and replays with typed text hidden. Nothing is kept in the browser (no cookies). Locally there's no key, so nothing is sent.
 - Super admins read it in Manager → Analytics, over 1 Day, 1 Week, 1 Month, 6 Months, 1 Year or All, and download the numbers as a PDF. Features used in documents lists are their own rows (`list_kind`).
 - New accounts must agree to the privacy policy at sign-up; `profiles.privacy_accepted_at` records when (empty for accounts made before v0.5.0).
 - Ad blockers (e.g. Privacy Badger, uBlock Origin) block PostHog's own addresses, so their users aren't counted yet. Fix planned: PostHog's managed reverse proxy (`docs/mvp-plan.md`).

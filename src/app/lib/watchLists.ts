@@ -8,8 +8,8 @@ export type ListKind = 'news' | 'documents';
 
 export const watchLists = ref<{ id: string; name: string; keywords: string[]; kind: ListKind }[]>([]);
 
-// Each list's stories found since the user last opened it, through its keywords: the side nav's badges
-// and the dashboard's big numbers.
+// Each list's stories still marked New (not seen yet, lib/seenStories.ts), through its keywords: the side nav's
+// badges and the dashboard's big numbers.
 export const newCounts = ref(new Map<string, number>());
 
 // Both the side nav and the dashboard open the "New watch list" dialog, which lives in the layout.

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // A watch list in two tabs: Stories (newest first, 50 at a time) and Sources (SourcesTab), which shows how
-// many sources are failing. Opening it marks the stories shown as seen, so the dashboard's new count starts
-// again from zero. Stories come from watch_list_articles, which keeps only those matching the list's keywords;
+// many sources are failing. A story stays New until its card has been on screen (lib/seenStories.ts), or until
+// "Mark all as read". Stories come from watch_list_articles, which keeps only those matching the list's keywords;
 // the search box narrows them further. ?tab=sources opens the Sources tab (the digest's failing-sources link).
 // The name and keywords follow the watchLists store, so an edit from the side nav shows here too.
 // The Stories tab switches between all stories and the saved ones (newest save first, all at once). The Sources dropdown
@@ -24,9 +24,10 @@ import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import SearchField from '@/components/ui/SearchField.vue';
 import { track } from '@/lib/analytics';
+import { useSeenStories } from '@/lib/seenStories';
 import { listLabel, SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
-import { documentKindLabel, loadNewCounts, watchLists, type ListKind } from '@/lib/watchLists';
+import { documentKindLabel, loadNewCounts, newCounts, watchLists, type ListKind } from '@/lib/watchLists';
 
 const props = defineProps<{
     id: string;
@@ -49,14 +50,10 @@ type Article = {
 
 // Stories shown per page: "Load more" adds the next ones.
 const PAGE_SIZE = 50;
-// Rows Supabase sends at most per request.
-const MAX_ROWS = 1000;
 // Wait this long after the last key press before searching.
 const SEARCH_DELAY_MS = 300;
 
 const name = ref('');
-// When the user last opened this list: stories first seen after it are new.
-const lastViewedAt = ref('');
 const keywords = ref<string[]>([]);
 const kind = ref<ListKind>('news');
 const sources = ref<Source[]>([]);
@@ -108,6 +105,9 @@ const sourceOptions = computed(() =>
 // Counts story loads, so an answer that arrives after a newer search started is dropped.
 let request = 0;
 
+const { observe } = useSeenStories(props.id);
+const markingRead = ref(false);
+
 const tab = ref(useRoute().query.tab === 'sources' ? 'sources' : 'stories');
 const failingSources = computed(() => sources.value.filter((source) => source.problem).length);
 
@@ -140,7 +140,7 @@ async function load() {
     failed.value = false;
 
     const [list, listSources, savedStories] = await Promise.all([
-        supabase.from('watch_lists').select('name, last_viewed_at, keywords, kind').eq('id', props.id).maybeSingle(),
+        supabase.from('watch_lists').select('name, keywords, kind').eq('id', props.id).maybeSingle(),
         supabase.from('watch_list_sources').select(`sources (${SOURCE_COLUMNS})` as const).eq('watch_list_id', props.id).order('created_at'),
         supabase.from('saved_stories').select('article_id').eq('watch_list_id', props.id),
     ]);
@@ -157,7 +157,6 @@ async function load() {
     }
 
     name.value = list.data.name;
-    lastViewedAt.value = list.data.last_viewed_at;
     keywords.value = list.data.keywords;
     kind.value = list.data.kind as ListKind;
     view.value = kind.value === 'documents' ? 'bond' : 'all';
@@ -168,28 +167,26 @@ async function load() {
     loading.value = false;
 }
 
-// Counts each source's new stories (as the New marker: found since the last visit), a page of rows at a time.
-// If it fails, the dropdown shows no numbers.
+// Each source's new stories (the New marks). If it fails, the dropdown shows no numbers.
 async function loadNewBySource() {
-    const counts = new Map<string, number>();
-    for (let start = 0; ; start += MAX_ROWS) {
-        const { data, error } = await supabase
-            .from('watch_list_articles')
-            .select('source_id')
-            .eq('watch_list_id', props.id)
-            .eq('counts_as_new', true)
-            .gt('first_seen_at', lastViewedAt.value)
-            .order('id')
-            .range(start, start + MAX_ROWS - 1);
-        if (error) {
-            return;
-        }
-        data.forEach((row) => counts.set(row.source_id, (counts.get(row.source_id) ?? 0) + 1));
-        if (data.length < MAX_ROWS) {
-            break;
-        }
+    const { data, error } = await supabase.from('watch_list_source_new_counts').select('source_id, new_count').eq('watch_list_id', props.id);
+    if (!error) {
+        newBySource.value = new Map(data.map((count) => [count.source_id ?? '', count.new_count ?? 0]));
     }
-    newBySource.value = counts;
+}
+
+// Every story found until now loses its New mark, here and in the counts.
+async function markAllRead() {
+    markingRead.value = true;
+    const { error } = await supabase.rpc('mark_all_read', { list_id: props.id });
+    markingRead.value = false;
+    if (error) {
+        return;
+    }
+    track('mark_all_read', { list_kind: kind.value });
+    articles.value.forEach((article) => (article.isNew = false));
+    newBySource.value = new Map();
+    loadNewCounts();
 }
 
 async function loadArticles() {
@@ -214,14 +211,6 @@ async function loadArticles() {
     hasMore.value = data.length > PAGE_SIZE;
     shownSearch.value = term;
     shownFiltered.value = pickedSources.value.length > 0;
-
-    // Mark as seen up to the newest story shown (not "now"), so stories found while the page loads stay new.
-    // Not while searching or showing some sources: newer stories they hide would lose their "New".
-    const newest = data[0]?.first_seen_at;
-    if (!term && !shownFiltered.value && newest && new Date(newest) > new Date(lastViewedAt.value)) {
-        await supabase.from('watch_lists').update({ last_viewed_at: newest }).eq('id', props.id);
-        loadNewCounts();
-    }
 }
 
 async function loadMore() {
@@ -253,7 +242,7 @@ async function loadMore() {
 function fetchArticles(offset: number, term: string) {
     let query = supabase
         .from('watch_list_articles')
-        .select('id, url, title, summary, published_at, first_seen_at, source_id, section, document_kind, counts_as_new')
+        .select('id, url, title, summary, published_at, first_seen_at, source_id, section, document_kind, is_new')
         .eq('watch_list_id', props.id);
     if (view.value === 'bond') {
         query = query.or('document_kind.is.null,document_kind.neq.other');
@@ -316,7 +305,7 @@ function toArticle(article: {
     source_id: string;
     section: string | null;
     document_kind: string | null;
-    counts_as_new?: boolean | null;
+    is_new?: boolean | null;
 }): Article {
     return {
         id: article.id,
@@ -327,8 +316,8 @@ function toArticle(article: {
         foundAt: new Date(article.first_seen_at),
         sourceId: article.source_id,
         source: sources.value.find((source) => source.id === article.source_id)?.label ?? '',
-        // What was on a documents list's pages at their first check, and its "other" PDFs, are never new.
-        isNew: article.counts_as_new !== false && new Date(article.first_seen_at) > new Date(lastViewedAt.value),
+        // Saved stories come without it: no mark.
+        isNew: article.is_new ?? false,
         label: kind.value === 'documents' ? documentKindLabel(article.document_kind) : undefined,
         section: article.section,
     };
@@ -419,17 +408,22 @@ onMounted(load);
                         <SearchField v-model="search" :label="kind === 'documents' ? 'Search documents' : 'Search stories'" />
                         <SourceFilter v-model="pickedSources" :sources="sourceOptions" />
                     </template>
-                    <div class="join ms-auto" role="group" aria-label="Show">
-                        <button
-                            v-for="option in viewOptions"
-                            :key="option.value"
-                            type="button"
-                            :class="['btn join-item', view === option.value ? 'btn-primary' : 'border-base-300 bg-base-100']"
-                            :aria-pressed="view === option.value"
-                            @click="view = option.value"
-                        >
-                            {{ option.label }}
-                        </button>
+                    <div class="ms-auto flex flex-wrap items-center gap-2">
+                        <Button v-if="view !== 'saved' && (newCounts.get(id) ?? 0) > 0" variant="ghost" :busy="markingRead" @click="markAllRead">
+                            Mark all as read
+                        </Button>
+                        <div class="join" role="group" aria-label="Show">
+                            <button
+                                v-for="option in viewOptions"
+                                :key="option.value"
+                                type="button"
+                                :class="['btn join-item', view === option.value ? 'btn-primary' : 'border-base-300 bg-base-100']"
+                                :aria-pressed="view === option.value"
+                                @click="view = option.value"
+                            >
+                                {{ option.label }}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -494,7 +488,11 @@ onMounted(load);
                     <section v-for="group in articleGroups" :key="group.heading" class="flex flex-col gap-4">
                         <h2 v-if="group.heading" class="text-xl font-bold">{{ group.heading }}</h2>
                         <ul class="flex flex-col gap-4">
-                            <li v-for="article in group.articles" :key="article.id">
+                            <li
+                            v-for="article in group.articles"
+                            :key="article.id"
+                            :ref="(element) => article.isNew && observe(element as Element | null, article.id)"
+                        >
                                 <StoryCard
                                     filter-by-source
                                     :watch-list-id="id"

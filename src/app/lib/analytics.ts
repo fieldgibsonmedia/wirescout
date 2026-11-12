@@ -21,7 +21,8 @@ export type AnalyticsEvent =
     | 'digest_link_opened'
     | 'settings_changed'
     | 'load_more'
-    | 'source_filter';
+    | 'source_filter'
+    | 'mark_all_read';
 
 // The signed-in user, or '' while signed out: nothing is sent then, not even errors or replays.
 let userId = '';

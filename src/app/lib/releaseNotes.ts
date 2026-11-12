@@ -6,6 +6,12 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: [
+            'A story now stays New until you\'ve seen it: once its headline has been on your screen, or you\'ve opened it. Opening a watch list no longer clears every New mark, so an interrupted visit loses nothing. "Mark all as read" clears them all at once.',
+        ],
+    },
+    {
+        version: '0.7.8',
         notes: ['A news list\'s stories now sit under headings by when Wirescout found them: Today, Yesterday, Last 7 days and Earlier.'],
     },
     {

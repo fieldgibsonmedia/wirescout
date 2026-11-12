@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-12: New stays until seen, v0.7.9 (update `upload-feedback`, job 4)
+
+- Done: a story loses New once at least half its card has been on screen for a second, or it's opened (story page, the digest's link); "Mark all as read" clears the rest. Opening the list no longer clears anything. The dashboard count, side nav badge and Sources dropdown counts follow the same marks. Migration `20261112153954_seen_stories.sql`: table `seen_stories`, `watch_list_articles.is_new`, view `watch_list_source_new_counts`, function `mark_all_read`. Event `mark_all_read`. What's new, version 0.7.9.
+- Checked: pgTAP (168, 11 new in `seen_stories.test.sql`), db lint, unit tests, type-check, build; in the browser (Wire, made new again locally): the 4 headlines on screen saved as seen, 116 still new in the counts; Mark all as read cleared marks, button and counts; opening a story page marked it seen; no console errors.
+- Found while testing: in the automated browser, the "on screen" check only runs when the window repaints (screenshots); in a normal browser it runs continuously. A hidden or minimised window should mark nothing (not checked).
+- Not checked: phone, the event reaching PostHog.
+- Release (Ken): push the migration just before merging (until then the old app keeps working: the view only gains a column).
+
 ## 2026-11-12: Date headings, v0.7.8 (update `upload-feedback`, job 3)
 
 - Done: a news list's stories under Today, Yesterday, Last 7 days and Earlier, by date found, in the reader's time zone ("Last 7 days", not "This week": a rolling week, so Monday isn't nearly empty). Documents lists and Saved: no headings. What's new, version 0.7.8.
