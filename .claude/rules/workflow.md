@@ -76,6 +76,7 @@ When Ken runs a production step (migration push, function deploy, dashboard sett
     3. **Tested:** the commands and their results.
     4. **Not tested:** what, and why.
     5. **Before you merge:** everything that happens on live at merge, or "nothing special". That covers the deploy itself, migrations, schema changes, new env variables and crons.
+        - Each step Ken runs comes with its exact command or click, where to run it (folder, branch) and the order. Never a step without its how (Ken, 2026-11-12).
     6. **How to undo:** revert the PR, plus any extra step.
 - If the branch fell behind `main`, merge `origin/main` into it (no rebase: on a pushed branch that needs a force-push) and run the checks again before asking for review.
 
