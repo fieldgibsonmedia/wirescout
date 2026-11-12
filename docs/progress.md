@@ -5,7 +5,7 @@ Newest first. One entry per job: date, what was done, what's next.
 ## 2026-11-12: End of session (2), where things stand
 
 - v0.7.9 is live (PR #34): every uploaded link added, Sources filter, date headings, New until seen. No open branch of this update.
-- This note is on branch `next-update` (from `main`): the next update's jobs go there, or rename it when Ken names the update.
+- Branch `next-update` (from `main`, pushed) holds this note and a new rule (`workflow.md`: every production step in a PR comes with its exact command). The next update's jobs go there, or rename it when Ken names the update.
 - To check next session: the scanner run at 17:17 UTC on the new code (GitHub Actions, scanner.yml); `source_filter` and `mark_all_read` in Analytics → Features used.
 - Still open from before: `digest-on-time` (postponed, pushed, not merged; merge `origin/main` into it to pick it up); the bond team's first list.
 - Local: database reset at release (only the seeded dev account). Ken's test file `~/Downloads/wirescout-upload-test.csv`, not committed.
