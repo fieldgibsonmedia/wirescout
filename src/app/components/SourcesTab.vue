@@ -497,7 +497,7 @@ async function move() {
     </div>
 
     <Dialog v-model:open="addingSources" title="Add sources">
-        <AddManySources :watch-list-id="watchListId" :sources="sources" @added="onAdded" />
+        <AddManySources :watch-list-id="watchListId" :sources="sources" @added="onAdded" @done="addingSources = false" />
     </Dialog>
 
     <FormDialog

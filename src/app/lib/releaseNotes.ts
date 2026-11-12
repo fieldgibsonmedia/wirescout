@@ -7,6 +7,12 @@ export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
         notes: [
+            "Adding sources from a file or a pasted list now adds every link, even one that doesn't work yet. A short message says how many work, and the ones with a problem show at the top of the Sources tab, in red, each with a Fix button.",
+        ],
+    },
+    {
+        version: '0.7.5',
+        notes: [
             "Bond documents lists find PDFs on more issuers' pages, including pages built with JavaScript.",
             'A site that shows Wirescout a robot check now says "the site blocks Wirescout", not "no stories found".',
         ],

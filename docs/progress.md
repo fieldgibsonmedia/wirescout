@@ -2,6 +2,15 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-12: Every uploaded link added, v0.7.6 (update branch `upload-feedback`, job 1)
+
+- Ken's call: no more `mvp`. Deleted locally and on GitHub (it held only the last progress note, now on this branch). Updates branch from `main`, one PR each, several jobs per update; rules changed to match.
+- Done: pasted or uploaded links are all added, working or not, and read once right away (no separate link check first). One short message with the counts and a "See sources" button; the failing ones are at the top of the Sources tab, in red, with Fix. The red box is only for a file or list that can't be added. The dialog's buttons stay at the bottom; only the content scrolls. What's new, version 0.7.6. Tested by Ken locally.
+- Scanner: a documents source that failed its checks so far has its first check when it first finds PDFs, so a broken link fixed later doesn't flood the digest.
+- Checked locally: unit tests (86), type-check, build; in the browser (dev account, list "Upload test"): a CSV with 1 working and 3 broken links (all 4 added, 3 red with their reason), a link already in the list; a failed documents source made to work: its 39 PDFs saved as found on first check.
+- Not checked: the scanner change before the fix (no test for `check-source.js`).
+- Release: no migration. Redeploy `scan-new-sources`: it bundles the scanner's `check-source.js`.
+
 ## 2026-11-05: Released bond document lists, v0.7.5 (PR #33)
 
 - Done by Ken on 2026-11-05, in this order: the 3 migrations pushed (`20261105143948_document_lists`, `20261105150652_document_lists_app`, `20261105164307_document_reuploads`), `check-links`, `scan-new-sources` and `analytics` deployed, then PR #33 merged at 18:08 UTC.
