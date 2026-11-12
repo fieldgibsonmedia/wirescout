@@ -14,7 +14,7 @@ An internal Field Gibson Media tool for journalists, in production since 2026-11
     - GitHub Actions runs it every hour (`.github/workflows/scanner.yml`), installing only the runtime packages (`npm ci --omit=dev`).
 - Daily digest: Node.js 22, same packages as the scanner. GitHub Actions runs it every 15 minutes (`.github/workflows/digest.yml`).
 - Admin emails: the same again, every hour (`.github/workflows/admin.yml`).
-- Git: GitHub (`fieldgibsonmedia/wirescout`), public. `main` is live; MVP work goes into `mvp`, and each finished stage is merged into `main`.
+- Git: GitHub (`fieldgibsonmedia/wirescout`), public. `main` is live; each update is built on its own branch and merged into `main` through a PR.
 
 The MVP stack is decided in `docs/mvp-plan.md`. Built so far:
 
@@ -64,7 +64,7 @@ All code lives in `src/`: the web app in `src/app/`, the scanner in `src/scanner
 3. Save the stories whose link is new for that source and opens: each new link is opened once, and one the site says doesn't exist (404, 410) waits for the next scan. Blocked or slow links are saved. Stories are never deleted.
 4. Record the source's status: last checked, stories found, feed or page.
 5. If the scanner itself looks broken (at least half of the sources that found stories last time find none, and at least 3), email `ADMIN_EMAIL`. Once per break, not every hour. One failing source emails nobody: the journalist sees it in the digest and the Sources tab.
-6. Documents lists (`docs/mvp-plan.md`, "Document lists for bond alerts"): the PDFs on a source's page at its first check are kept but aren't new (`articles.found_on_first_check`). Claude Haiku 5.5 labels each PDF (`articles.document_kind`: allocation report, impact report, framework, SPO, new bond issue, or other), up to 2,000 a run; what's left, or failed, is labelled next run. Unlabelled PDFs are shown. A page without PDF links is also searched for PDF addresses in its own data (pages built with JavaScript). Only bond documents count as new (`watch_list_articles.counts_as_new`). A PDF with the same title, section and file name, apart from its numbers, as one already saved from that source is a re-upload (`articles.is_reupload`): shown, never new.
+6. Documents lists (`docs/mvp-plan.md`, "Document lists for bond alerts"): the PDFs on a source's page at its first check are kept but aren't new (`articles.found_on_first_check`); a source added with a broken link has its first check when it first finds PDFs. Claude Haiku 5.5 labels each PDF (`articles.document_kind`: allocation report, impact report, framework, SPO, new bond issue, or other), up to 2,000 a run; what's left, or failed, is labelled next run. Unlabelled PDFs are shown. A page without PDF links is also searched for PDF addresses in its own data (pages built with JavaScript). Only bond documents count as new (`watch_list_articles.counts_as_new`). A PDF with the same title, section and file name, apart from its numbers, as one already saved from that source is a re-upload (`articles.is_reupload`): shown, never new.
 
 The logs show only totals: the repo is public, and which sources people follow is theirs.
 

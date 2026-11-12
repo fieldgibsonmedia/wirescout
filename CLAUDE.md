@@ -57,12 +57,12 @@ Wirescout is in production since 2026-11-03, when Ken invited the first journali
 ## Git hosting
 
 - GitHub (`fieldgibsonmedia/wirescout`), public.
-- `main` is the live branch. `mvp` collects the MVP work; each finished stage goes from `mvp` into `main`.
-    - Branch from the latest `origin/mvp`.
-    - After Ken says "approve" on a finished job: commit it, merge its branch into `mvp`, push `mvp` and delete the job branch, all in one go (`safety.md`, "Never commit or merge without asking"). No PR and no PR text for jobs: the PR rules in `workflow.md` apply only to releases (`mvp` into `main`). Mistakes there can be undone.
-    - Only Ken merges `mvp` into `main`, once per finished stage. Before each release, merge `origin/main` into `mvp` (it may have commits made directly on `main`).
+- `main` is the live branch. Each update gets its own branch from the latest `origin/main`, and goes into `main` through one PR (Ken, 2026-11-12).
+    - An update can hold several jobs: Ken says which ones belong together. They all go on the update's branch.
+    - After Ken says "approve" on a finished job: commit it on the update's branch and push the branch (`safety.md`, "Never commit or merge without asking").
+    - Only Ken merges the PR into `main`. Before opening it, merge `origin/main` into the branch (it may have commits made directly on `main`).
     - `main` must stay the GitHub default branch: scheduled workflows run from the default branch, so switching it would put unreleased work live.
-- `gh` is installed and signed in as `fieldgibsonmedia` (the company account Ken works under). For a release PR: push `mvp`, show Ken the PR title and description, and after he says "approve" open it yourself (`gh pr create --base main --head mvp`). Only Ken merges it: merging PRs from here is denied in `.claude/settings.json`.
+- `gh` is installed and signed in as `fieldgibsonmedia` (the company account Ken works under). For an update's PR: push its branch, show Ken the PR title and description, and after he says "approve" open it yourself (`gh pr create --base main`). Only Ken merges it: merging PRs from here is denied in `.claude/settings.json`.
 - No mention of Claude, Claude Code or AI in branch names, commits or PRs.
 
 ## Security rules
