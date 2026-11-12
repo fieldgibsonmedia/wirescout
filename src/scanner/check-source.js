@@ -21,8 +21,10 @@ export async function checkSource(supabase, source) {
     result = { stories: [], readFrom: source.read_from, feedUrl: source.feed_url };
   }
 
-  // A documents source's first check finds what was already on the page: kept, but not news.
-  const firstCheck = source.kind === "documents" && !source.last_checked_at;
+  // A documents source's first check finds what was already on the page: kept, but not news. A source that
+  // failed its checks so far (a broken link, fixed on the site later) has saved nothing yet: still its first.
+  const firstCheck =
+    source.kind === "documents" && (!source.last_checked_at || (!source.stories_found && !(await hasSaved(supabase, source.id))));
 
   // Each new link is opened once before it's saved: one the site says doesn't exist waits for the next scan,
   // so nobody gets a broken link.
@@ -72,6 +74,13 @@ export async function checkSource(supabase, source) {
     broken: newStories.length - working.length,
     error,
   };
+}
+
+// Whether this source has saved any story yet.
+async function hasSaved(supabase, sourceId) {
+  const { data, error } = await supabase.from("articles").select("id").eq("source_id", sourceId).limit(1);
+  if (error) throw error;
+  return data.length > 0;
 }
 
 // The re-upload keys of every PDF this source has saved, read a page at a time (Supabase sends 1,000 rows at most).
