@@ -2,6 +2,11 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-12: Release of update `upload-feedback` (v0.7.6 to v0.7.9)
+
+- Done by Ken on 2026-11-12, before the merge: migration `20261112153954_seen_stories` pushed (`npx supabase db push --linked`), `scan-new-sources` and `analytics` redeployed.
+- Next: Ken merges the PR; then check the deploy run and `wirescout.app` serving v0.7.9.
+
 ## 2026-11-12: New stays until seen, v0.7.9 (update `upload-feedback`, job 4)
 
 - Done: a story loses New once at least half its card has been on screen for a second, or it's opened (story page, the digest's link); "Mark all as read" clears the rest. Opening the list no longer clears anything. The dashboard count, side nav badge and Sources dropdown counts follow the same marks. Migration `20261112153954_seen_stories.sql`: table `seen_stories`, `watch_list_articles.is_new`, view `watch_list_source_new_counts`, function `mark_all_read`. Event `mark_all_read`. What's new, version 0.7.9.
