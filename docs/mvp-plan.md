@@ -426,7 +426,7 @@ Why: GitHub starts scheduled runs when it has capacity. On 2026-11-05 the digest
     2. Save it in the cloud project (SQL Editor): `select vault.create_secret('<token>', 'github_digest_token');`. A new token later: `select vault.update_secret((select id from vault.secrets where name = 'github_digest_token'), '<new token>');`.
     3. Push the migration (`npx supabase db push --linked`).
     4. Merge the release PR. Then check the next run in GitHub → Actions → Daily digest: its event is `workflow_dispatch`, a few seconds after :05, :20, :35 or :50.
-- Postponed by Ken (2026-11-05): a digest late now and then is fine for now. Built and checked locally on branch `digest-on-time` (pushed, not merged). To pick it up: merge `origin/mvp` into that branch, run the checks again, then Ken's production steps above.
+- Postponed by Ken (2026-11-05): a digest late now and then is fine for now. Built and checked locally on branch `digest-on-time` (pushed, not merged). To pick it up: merge `origin/main` into that branch, run the checks again, then Ken's production steps above.
 
 ### Document lists for bond alerts (approved 2026-11-05)
 
@@ -490,9 +490,9 @@ Next jobs (agreed with Ken 2026-11-05, for a new session; each needs its own pla
 
 ## Branches
 
-- Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.
-- Each finished stage is released: Ken merges `mvp` into `main` through a PR, and it goes live (decided 2026-10-29, so stages are tested live instead of waiting for the whole MVP).
-- Merge `main` into `mvp` before each release, in case `main` has commits of its own.
+- Since 2026-11-12 (Ken): no `mvp` branch. Each update is a branch from `main`, holding the jobs Ken groups into it, and goes live through one PR that Ken merges.
+- Merge `origin/main` into the update's branch before its PR, in case `main` has commits of its own.
+- Before 2026-11-12: jobs merged into `mvp`, and Ken merged `mvp` into `main` once per stage.
 
 ## Build order
 

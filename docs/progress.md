@@ -2,6 +2,14 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-12: End of session, where things stand
+
+- Branch `upload-feedback` (from `main`, pushed): the first update of a batch Ken will add to. Job 1 (every uploaded link added, v0.7.6) done, tested by Ken and committed. No PR yet: it comes after the batch's last job.
+- Next: Ken's next update for this branch. When the batch is done: merge `origin/main` into the branch, run the "Before a PR" checks, then the PR (`gh pr create --base main`) after Ken's "approve".
+- At release (Ken): no migration; redeploy `scan-new-sources` (it runs the changed `check-source.js`). Add any later jobs' steps here.
+- Still open from before: `digest-on-time` (postponed, pushed, not merged); the checks listed under "Released bond document lists" below.
+- Local test data on the dev account: "Upload test" (documents list, 4 sources). Ken's test file: `~/Downloads/wirescout-upload-test.csv` (not committed).
+
 ## 2026-11-12: Every uploaded link added, v0.7.6 (update branch `upload-feedback`, job 1)
 
 - Ken's call: no more `mvp`. Deleted locally and on GitHub (it held only the last progress note, now on this branch). Updates branch from `main`, one PR each, several jobs per update; rules changed to match.
