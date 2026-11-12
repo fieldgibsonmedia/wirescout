@@ -6,6 +6,10 @@
 export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
+        notes: ['A news list\'s stories now sit under headings by when Wirescout found them: Today, Yesterday, Last 7 days and Earlier.'],
+    },
+    {
+        version: '0.7.7',
         notes: [
             'A watch list can show only the stories of the sources you pick: use the Sources menu next to search, click a source\'s name on a story, or choose See its stories in the Sources tab. Each source shows how many new stories it has.',
         ],

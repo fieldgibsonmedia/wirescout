@@ -2,6 +2,12 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-12: Date headings, v0.7.8 (update `upload-feedback`, job 3)
+
+- Done: a news list's stories under Today, Yesterday, Last 7 days and Earlier, by date found, in the reader's time zone ("Last 7 days", not "This week": a rolling week, so Monday isn't nearly empty). Documents lists and Saved: no headings. What's new, version 0.7.8.
+- Checked: type-check, build; in the browser: Wire with 6 local stories dated today, yesterday and 3 days ago, under the right headings, the rest under Earlier; a documents list without headings; no console errors.
+- Local test data: 6 of Wire's stories re-dated (back with `npx supabase db reset`).
+
 ## 2026-11-12: Source filter, v0.7.7 (update `upload-feedback`, job 2)
 
 - Plan for jobs 2 to 4 approved by Ken (`docs/mvp-plan.md`, "Feedback from PostHog recordings").

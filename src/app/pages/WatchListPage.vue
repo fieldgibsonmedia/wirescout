@@ -6,7 +6,8 @@
 // The name and keywords follow the watchLists store, so an edit from the side nav shows here too.
 // The Stories tab switches between all stories and the saved ones (newest save first, all at once). The Sources dropdown
 // shows only the stories of the sources picked, each with its new stories ("BBC (8)"); the search then looks only in
-// those.
+// those. A news list's stories sit under headings by when they were found: Today, Yesterday, Last 7 days, Earlier
+// (a documents list has none: nearly all its PDFs are found on the first day).
 // A documents list (bond alerts) has a Documents tab instead, showing the bond documents by default: the PDFs
 // labelled as one, and those not labelled yet, so nothing is missed. "All PDFs" shows the others too.
 import { ExclamationTriangleIcon } from '@heroicons/vue/20/solid';
@@ -37,6 +38,8 @@ type Article = {
     title: string;
     summary: string | null;
     date: string;
+    // When Wirescout found it: the list's order, and its heading.
+    foundAt: Date;
     sourceId: string;
     source: string;
     isNew: boolean;
@@ -107,6 +110,28 @@ let request = 0;
 
 const tab = ref(useRoute().query.tab === 'sources' ? 'sources' : 'stories');
 const failingSources = computed(() => sources.value.filter((source) => source.problem).length);
+
+// The stories shown, under their headings (in the reader's time zone). One group without a heading for a documents list.
+const articleGroups = computed(() => {
+    if (kind.value === 'documents') {
+        return [{ heading: '', articles: articles.value }];
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const daysAgo = (days: number) => new Date(today.getFullYear(), today.getMonth(), today.getDate() - days);
+    const headings = [
+        { heading: 'Today', from: today },
+        { heading: 'Yesterday', from: daysAgo(1) },
+        { heading: 'Last 7 days', from: daysAgo(6) },
+        { heading: 'Earlier', from: new Date(0) },
+    ];
+    return headings
+        .map(({ heading, from }, index) => ({
+            heading,
+            articles: articles.value.filter((article) => article.foundAt >= from && (index === 0 || article.foundAt < headings[index - 1].from)),
+        }))
+        .filter((group) => group.articles.length > 0);
+});
 
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -299,6 +324,7 @@ function toArticle(article: {
         title: article.title,
         summary: article.summary,
         date: dateFormat.format(new Date(article.published_at ?? article.first_seen_at)),
+        foundAt: new Date(article.first_seen_at),
         sourceId: article.source_id,
         source: sources.value.find((source) => source.id === article.source_id)?.label ?? '',
         // What was on a documents list's pages at their first check, and its "other" PDFs, are never new.
@@ -464,26 +490,31 @@ onMounted(load);
                     </p>
                 </Card>
 
-                <ul v-else class="flex flex-col gap-4">
-                    <li v-for="article in articles" :key="article.id">
-                        <StoryCard
-                            filter-by-source
-                            @source="showSource(article.sourceId)"
-                            :watch-list-id="id"
-                            :article-id="article.id"
-                            :title="article.title"
-                            :url="article.url"
-                            :summary="article.summary"
-                            :source="article.source"
-                            :date="article.date"
-                            :is-new="article.isNew"
-                            :label="article.label"
-                            :section="article.section"
-                            :saved="savedIds.has(article.id)"
-                            @update:saved="setSaved(article.id, $event)"
-                        />
-                    </li>
-                </ul>
+                <template v-else>
+                    <section v-for="group in articleGroups" :key="group.heading" class="flex flex-col gap-4">
+                        <h2 v-if="group.heading" class="text-xl font-bold">{{ group.heading }}</h2>
+                        <ul class="flex flex-col gap-4">
+                            <li v-for="article in group.articles" :key="article.id">
+                                <StoryCard
+                                    filter-by-source
+                                    :watch-list-id="id"
+                                    :article-id="article.id"
+                                    :title="article.title"
+                                    :url="article.url"
+                                    :summary="article.summary"
+                                    :source="article.source"
+                                    :date="article.date"
+                                    :is-new="article.isNew"
+                                    :label="article.label"
+                                    :section="article.section"
+                                    :saved="savedIds.has(article.id)"
+                                    @update:saved="setSaved(article.id, $event)"
+                                    @source="showSource(article.sourceId)"
+                                />
+                            </li>
+                        </ul>
+                    </section>
+                </template>
 
                 <div v-if="view !== 'saved' && (hasMore || moreFailed)" class="flex flex-col items-start gap-2">
                     <Alert v-if="moreFailed" type="error">More stories couldn't be loaded. Please try again.</Alert>

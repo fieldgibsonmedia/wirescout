@@ -4,6 +4,8 @@ Ideas not planned yet, with what we know about them. Newest first. Each one need
 
 ## Stories grouped and filtered by date (Ken, 2026-11-05)
 
+Update 2026-11-12: headings built for news lists (v0.7.8, `docs/mvp-plan.md`, "Feedback from PostHog recordings"). The time range filter and documents lists below stay postponed.
+
 The idea: a list's stories (news and documents) under headings by when they were found (Today, This week, Last month, Last 6 months, Last year, Older), and a filter icon next to the view switch that opens a time range (Today | This week | Last month | Last 6 months | Last year | All).
 
 Postponed (Ken, 2026-11-05), because:
