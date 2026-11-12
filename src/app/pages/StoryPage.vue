@@ -8,6 +8,7 @@ import { onMounted, ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import StoryCard from '@/components/StoryCard.vue';
 import Alert from '@/components/ui/Alert.vue';
+import { markSeen } from '@/lib/seenStories';
 import { sourceLabel } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
 import { documentKindLabel } from '@/lib/watchLists';
@@ -69,6 +70,8 @@ async function load() {
     }
 
     listName.value = list.data.name;
+    // Opened, so seen: it loses its New mark.
+    markSeen(props.id, [Number(props.storyId)]);
     saved.value = Boolean(savedStory.data);
     story.value = {
         title: article.data.title,

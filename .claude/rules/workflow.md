@@ -23,8 +23,8 @@ Core rule, adapted for Wirescout. Last edited: 2026-10-27.
 
 ## Doing the work
 
-- One job = one branch = one PR.
-- Branch from the latest `origin/mvp`.
+- One update = one branch = one PR. An update can hold several jobs: Ken says which ones go together (Ken, 2026-11-12).
+- Branch from the latest `origin/main`.
 - Make the smallest change that fully solves the task.
 - Problems found along the way: note them where `CLAUDE.md` says. Don't fix them in this branch.
 - Dependencies:
@@ -48,7 +48,7 @@ Core rule, adapted for Wirescout. Last edited: 2026-10-27.
 - The task is unclear, or it needs a decision on product, money, data or direction.
 - 3 attempts have failed (the ladder in `code-style.md`, "When something doesn't work").
 - You can't reproduce the bug, can't run the tests, or can't verify the fix.
-- The branch conflicts with `mvp`, or another open branch changes the same code.
+- The branch conflicts with `main`, or another open branch changes the same code.
 - The change touches any of these:
     - database schema, content types or migrations
     - login, permissions or security
@@ -68,8 +68,8 @@ When Ken runs a production step (migration push, function deploy, dashboard sett
 
 ## The pull request
 
-- **When to open one:** once per job, when the job is done and Ken says "approve". Changes agreed along the way collect on the job's branch; don't push or open a PR for each one.
-- **One concern per PR:** a PR holds only changes for its own job. Something unrelated found along the way (e.g. a bug in another feature) is a separate job: note it (see "Doing the work"), never fold it in.
+- **When to open one:** once per update, when its last job is done and Ken says "approve". Its jobs and the changes agreed along the way collect on the update's branch; don't open a PR for each one.
+- **One concern per PR:** a PR holds only changes for its own update's jobs. Something unrelated found along the way (e.g. a bug in another feature) is a separate job: note it (see "Doing the work"), never fold it in.
 - **The PR description, in this order:**
     1. **What and why:** 2–3 lines.
     2. **Live impact:** who could be affected, and what you checked.
@@ -77,7 +77,7 @@ When Ken runs a production step (migration push, function deploy, dashboard sett
     4. **Not tested:** what, and why.
     5. **Before you merge:** everything that happens on live at merge, or "nothing special". That covers the deploy itself, migrations, schema changes, new env variables and crons.
     6. **How to undo:** revert the PR, plus any extra step.
-- If the branch fell behind `mvp`, merge `origin/mvp` into it (no rebase: on a pushed branch that needs a force-push) and run the checks again before asking for review.
+- If the branch fell behind `main`, merge `origin/main` into it (no rebase: on a pushed branch that needs a force-push) and run the checks again before asking for review.
 
 ## Finishing (housekeeping)
 
@@ -88,4 +88,4 @@ When Ken runs a production step (migration push, function deploy, dashboard sett
 - Branches:
     - Delete a branch once it's merged, locally and on GitHub.
     - Ask before deleting an unmerged branch.
-    - Never delete `main` or `mvp`.
+    - Never delete `main`.

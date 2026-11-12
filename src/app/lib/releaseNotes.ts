@@ -7,6 +7,28 @@ export const releaseNotes: { version: string; notes: string[] }[] = [
     {
         version: __APP_VERSION__,
         notes: [
+            'A story now stays New until you\'ve seen it: once its headline has been on your screen, or you\'ve opened it. Opening a watch list no longer clears every New mark, so an interrupted visit loses nothing. "Mark all as read" clears them all at once.',
+        ],
+    },
+    {
+        version: '0.7.8',
+        notes: ['A news list\'s stories now sit under headings by when Wirescout found them: Today, Yesterday, Last 7 days and Earlier.'],
+    },
+    {
+        version: '0.7.7',
+        notes: [
+            'A watch list can show only the stories of the sources you pick: use the Sources menu next to search, click a source\'s name on a story, or choose See its stories in the Sources tab. Each source shows how many new stories it has.',
+        ],
+    },
+    {
+        version: '0.7.6',
+        notes: [
+            "Adding sources from a file or a pasted list now adds every link, even one that doesn't work yet. A short message says how many work, and the ones with a problem show at the top of the Sources tab, in red, each with a Fix button.",
+        ],
+    },
+    {
+        version: '0.7.5',
+        notes: [
             "Bond documents lists find PDFs on more issuers' pages, including pages built with JavaScript.",
             'A site that shows Wirescout a robot check now says "the site blocks Wirescout", not "no stories found".',
         ],

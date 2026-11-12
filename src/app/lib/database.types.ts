@@ -223,10 +223,72 @@ isOneToOne: false
       foreignKeyName: "saved_stories_watch_list_id_fkey"
       columns: ["watch_list_id"]
 isOneToOne: false
+      referencedRelation: "watch_list_source_new_counts"
+      referencedColumns: ["watch_list_id"]
+    },{
+      foreignKeyName: "saved_stories_watch_list_id_fkey"
+      columns: ["watch_list_id"]
+isOneToOne: false
       referencedRelation: "watch_list_stats"
       referencedColumns: ["watch_list_id"]
     },{
       foreignKeyName: "saved_stories_watch_list_id_fkey"
+      columns: ["watch_list_id"]
+isOneToOne: false
+      referencedRelation: "watch_lists"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"seen_stories": {
+                  Row: {
+                    "article_id": number,"seen_at": string,"watch_list_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "article_id": number,"seen_at"?: string,"watch_list_id": string
+                  }
+                  Update: {
+                    "article_id"?: number,"seen_at"?: string,"watch_list_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "seen_stories_article_id_fkey"
+      columns: ["article_id"]
+isOneToOne: false
+      referencedRelation: "articles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "seen_stories_article_id_fkey"
+      columns: ["article_id"]
+isOneToOne: false
+      referencedRelation: "watch_list_articles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "seen_stories_watch_list_id_fkey"
+      columns: ["watch_list_id"]
+isOneToOne: false
+      referencedRelation: "watch_list_articles"
+      referencedColumns: ["watch_list_id"]
+    },{
+      foreignKeyName: "seen_stories_watch_list_id_fkey"
+      columns: ["watch_list_id"]
+isOneToOne: false
+      referencedRelation: "watch_list_new_counts"
+      referencedColumns: ["watch_list_id"]
+    },{
+      foreignKeyName: "seen_stories_watch_list_id_fkey"
+      columns: ["watch_list_id"]
+isOneToOne: false
+      referencedRelation: "watch_list_source_new_counts"
+      referencedColumns: ["watch_list_id"]
+    },{
+      foreignKeyName: "seen_stories_watch_list_id_fkey"
+      columns: ["watch_list_id"]
+isOneToOne: false
+      referencedRelation: "watch_list_stats"
+      referencedColumns: ["watch_list_id"]
+    },{
+      foreignKeyName: "seen_stories_watch_list_id_fkey"
       columns: ["watch_list_id"]
 isOneToOne: false
       referencedRelation: "watch_lists"
@@ -353,6 +415,12 @@ isOneToOne: false
       foreignKeyName: "watch_list_sources_watch_list_id_fkey"
       columns: ["watch_list_id"]
 isOneToOne: false
+      referencedRelation: "watch_list_source_new_counts"
+      referencedColumns: ["watch_list_id"]
+    },{
+      foreignKeyName: "watch_list_sources_watch_list_id_fkey"
+      columns: ["watch_list_id"]
+isOneToOne: false
       referencedRelation: "watch_list_stats"
       referencedColumns: ["watch_list_id"]
     },{
@@ -388,7 +456,7 @@ isOneToOne: false
           Views: {
             "watch_list_articles": {
                   Row: {
-                    "counts_as_new": boolean | null,"document_kind": string | null,"first_seen_at": string,"id": number,"published_at": string | null,"search_text": string | null,"section": string | null,"source_id": string,"summary": string | null,"title": string,"url": string,"watch_list_id": string
+                    "counts_as_new": boolean | null,"document_kind": string | null,"first_seen_at": string,"id": number,"is_new": boolean | null,"published_at": string | null,"search_text": string | null,"section": string | null,"source_id": string,"summary": string | null,"title": string,"url": string,"watch_list_id": string
                   }
                   ComputedFields: never
                   Relationships: [
@@ -414,6 +482,20 @@ isOneToOne: false
                         Relationships: [
                     
                   ]
+                },"watch_list_source_new_counts": {
+                  Row: {
+                    "new_count": number | null,"source_id": string,"watch_list_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "articles_source_id_fkey"
+      columns: ["source_id"]
+isOneToOne: false
+      referencedRelation: "sources"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"watch_list_stats": {
                   Row: {
                     "daily_counts": (number)[] | null,"failing_count": number | null,"latest_story_at": string | null,"saved_count": number | null,"source_count": number | null,"watch_list_id": string
@@ -436,6 +518,9 @@ isOneToOne: false
                            },
 "is_super_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"mark_all_read":
+{ Args: { "list_id": string }; Returns: undefined
                            },
 "mentions_any":
 { Args: { "content": string,"keywords": (string)[] }; Returns: boolean

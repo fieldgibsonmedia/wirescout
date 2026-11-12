@@ -1,6 +1,6 @@
 {
   "name": "wirescout",
-  "version": "0.7.5",
+  "version": "0.7.9",
   "description": "Lightweight scraper bot that monitors websites for new articles",
   "main": "src/scanner/index.js",
   "type": "module",

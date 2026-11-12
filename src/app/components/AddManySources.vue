@@ -7,9 +7,10 @@
 //   The user sees the list, then adds it with one button. For a documents list, each link from a file takes its
 //   row's first cell as the source's name (EF Data's issuer list: "Covivio", not covivio.eu), unless that cell is
 //   empty, a number or a link. Not for news lists: a source's name is shared by everyone who follows it.
-// Each link is checked first: the ones that fail aren't added, and the user sees why. The same address
-// written differently (http or https, www., a trailing slash) counts once.
-// Sources the scanner hasn't checked yet are read once right away, so their first stories (or PDFs) show now.
+// Every link is added, working or not (Ken, 2026-11-12). The same address written differently (http or https, www.,
+// a trailing slash) counts once. Sources the scanner hasn't checked yet are read once right away, so their first
+// stories (or PDFs) show now, and the ones that fail show in the Sources tab with why, and a Fix button. The result
+// is a few lines of counts; the error box is only for a file or list that can't be added at all.
 // The Excel reader is only downloaded when an .xlsx file is used.
 import { ArrowUpTrayIcon, PlusIcon } from '@heroicons/vue/20/solid';
 import { TabsContent, TabsIndicator, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
@@ -20,12 +21,9 @@ import TextAreaField from '@/components/ui/TextAreaField.vue';
 import {
     addressKey,
     addSources,
-    checkLinks,
-    checkMessages,
     isWebAddress,
     scanNewSources,
     uniqueAddresses,
-    type LinkCheck,
     type Source,
 } from '@/lib/sources';
 import { listKind } from '@/lib/watchLists';
@@ -37,6 +35,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     added: [sources: Source[]];
+    // "See sources" after adding: the Sources tab closes the dialog.
+    done: [];
 }>();
 
 // EF Data's issuer list has about 500 links: one upload. Checking and reading that many takes 5 to 10 minutes,
@@ -64,15 +64,19 @@ const found = ref<string[]>([]);
 // The names found in the file, by addressKey.
 const foundNames = ref(new Map<string, string>());
 const adding = ref(false);
-// While adding: how many links are checked (or sources read) so far, out of how many.
+// While adding: how many new sources are read so far, out of how many.
 const progress = ref({ done: 0, total: 0 });
 const progressText = computed(() => (progress.value.total > 1 ? ` ${progress.value.done} of ${progress.value.total}` : ''));
 // After adding: reading the new sources for their first stories.
 const scanning = ref(false);
 const addFailed = ref(false);
-const result = ref('');
-// The links that failed their check, one line per reason.
-const notAdded = ref<string[]>([]);
+// After adding: one line per count, e.g. "60 sources added and working."
+const result = ref<string[]>([]);
+// Whether some of the added sources fail: the result then shows as a warning.
+const someFail = ref(false);
+
+// How many links are being added, for the status line.
+const addingCount = computed(() => (tab.value === 'paste' ? pastedLinks.value.length : found.value.length));
 
 const foundLabel = computed(() => (found.value.length === 1 ? 'Found 1 address' : `Found ${found.value.length} addresses`));
 
@@ -151,8 +155,7 @@ function onChoose() {
 
 async function readFile(file: File) {
     fileError.value = '';
-    result.value = '';
-    notAdded.value = [];
+    result.value = [];
     addFailed.value = false;
     found.value = [];
     foundNames.value = new Map();
@@ -286,26 +289,19 @@ function findAddresses(text: string) {
     return uniqueAddresses(addresses);
 }
 
-// Checks the links and adds the ones that work. Returns false if they couldn't be added at all.
+// Adds the links, working or not, and reads the new ones once. Returns false if they couldn't be added at all.
 async function add(urls: string[], names = new Map<string, string>()) {
-    result.value = '';
-    notAdded.value = [];
+    result.value = [];
     const inList = new Set(props.sources.map((source) => addressKey(source.url)));
     const invalid = urls.filter((url) => !isWebAddress(url));
     const already = urls.filter((url) => isWebAddress(url) && inList.has(addressKey(url)));
-    const toCheck = urls.filter((url) => isWebAddress(url) && !inList.has(addressKey(url)));
+    const toAdd = urls.filter((url) => isWebAddress(url) && !inList.has(addressKey(url)));
 
     addFailed.value = false;
     let added: Source[] = [];
-    let failed: LinkCheck[] = [];
-    if (toCheck.length > 0) {
+    if (toAdd.length > 0) {
         adding.value = true;
-        progress.value = { done: 0, total: toCheck.length };
-        const checks = await checkLinks(toCheck, kind.value, () => progress.value.done++);
-        failed = checks.filter((check) => check.problem);
-        const working = checks.filter((check) => !check.problem).map((check) => check.url);
-        const response = working.length > 0 ? await addSources(props.watchListId, working, names) : [];
-
+        const response = await addSources(props.watchListId, toAdd, names);
         if (!response) {
             adding.value = false;
             addFailed.value = true;
@@ -318,32 +314,42 @@ async function add(urls: string[], names = new Map<string, string>()) {
         adding.value = false;
     }
 
+    const working = added.filter((source) => source.lastCheckedAt && !source.problem).length;
+    const failing = added.filter((source) => source.problem).length;
+    // A read that didn't finish (the function failed): the hourly scan checks it.
+    const unchecked = added.filter((source) => !source.lastCheckedAt).length;
     result.value = [
-        `${added.length} added`,
-        failed.length > 0 && `${failed.length} not added`,
-        already.length > 0 && `${already.length} already in the list`,
-        invalid.length === 1 && "1 isn't a web address",
-        invalid.length > 1 && `${invalid.length} aren't web addresses`,
-    ]
-        .filter(Boolean)
-        .join(', ');
-    notAdded.value = checkMessages(failed, kind.value);
+        working > 0 && `${count(working, 'source')} added and working.`,
+        failing === 1 && "1 source has a problem: it's at the top of the Sources tab, in red, with a Fix button.",
+        failing > 1 && `${failing} sources have problems: they're at the top of the Sources tab, in red, each with a Fix button.`,
+        unchecked > 0 && `${count(unchecked, 'source')} added, checked within the hour.`,
+        already.length === 1 && '1 was already in the list.',
+        already.length > 1 && `${already.length} were already in the list.`,
+        invalid.length === 1 && "1 isn't a web address, so it wasn't added.",
+        invalid.length > 1 && `${invalid.length} aren't web addresses, so they weren't added.`,
+    ].filter((line) => typeof line === 'string');
+    someFail.value = failing > 0;
     emit('added', added);
     return true;
+}
+
+function count(number: number, noun: string) {
+    return `${number} ${number === 1 ? noun : `${noun}s`}`;
 }
 </script>
 
 <template>
-    <!-- One fixed height for both tabs and their results, so the dialog never resizes; the content scrolls inside. -->
-    <!-- -mx-1 px-1: room for the fields' focus rings, which the scrolling box would otherwise cut at the sides. -->
-    <div class="-mx-1 flex h-[28rem] max-h-[calc(100dvh-12rem)] flex-col gap-3 overflow-y-auto px-1">
-        <TabsRoot v-model="tab" class="flex flex-col gap-3">
-            <TabsList aria-label="How to add sources" class="tabs tabs-border relative">
-                <TabsTrigger value="paste" class="tab data-[state=active]:tab-active">Paste links</TabsTrigger>
-                <TabsTrigger value="file" class="tab data-[state=active]:tab-active">Upload a file</TabsTrigger>
-                <TabsIndicator class="tab-indicator" />
-            </TabsList>
+    <!-- One fixed height for both tabs and their results, so the dialog never resizes. The tabs and the buttons stay
+         in place; only the content between them scrolls, so the buttons are always in sight. -->
+    <TabsRoot v-model="tab" class="flex h-[28rem] max-h-[calc(100dvh-12rem)] flex-col gap-3">
+        <TabsList aria-label="How to add sources" class="tabs tabs-border relative shrink-0">
+            <TabsTrigger value="paste" class="tab data-[state=active]:tab-active">Paste links</TabsTrigger>
+            <TabsTrigger value="file" class="tab data-[state=active]:tab-active">Upload a file</TabsTrigger>
+            <TabsIndicator class="tab-indicator" />
+        </TabsList>
 
+        <!-- -mx-1 px-1: room for the fields' focus rings, which the scrolling box would otherwise cut at the sides. -->
+        <div class="-mx-1 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-1">
             <TabsContent value="paste" class="flex flex-col gap-3">
                 <TextAreaField
                     v-model="pasted"
@@ -360,17 +366,6 @@ async function add(urls: string[], names = new Map<string, string>()) {
                         {{ line }}
                     </li>
                 </ul>
-                <p v-if="scanning" role="status" class="text-sm">{{ kind === 'documents' ? 'Finding their PDFs' : 'Finding their first stories' }}{{ progressText }}…</p>
-                <p v-else-if="adding" role="status" class="text-sm">
-                    Validating {{ pastedLinks.length === 1 ? 'source' : 'sources' }}{{ progressText }}…
-                </p>
-                <Alert v-if="addFailed" type="error">The sources couldn't be added. Please try again.</Alert>
-                <div>
-                    <Button variant="outline" :busy="adding" @click="addPasted">
-                        <PlusIcon v-if="!adding" class="size-5" aria-hidden="true" />
-                        Add
-                    </Button>
-                </div>
             </TabsContent>
 
             <TabsContent value="file" class="flex flex-col gap-3">
@@ -397,28 +392,39 @@ async function add(urls: string[], names = new Map<string, string>()) {
                 <p v-if="reading" role="status" class="text-sm">Reading the file…</p>
                 <Alert v-if="fileError" type="error">{{ fileError }}</Alert>
 
-                <div v-if="found.length > 0" class="flex flex-col gap-3">
+                <template v-if="found.length > 0">
                     <p role="status" class="font-medium">{{ foundLabel }}</p>
-                    <ul class="max-h-64 overflow-y-auto rounded-box border border-base-300 text-sm">
+                    <ul class="rounded-box border border-base-300 text-sm">
                         <li v-for="url in found" :key="url" class="border-b border-base-300 px-3 py-2 break-words last:border-b-0">{{ url }}</li>
                     </ul>
-                    <p v-if="scanning" role="status" class="text-sm">{{ kind === 'documents' ? 'Finding their PDFs' : 'Finding their first stories' }}{{ progressText }}…</p>
-                    <p v-else-if="adding" role="status" class="text-sm">Validating {{ found.length === 1 ? 'source' : 'sources' }}{{ progressText }}…</p>
-                    <Alert v-if="addFailed" type="error">The sources couldn't be added. Please try again.</Alert>
-                    <div class="flex flex-wrap gap-3">
-                        <Button variant="outline" :busy="adding" @click="addFound">
-                            <PlusIcon v-if="!adding" class="size-5" aria-hidden="true" />
-                            Add {{ found.length === 1 ? 'it' : `all ${found.length}` }}
-                        </Button>
-                        <Button variant="ghost" @click="found = []">Cancel</Button>
-                    </div>
-                </div>
+                </template>
             </TabsContent>
-        </TabsRoot>
 
-        <Alert v-if="result" type="success">{{ result }}.</Alert>
-        <Alert v-if="notAdded.length > 0" type="error">
-            <p v-for="message in notAdded" :key="message" class="break-words">{{ message }}</p>
-        </Alert>
-    </div>
+            <Alert v-if="result.length > 0" :type="someFail ? 'warning' : 'success'">
+                <div class="flex flex-col gap-1">
+                    <p v-for="line in result" :key="line">{{ line }}</p>
+                </div>
+            </Alert>
+        </div>
+
+        <div v-if="tab === 'paste' || found.length > 0 || result.length > 0 || addFailed" class="flex shrink-0 flex-col gap-3 border-t border-base-300 pt-3">
+            <p v-if="scanning" role="status" class="text-sm">{{ kind === 'documents' ? 'Finding their PDFs' : 'Finding their first stories' }}{{ progressText }}…</p>
+            <p v-else-if="adding" role="status" class="text-sm">Adding {{ addingCount === 1 ? 'source' : 'sources' }}…</p>
+            <Alert v-if="addFailed" type="error">The sources couldn't be added. Please try again.</Alert>
+            <div class="flex flex-wrap gap-3">
+                <Button v-if="tab === 'paste'" variant="outline" :busy="adding" @click="addPasted">
+                    <PlusIcon v-if="!adding" class="size-5" aria-hidden="true" />
+                    Add
+                </Button>
+                <template v-else-if="found.length > 0">
+                    <Button variant="outline" :busy="adding" @click="addFound">
+                        <PlusIcon v-if="!adding" class="size-5" aria-hidden="true" />
+                        Add {{ found.length === 1 ? 'it' : `all ${found.length}` }}
+                    </Button>
+                    <Button variant="ghost" @click="found = []">Cancel</Button>
+                </template>
+                <Button v-if="result.length > 0" variant="outline" class="ms-auto" @click="emit('done')">See sources</Button>
+            </div>
+        </div>
+    </TabsRoot>
 </template>

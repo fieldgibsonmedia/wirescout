@@ -149,8 +149,8 @@ export async function checkLinks(urls: string[], kind: ListKind, onChecked?: () 
 }
 
 // Reads sources just added that the scanner hasn't checked yet, or that failed its last check (shared with
-// another list: the link check just passed, so the old "failing" would be wrong), so their stories and status
-// show now instead of after the next hourly scan. One source per call, like checkLinks. A failed read is left
+// another list: the site may work again), so their stories and status show now instead of after the next
+// hourly scan. One source per call, like checkLinks. A failed read is left
 // to that scan. Returns the sources with their new status. onRead (optional) runs after each, with how many there are.
 export async function scanNewSources(sources: Source[], onRead?: (total: number) => void): Promise<Source[]> {
     const unchecked = sources.filter((source) => !source.lastCheckedAt || source.problem);

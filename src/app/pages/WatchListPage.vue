@@ -1,10 +1,13 @@
 <script setup lang="ts">
 // A watch list in two tabs: Stories (newest first, 50 at a time) and Sources (SourcesTab), which shows how
-// many sources are failing. Opening it marks the stories shown as seen, so the dashboard's new count starts
-// again from zero. Stories come from watch_list_articles, which keeps only those matching the list's keywords;
+// many sources are failing. A story stays New until its card has been on screen (lib/seenStories.ts), or until
+// "Mark all as read". Stories come from watch_list_articles, which keeps only those matching the list's keywords;
 // the search box narrows them further. ?tab=sources opens the Sources tab (the digest's failing-sources link).
 // The name and keywords follow the watchLists store, so an edit from the side nav shows here too.
-// The Stories tab switches between all stories and the saved ones (newest save first, all at once).
+// The Stories tab switches between all stories and the saved ones (newest save first, all at once). The Sources dropdown
+// shows only the stories of the sources picked, each with its new stories ("BBC (8)"); the search then looks only in
+// those. A news list's stories sit under headings by when they were found: Today, Yesterday, Last 7 days, Earlier
+// (a documents list has none: nearly all its PDFs are found on the first day).
 // A documents list (bond alerts) has a Documents tab instead, showing the bond documents by default: the PDFs
 // labelled as one, and those not labelled yet, so nothing is missed. "All PDFs" shows the others too.
 import { ExclamationTriangleIcon } from '@heroicons/vue/20/solid';
@@ -13,6 +16,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import SourcesTab from '@/components/SourcesTab.vue';
 import StoryCard from '@/components/StoryCard.vue';
+import SourceFilter from '@/components/SourceFilter.vue';
 import WatchListMenu from '@/components/WatchListMenu.vue';
 import Alert from '@/components/ui/Alert.vue';
 import Button from '@/components/ui/Button.vue';
@@ -20,9 +24,10 @@ import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import SearchField from '@/components/ui/SearchField.vue';
 import { track } from '@/lib/analytics';
-import { SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
+import { useSeenStories } from '@/lib/seenStories';
+import { listLabel, SOURCE_COLUMNS, toSource, type Source } from '@/lib/sources';
 import { supabase } from '@/lib/supabase';
-import { documentKindLabel, loadNewCounts, watchLists, type ListKind } from '@/lib/watchLists';
+import { documentKindLabel, loadNewCounts, newCounts, watchLists, type ListKind } from '@/lib/watchLists';
 
 const props = defineProps<{
     id: string;
@@ -34,6 +39,8 @@ type Article = {
     title: string;
     summary: string | null;
     date: string;
+    // When Wirescout found it: the list's order, and its heading.
+    foundAt: Date;
     sourceId: string;
     source: string;
     isNew: boolean;
@@ -47,8 +54,6 @@ const PAGE_SIZE = 50;
 const SEARCH_DELAY_MS = 300;
 
 const name = ref('');
-// When the user last opened this list: stories first seen after it are new.
-const lastViewedAt = ref('');
 const keywords = ref<string[]>([]);
 const kind = ref<ListKind>('news');
 const sources = ref<Source[]>([]);
@@ -83,11 +88,50 @@ const savedFailed = ref(false);
 const search = ref('');
 // The search behind the stories shown, for the "No stories match" line.
 const shownSearch = ref('');
+
+// The sources whose stories are shown (the Sources dropdown); none picked shows them all.
+const pickedSources = ref<string[]>([]);
+// Whether the stories shown are narrowed to some sources, for the "No stories" line.
+const shownFiltered = ref(false);
+// Each source's new stories when the page opened, by source id, for the dropdown.
+const newBySource = ref(new Map<string, number>());
+// The working sources (a failing or unchecked one has no stories to show), most new first, then A to Z.
+const sourceOptions = computed(() =>
+    sources.value
+        .filter((source) => (source.lastCheckedAt && !source.problem) || newBySource.value.has(source.id))
+        .map((source) => ({ id: source.id, label: listLabel(source, sources.value), newCount: newBySource.value.get(source.id) ?? 0 }))
+        .sort((a, b) => b.newCount - a.newCount || a.label.localeCompare(b.label)),
+);
 // Counts story loads, so an answer that arrives after a newer search started is dropped.
 let request = 0;
 
+const { observe } = useSeenStories(props.id);
+const markingRead = ref(false);
+
 const tab = ref(useRoute().query.tab === 'sources' ? 'sources' : 'stories');
 const failingSources = computed(() => sources.value.filter((source) => source.problem).length);
+
+// The stories shown, under their headings (in the reader's time zone). One group without a heading for a documents list.
+const articleGroups = computed(() => {
+    if (kind.value === 'documents') {
+        return [{ heading: '', articles: articles.value }];
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const daysAgo = (days: number) => new Date(today.getFullYear(), today.getMonth(), today.getDate() - days);
+    const headings = [
+        { heading: 'Today', from: today },
+        { heading: 'Yesterday', from: daysAgo(1) },
+        { heading: 'Last 7 days', from: daysAgo(6) },
+        { heading: 'Earlier', from: new Date(0) },
+    ];
+    return headings
+        .map(({ heading, from }, index) => ({
+            heading,
+            articles: articles.value.filter((article) => article.foundAt >= from && (index === 0 || article.foundAt < headings[index - 1].from)),
+        }))
+        .filter((group) => group.articles.length > 0);
+});
 
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -96,7 +140,7 @@ async function load() {
     failed.value = false;
 
     const [list, listSources, savedStories] = await Promise.all([
-        supabase.from('watch_lists').select('name, last_viewed_at, keywords, kind').eq('id', props.id).maybeSingle(),
+        supabase.from('watch_lists').select('name, keywords, kind').eq('id', props.id).maybeSingle(),
         supabase.from('watch_list_sources').select(`sources (${SOURCE_COLUMNS})` as const).eq('watch_list_id', props.id).order('created_at'),
         supabase.from('saved_stories').select('article_id').eq('watch_list_id', props.id),
     ]);
@@ -113,15 +157,36 @@ async function load() {
     }
 
     name.value = list.data.name;
-    lastViewedAt.value = list.data.last_viewed_at;
     keywords.value = list.data.keywords;
     kind.value = list.data.kind as ListKind;
     view.value = kind.value === 'documents' ? 'bond' : 'all';
     sources.value = listSources.data.map(({ sources: source }) => toSource(source));
     savedIds.value = new Set(savedStories.data.map((savedStory) => savedStory.article_id));
 
-    await loadArticles();
+    await Promise.all([loadArticles(), loadNewBySource()]);
     loading.value = false;
+}
+
+// Each source's new stories (the New marks). If it fails, the dropdown shows no numbers.
+async function loadNewBySource() {
+    const { data, error } = await supabase.from('watch_list_source_new_counts').select('source_id, new_count').eq('watch_list_id', props.id);
+    if (!error) {
+        newBySource.value = new Map(data.map((count) => [count.source_id ?? '', count.new_count ?? 0]));
+    }
+}
+
+// Every story found until now loses its New mark, here and in the counts.
+async function markAllRead() {
+    markingRead.value = true;
+    const { error } = await supabase.rpc('mark_all_read', { list_id: props.id });
+    markingRead.value = false;
+    if (error) {
+        return;
+    }
+    track('mark_all_read', { list_kind: kind.value });
+    articles.value.forEach((article) => (article.isNew = false));
+    newBySource.value = new Map();
+    loadNewCounts();
 }
 
 async function loadArticles() {
@@ -145,14 +210,7 @@ async function loadArticles() {
     articles.value = data.slice(0, PAGE_SIZE).map(toArticle);
     hasMore.value = data.length > PAGE_SIZE;
     shownSearch.value = term;
-
-    // Mark as seen up to the newest story shown (not "now"), so stories found while the page loads stay new.
-    // Not while searching: newer stories the search hides would lose their "New".
-    const newest = data[0]?.first_seen_at;
-    if (!term && newest && new Date(newest) > new Date(lastViewedAt.value)) {
-        await supabase.from('watch_lists').update({ last_viewed_at: newest }).eq('id', props.id);
-        loadNewCounts();
-    }
+    shownFiltered.value = pickedSources.value.length > 0;
 }
 
 async function loadMore() {
@@ -184,10 +242,13 @@ async function loadMore() {
 function fetchArticles(offset: number, term: string) {
     let query = supabase
         .from('watch_list_articles')
-        .select('id, url, title, summary, published_at, first_seen_at, source_id, section, document_kind, counts_as_new')
+        .select('id, url, title, summary, published_at, first_seen_at, source_id, section, document_kind, is_new')
         .eq('watch_list_id', props.id);
     if (view.value === 'bond') {
         query = query.or('document_kind.is.null,document_kind.neq.other');
+    }
+    if (pickedSources.value.length > 0) {
+        query = query.in('source_id', pickedSources.value);
     }
     if (term) {
         // % and _ are wildcards in ilike: escape them so they're searched for as typed.
@@ -244,7 +305,7 @@ function toArticle(article: {
     source_id: string;
     section: string | null;
     document_kind: string | null;
-    counts_as_new?: boolean | null;
+    is_new?: boolean | null;
 }): Article {
     return {
         id: article.id,
@@ -252,10 +313,11 @@ function toArticle(article: {
         title: article.title,
         summary: article.summary,
         date: dateFormat.format(new Date(article.published_at ?? article.first_seen_at)),
+        foundAt: new Date(article.first_seen_at),
         sourceId: article.source_id,
         source: sources.value.find((source) => source.id === article.source_id)?.label ?? '',
-        // What was on a documents list's pages at their first check, and its "other" PDFs, are never new.
-        isNew: article.counts_as_new !== false && new Date(article.first_seen_at) > new Date(lastViewedAt.value),
+        // Saved stories come without it: no mark.
+        isNew: article.is_new ?? false,
         label: kind.value === 'documents' ? documentKindLabel(article.document_kind) : undefined,
         section: article.section,
     };
@@ -275,6 +337,26 @@ watch(
         }
     },
 );
+
+watch(pickedSources, (picked) => {
+    track('source_filter', { list_kind: kind.value, sources: picked.length });
+    loadArticles();
+});
+
+// A story's source name, clicked: show only that source's stories, from the top.
+function showSource(sourceId: string) {
+    pickedSources.value = [sourceId];
+    window.scrollTo({ top: 0 });
+}
+
+// Sources tab → See its stories.
+function showSourceStories(sourceId: string) {
+    tab.value = 'stories';
+    if (view.value === 'saved') {
+        view.value = kind.value === 'documents' ? 'bond' : 'all';
+    }
+    showSource(sourceId);
+}
 
 let searchTimer: ReturnType<typeof setTimeout> | undefined;
 watch(search, () => {
@@ -322,22 +404,26 @@ onMounted(load);
 
             <TabsContent value="stories" class="flex flex-col gap-4">
                 <div v-if="sources.length > 0 || savedIds.size > 0" class="flex flex-wrap items-center gap-2">
-                    <SearchField
-                        v-if="view !== 'saved' && sources.length > 0"
-                        v-model="search"
-                        :label="kind === 'documents' ? 'Search documents' : 'Search stories'"
-                    />
-                    <div class="join ms-auto" role="group" aria-label="Show">
-                        <button
-                            v-for="option in viewOptions"
-                            :key="option.value"
-                            type="button"
-                            :class="['btn join-item', view === option.value ? 'btn-primary' : 'border-base-300 bg-base-100']"
-                            :aria-pressed="view === option.value"
-                            @click="view = option.value"
-                        >
-                            {{ option.label }}
-                        </button>
+                    <template v-if="view !== 'saved' && sources.length > 0">
+                        <SearchField v-model="search" :label="kind === 'documents' ? 'Search documents' : 'Search stories'" />
+                        <SourceFilter v-model="pickedSources" :sources="sourceOptions" />
+                    </template>
+                    <div class="ms-auto flex flex-wrap items-center gap-2">
+                        <Button v-if="view !== 'saved' && (newCounts.get(id) ?? 0) > 0" variant="ghost" :busy="markingRead" @click="markAllRead">
+                            Mark all as read
+                        </Button>
+                        <div class="join" role="group" aria-label="Show">
+                            <button
+                                v-for="option in viewOptions"
+                                :key="option.value"
+                                type="button"
+                                :class="['btn join-item', view === option.value ? 'btn-primary' : 'border-base-300 bg-base-100']"
+                                :aria-pressed="view === option.value"
+                                @click="view = option.value"
+                            >
+                                {{ option.label }}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -379,7 +465,11 @@ onMounted(load);
                         <button type="button" class="link" @click="tab = 'sources'">Go to Sources</button>
                     </p>
                     <p v-else-if="shownSearch" class="max-w-prose break-words">
-                        No {{ kind === 'documents' ? 'documents' : 'stories' }} match "{{ shownSearch }}".
+                        No {{ kind === 'documents' ? 'documents' : 'stories' }} match "{{ shownSearch }}"{{ shownFiltered ? ' in the sources picked' : '' }}.
+                    </p>
+                    <p v-else-if="shownFiltered" class="max-w-prose">
+                        No {{ kind === 'documents' ? 'documents' : 'stories' }} from the sources picked yet.
+                        <button type="button" class="link" @click="pickedSources = []">Show all sources</button>
                     </p>
                     <p v-else-if="kind === 'documents'" class="max-w-prose">
                         No {{ view === 'bond' ? 'bond documents' : 'PDFs' }} yet. Wirescout checks your sources every hour, and new ones
@@ -394,24 +484,35 @@ onMounted(load);
                     </p>
                 </Card>
 
-                <ul v-else class="flex flex-col gap-4">
-                    <li v-for="article in articles" :key="article.id">
-                        <StoryCard
-                            :watch-list-id="id"
-                            :article-id="article.id"
-                            :title="article.title"
-                            :url="article.url"
-                            :summary="article.summary"
-                            :source="article.source"
-                            :date="article.date"
-                            :is-new="article.isNew"
-                            :label="article.label"
-                            :section="article.section"
-                            :saved="savedIds.has(article.id)"
-                            @update:saved="setSaved(article.id, $event)"
-                        />
-                    </li>
-                </ul>
+                <template v-else>
+                    <section v-for="group in articleGroups" :key="group.heading" class="flex flex-col gap-4">
+                        <h2 v-if="group.heading" class="text-xl font-bold">{{ group.heading }}</h2>
+                        <ul class="flex flex-col gap-4">
+                            <li
+                            v-for="article in group.articles"
+                            :key="article.id"
+                            :ref="(element) => article.isNew && observe(element as Element | null, article.id)"
+                        >
+                                <StoryCard
+                                    filter-by-source
+                                    :watch-list-id="id"
+                                    :article-id="article.id"
+                                    :title="article.title"
+                                    :url="article.url"
+                                    :summary="article.summary"
+                                    :source="article.source"
+                                    :date="article.date"
+                                    :is-new="article.isNew"
+                                    :label="article.label"
+                                    :section="article.section"
+                                    :saved="savedIds.has(article.id)"
+                                    @update:saved="setSaved(article.id, $event)"
+                                    @source="showSource(article.sourceId)"
+                                />
+                            </li>
+                        </ul>
+                    </section>
+                </template>
 
                 <div v-if="view !== 'saved' && (hasMore || moreFailed)" class="flex flex-col items-start gap-2">
                     <Alert v-if="moreFailed" type="error">More stories couldn't be loaded. Please try again.</Alert>
@@ -420,7 +521,7 @@ onMounted(load);
             </TabsContent>
 
             <TabsContent value="sources">
-                <SourcesTab v-model:sources="sources" :watch-list-id="id" @changed="loadArticles" />
+                <SourcesTab v-model:sources="sources" :watch-list-id="id" @changed="loadArticles" @stories="showSourceStories" />
             </TabsContent>
         </TabsRoot>
     </template>

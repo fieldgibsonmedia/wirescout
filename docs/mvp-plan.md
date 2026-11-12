@@ -426,7 +426,7 @@ Why: GitHub starts scheduled runs when it has capacity. On 2026-11-05 the digest
     2. Save it in the cloud project (SQL Editor): `select vault.create_secret('<token>', 'github_digest_token');`. A new token later: `select vault.update_secret((select id from vault.secrets where name = 'github_digest_token'), '<new token>');`.
     3. Push the migration (`npx supabase db push --linked`).
     4. Merge the release PR. Then check the next run in GitHub → Actions → Daily digest: its event is `workflow_dispatch`, a few seconds after :05, :20, :35 or :50.
-- Postponed by Ken (2026-11-05): a digest late now and then is fine for now. Built and checked locally on branch `digest-on-time` (pushed, not merged). To pick it up: merge `origin/mvp` into that branch, run the checks again, then Ken's production steps above.
+- Postponed by Ken (2026-11-05): a digest late now and then is fine for now. Built and checked locally on branch `digest-on-time` (pushed, not merged). To pick it up: merge `origin/main` into that branch, run the checks again, then Ken's production steps above.
 
 ### Document lists for bond alerts (approved 2026-11-05)
 
@@ -488,11 +488,24 @@ Next jobs (agreed with Ken 2026-11-05, for a new session; each needs its own pla
 - Live impact: the scanner, the app's source adding and the digest are live for journalists; their news lists must work exactly as now. The migration changes the sources' unique key: push it just before merging, as source adding fails in between.
 - Production steps (Ken): `ANTHROPIC_API_KEY` in GitHub secrets (done 2026-11-05); push the migrations; deploy the `check-links` and `scan-new-sources` functions (they run the scanner's code, which reads PDFs now); their email domain on the allowed list.
 
+## Feedback from PostHog recordings (update `upload-feedback`, 2026-11-12)
+
+Ken watched journalists' recordings. One update, one branch from `main`, released together:
+
+1. Job 1 (v0.7.6, done): a file or pasted list adds every link, working or not; one short message with the counts; the failing ones show in the Sources tab with Fix. The red box only for a file that can't be added.
+2. Job 2 (v0.7.7, done): a journalist scrolled endlessly looking for one source's stories. A "Sources" dropdown next to search (working sources only; several sources, its own search box), each with its new stories ("BBC (8)"), most new first, then A to Z; the search looks only in the picked sources. A story's source name filters to it; Sources tab → "See its stories". Event `source_filter`.
+3. Job 3 (v0.7.8, done): date headings in news lists (Today, Yesterday, Last 7 days, Earlier), by date found, in the reader's time zone. Not in documents lists (nearly all PDFs are found on day one).
+4. Job 4 (v0.7.9, done): New stays until seen. Opening the list cleared every New mark, so an interrupted visit lost them. A story loses New once its headline has been on screen about a second, or it's opened; "Mark all as read" clears the rest. The dashboard count, side nav badge and dropdown counts follow the same marks. A "seen stories" table (migration, pgTAP tests); stories seen before stay seen. Event `mark_all_read`.
+    - Research behind it (Ken asked, 2026-11-12): notification screens clear the badge on open but keep each item unread (LinkedIn messaging); news readers mark read on open, "Mark all as read" or scroll (Feedly's "Auto-Mark As Read On Scroll", an option). Ken ruled out "read only when opened": journalists skim headlines and open few.
+
+- Live impact: the watch list page and the dashboard counts for every journalist. The scanner changes only for job 1 (documents' first check). The digest doesn't change.
+- Production steps (Ken), at release: push job 4's migration just before merging; redeploy `scan-new-sources` (job 1) and `analytics` (job 2's new event in Features used).
+
 ## Branches
 
-- Every MVP job: a branch from `mvp`, merged into `mvp` after Ken's ok.
-- Each finished stage is released: Ken merges `mvp` into `main` through a PR, and it goes live (decided 2026-10-29, so stages are tested live instead of waiting for the whole MVP).
-- Merge `main` into `mvp` before each release, in case `main` has commits of its own.
+- Since 2026-11-12 (Ken): no `mvp` branch. Each update is a branch from `main`, holding the jobs Ken groups into it, and goes live through one PR that Ken merges.
+- Merge `origin/main` into the update's branch before its PR, in case `main` has commits of its own.
+- Before 2026-11-12: jobs merged into `mvp`, and Ken merged `mvp` into `main` once per stage.
 
 ## Build order
 

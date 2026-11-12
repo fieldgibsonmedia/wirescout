@@ -65,6 +65,8 @@ const sources = defineModel<Source[]>('sources', { required: true });
 
 const emit = defineEmits<{
     changed: [];
+    // See its stories, from a source's menu.
+    stories: [sourceId: string];
 }>();
 
 const features = tableFeatures({
@@ -470,6 +472,8 @@ async function move() {
                                 </Button>
                                 <SourceMenu
                                     :label="listLabel(row.original, sources)"
+                                    :stories-label="kind === 'documents' ? 'See its PDFs' : 'See its stories'"
+                                    @stories="emit('stories', row.original.id)"
                                     @edit="startEdit(row.original, false)"
                                     @move="startMove([row.original.id])"
                                     @remove="removeSource(row.original.id)"
@@ -497,7 +501,7 @@ async function move() {
     </div>
 
     <Dialog v-model:open="addingSources" title="Add sources">
-        <AddManySources :watch-list-id="watchListId" :sources="sources" @added="onAdded" />
+        <AddManySources :watch-list-id="watchListId" :sources="sources" @added="onAdded" @done="addingSources = false" />
     </Dialog>
 
     <FormDialog

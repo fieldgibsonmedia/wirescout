@@ -2,6 +2,57 @@
 
 Newest first. One entry per job: date, what was done, what's next.
 
+## 2026-11-12: Release of update `upload-feedback` (v0.7.6 to v0.7.9)
+
+- Done by Ken on 2026-11-12, before the merge: migration `20261112153954_seen_stories` pushed (`npx supabase db push --linked`), `scan-new-sources` and `analytics` redeployed.
+- Next: Ken merges the PR; then check the deploy run and `wirescout.app` serving v0.7.9.
+
+## 2026-11-12: New stays until seen, v0.7.9 (update `upload-feedback`, job 4)
+
+- Done: a story loses New once at least half its card has been on screen for a second, or it's opened (story page, the digest's link); "Mark all as read" clears the rest. Opening the list no longer clears anything. The dashboard count, side nav badge and Sources dropdown counts follow the same marks. Migration `20261112153954_seen_stories.sql`: table `seen_stories`, `watch_list_articles.is_new`, view `watch_list_source_new_counts`, function `mark_all_read`. Event `mark_all_read`. What's new, version 0.7.9.
+- Checked: pgTAP (168, 11 new in `seen_stories.test.sql`), db lint, unit tests, type-check, build; in the browser (Wire, made new again locally): the 4 headlines on screen saved as seen, 116 still new in the counts; Mark all as read cleared marks, button and counts; opening a story page marked it seen; no console errors.
+- Found while testing: in the automated browser, the "on screen" check only runs when the window repaints (screenshots); in a normal browser it runs continuously. A hidden or minimised window should mark nothing (not checked).
+- Not checked: phone, the event reaching PostHog.
+- Release (Ken): push the migration just before merging (until then the old app keeps working: the view only gains a column).
+
+## 2026-11-12: Date headings, v0.7.8 (update `upload-feedback`, job 3)
+
+- Done: a news list's stories under Today, Yesterday, Last 7 days and Earlier, by date found, in the reader's time zone ("Last 7 days", not "This week": a rolling week, so Monday isn't nearly empty). Documents lists and Saved: no headings. What's new, version 0.7.8.
+- Checked: type-check, build; in the browser: Wire with 6 local stories dated today, yesterday and 3 days ago, under the right headings, the rest under Earlier; a documents list without headings; no console errors.
+- Local test data: 6 of Wire's stories re-dated (back with `npx supabase db reset`).
+
+## 2026-11-12: Source filter, v0.7.7 (update `upload-feedback`, job 2)
+
+- Plan for jobs 2 to 4 approved by Ken (`docs/mvp-plan.md`, "Feedback from PostHog recordings").
+- Done: a "Sources" dropdown next to search (working sources only, Ken; several sources, its own search box, new stories per source, most new first); search and filter work together; a story's source name filters to it; Sources tab → "See its stories" / "See its PDFs". `source_filter` event, shown in Analytics → Features used. What's new, version 0.7.7.
+- Checked: unit tests (86), type-check, build; in the browser (dev account, Regulators): counts (1 and 1), picking a source, the dropdown's search, search + filter ("green" none in Example Regulator), Show all sources, the source name on a card, See its stories; no console errors.
+- Not checked: a documents list's dropdown, phone width, the event reaching PostHog (no PostHog locally).
+- Release: redeploy `analytics` too (its list of features).
+
+## 2026-11-12: End of session, where things stand
+
+- Branch `upload-feedback` (from `main`, pushed): the first update of a batch Ken will add to. Job 1 (every uploaded link added, v0.7.6) done, tested by Ken and committed. No PR yet: it comes after the batch's last job.
+- Next: Ken's next update for this branch. When the batch is done: merge `origin/main` into the branch, run the "Before a PR" checks, then the PR (`gh pr create --base main`) after Ken's "approve".
+- At release (Ken): no migration; redeploy `scan-new-sources` (it runs the changed `check-source.js`). Add any later jobs' steps here.
+- Still open from before: `digest-on-time` (postponed, pushed, not merged); the checks listed under "Released bond document lists" below.
+- Local test data on the dev account: "Upload test" (documents list, 4 sources). Ken's test file: `~/Downloads/wirescout-upload-test.csv` (not committed).
+
+## 2026-11-12: Every uploaded link added, v0.7.6 (update branch `upload-feedback`, job 1)
+
+- Ken's call: no more `mvp`. Deleted locally and on GitHub (it held only the last progress note, now on this branch). Updates branch from `main`, one PR each, several jobs per update; rules changed to match.
+- Done: pasted or uploaded links are all added, working or not, and read once right away (no separate link check first). One short message with the counts and a "See sources" button; the failing ones are at the top of the Sources tab, in red, with Fix. The red box is only for a file or list that can't be added. The dialog's buttons stay at the bottom; only the content scrolls. What's new, version 0.7.6. Tested by Ken locally.
+- Scanner: a documents source that failed its checks so far has its first check when it first finds PDFs, so a broken link fixed later doesn't flood the digest.
+- Checked locally: unit tests (86), type-check, build; in the browser (dev account, list "Upload test"): a CSV with 1 working and 3 broken links (all 4 added, 3 red with their reason), a link already in the list; a failed documents source made to work: its 39 PDFs saved as found on first check.
+- Not checked: the scanner change before the fix (no test for `check-source.js`).
+- Release: no migration. Redeploy `scan-new-sources`: it bundles the scanner's `check-source.js`.
+
+## 2026-11-05: Released bond document lists, v0.7.5 (PR #33)
+
+- Done by Ken on 2026-11-05, in this order: the 3 migrations pushed (`20261105143948_document_lists`, `20261105150652_document_lists_app`, `20261105164307_document_reuploads`), `check-links`, `scan-new-sources` and `analytics` deployed, then PR #33 merged at 18:08 UTC.
+- Checked: the web app deploy passed, and `wirescout.app` serves v0.7.5 (checked in its code). The admin emails run at 18:19 UTC passed.
+- Still to check: the first scanner run on the new code (19:17 UTC) and the next digest; the bond team's first list (their email domain on the allowed list, Manager → Platform access, if not there yet); `list_kind` and `load_more` in Analytics.
+- Next: send Rishi `~/Downloads/EF Data - links not added.xlsx`. Postponed: job C (`docs/ideas.md`), the digest on time.
+
 ## 2026-11-05: Document lists, job D (more pages read), v0.7.5; job C postponed
 
 - Job B committed, merged into `mvp` and pushed (Ken's "approve"). Job C (stories grouped by date) postponed by Ken after the data: 10,940 of the 10,943 PDFs in Rishi's list are found on day one, so dates found don't help. Kept in the new `docs/ideas.md`, with a `load_more` event to measure it.
